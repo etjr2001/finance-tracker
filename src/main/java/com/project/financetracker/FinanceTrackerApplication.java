@@ -1,4 +1,4 @@
-package com.project.finance_tracker;
+package com.project.financetracker;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
