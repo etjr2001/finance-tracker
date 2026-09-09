@@ -47,6 +47,12 @@ public class GlobalExceptionHandler {
                 .body(Map.of("error", ex.getMessage()));
     }
 
+    @ExceptionHandler(InvalidPeriodException.class)
+    public ResponseEntity<Map<String, String>> handleInvalidPeriod(InvalidPeriodException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("error", ex.getMessage()));
+    }
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, String>> handleGeneric(RuntimeException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
