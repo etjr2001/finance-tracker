@@ -48,8 +48,7 @@ public class CategoryController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         User user = currentUserService.getCurrentUser();
-        Category category = categoryService.requireOwnedCategory(id, user);
-        categoryRepository.delete(category);
+        categoryService.deleteCategory(id, user);
         return ResponseEntity.noContent().build();
     }
 
