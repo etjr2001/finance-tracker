@@ -7,16 +7,17 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
 
-    @Query("SELECT t FROM Transaction t JOIN FETCH t.category WHERE t.user.id =:userId")
-    List<Transaction> findByUserId(@Param("userId") Long userId);
+    @Query("SELECT t FROM Transaction t JOIN FETCH t.category WHERE t.userId = :userId")
+    List<Transaction> findByUserId(@Param("userId") UUID userId);
 
     @Query("SELECT t FROM Transaction t JOIN FETCH t.category " +
-            "WHERE t.user.id =:userId AND t.date BETWEEN :startDate AND :endDate")
+            "WHERE t.userId = :userId AND t.date BETWEEN :startDate AND :endDate")
     List<Transaction> findByUserIdAndDateBetween(
-            @Param("userId") Long userId,
+            @Param("userId") UUID userId,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate
     );

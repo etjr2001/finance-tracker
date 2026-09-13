@@ -2,7 +2,6 @@ package com.project.financetracker.controller;
 
 import com.project.financetracker.dto.DashboardResponse;
 import com.project.financetracker.exception.InvalidPeriodException;
-import com.project.financetracker.model.User;
 import com.project.financetracker.security.CurrentUserService;
 import com.project.financetracker.service.DashboardService;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.YearMonth;
 import java.time.format.DateTimeParseException;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/dashboards")
@@ -24,9 +24,9 @@ public class DashboardController {
 
     @GetMapping
     public DashboardResponse getDashboard(@RequestParam(required = false) String month) {
-        User user = currentUserService.getCurrentUser();
+        UUID userId = currentUserService.getCurrentUserId();
         YearMonth period = resolvePeriod(month);
-        return dashboardService.buildDashboard(user, period);
+        return dashboardService.buildDashboard(userId, period);
     }
 
     private YearMonth resolvePeriod(String month) {

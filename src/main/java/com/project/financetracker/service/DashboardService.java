@@ -2,7 +2,6 @@ package com.project.financetracker.service;
 
 import com.project.financetracker.dto.DashboardResponse;
 import com.project.financetracker.model.Transaction;
-import com.project.financetracker.model.User;
 import com.project.financetracker.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,6 +12,7 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -21,11 +21,11 @@ public class DashboardService {
 
     private final TransactionRepository transactionRepository;
 
-    public DashboardResponse buildDashboard(User user, YearMonth period) {
+    public DashboardResponse buildDashboard(UUID userId, YearMonth period) {
         LocalDate startDate = period.atDay(1);
         LocalDate endDate = period.atEndOfMonth();
 
-        List<Transaction> transactions = transactionRepository.findByUserIdAndDateBetween(user.getId(), startDate, endDate);
+        List<Transaction> transactions = transactionRepository.findByUserIdAndDateBetween(userId, startDate, endDate);
 
         BigDecimal totalIncome = sumByType(transactions, Transaction.Type.INCOME);
         BigDecimal totalExpenses = sumByType(transactions, Transaction.Type.EXPENSE);

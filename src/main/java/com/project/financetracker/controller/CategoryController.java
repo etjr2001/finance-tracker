@@ -1,7 +1,6 @@
 package com.project.financetracker.controller;
 
 import com.project.financetracker.model.Category;
-import com.project.financetracker.model.User;
 import com.project.financetracker.repository.CategoryRepository;
 import com.project.financetracker.security.CurrentUserService;
 import com.project.financetracker.service.CategoryService;
@@ -12,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/categories")
@@ -24,31 +24,26 @@ public class CategoryController {
 
     @GetMapping
     public List<Category> list() {
-        User user = currentUserService.getCurrentUser();
-        return categoryRepository.findByUserId(user.getId());
+        UUID userId = currentUserService.getCurrentUserId();
+        return categoryRepository.findByUserId(userId);
     }
 
     @PostMapping
     public Category create(@Valid @RequestBody CategoryRequest request) {
-        User user = currentUserService.getCurrentUser();
-        Category category = new Category();
-        category.setName(request.name());
-        category.setUser(user);
-        return categoryRepository.save(category);
+        UUID userId = currentUserService.getCurrentUserId();
+        return categoryService.createCategory(request.name(), userId);
     }
 
     @PutMapping("/{id}")
     public Category update(@PathVariable Long id, @Valid @RequestBody CategoryRequest request) {
-        User user = currentUserService.getCurrentUser();
-        Category category = categoryService.requireOwnedCategory(id, user);
-        category.setName(request.name());
-        return categoryRepository.save(category);
+        UUID userId = currentUserService.getCurrentUserId();
+        return categoryService.renameCategory(id, request.name(), userId);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        User user = currentUserService.getCurrentUser();
-        categoryService.deleteCategory(id, user);
+        UUID userId = currentUserService.getCurrentUserId();
+        categoryService.deleteCategory(id, userId);
         return ResponseEntity.noContent().build();
     }
 
