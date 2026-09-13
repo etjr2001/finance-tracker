@@ -27,12 +27,16 @@ export function AuthProvider({ children }) {
     const signup = useCallback(async ({ email, password }) => {
         const { data, error } = await supabase.auth.signUp({ email, password })
         if (error) throw error
+        if (data.session) {
+            setSession(data.session)
+        }
         return { needsConfirmation: !data.session }
     }, [])
 
     const login = useCallback(async ({ email, password }) => {
-        const { error } = await supabase.auth.signInWithPassword({ email, password })
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
+        setSession(data.session)
     }, [])
 
     const logout = useCallback(async () => {

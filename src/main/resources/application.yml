@@ -11,5 +11,6 @@ spring:
       resourceserver:
         jwt:
           jwk-set-uri: ${SUPABASE_JWKS_URI}
+          jws-algorithms: ES256
   flyway:
     enabled: true
