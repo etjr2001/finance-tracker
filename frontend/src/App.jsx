@@ -1,21 +1,17 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import ProtectedRoute from './components/ProtectedRoute'
-
-function LoginPlaceholder() {
-    return <div>Login page (placeholder)</div>
-}
-
-function DashboardPlaceholder() {
-    return <div>Dashboard (placeholder, protected)</div>
-}
+import LoginPage from './pages/LoginPage'
+import SignupPage from './pages/SignupPage'
+import TransactionsPage from './pages/TransactionsPage'
 
 function App() {
     return (
         <Routes>
-            <Route path="/login" element={<LoginPlaceholder />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
 
             <Route element={<ProtectedRoute />}>
-                <Route path="/" element={<DashboardPlaceholder />} />
+                <Route path="/" element={<TransactionsPage />} />
             </Route>
 
             <Route path="*" element={<Navigate to="/" replace />} />

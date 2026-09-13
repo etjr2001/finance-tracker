@@ -8,6 +8,7 @@ import com.project.financetracker.model.User;
 import com.project.financetracker.repository.TransactionRepository;
 import com.project.financetracker.security.CurrentUserService;
 import com.project.financetracker.service.CategoryService;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +35,7 @@ public class TransactionController {
     }
 
     @PostMapping
-    public Transaction create(@RequestBody TransactionRequest request) {
+    public Transaction create(@Valid @RequestBody TransactionRequest request) {
         User user = currentUserService.getCurrentUser();
         Category category = categoryService.requireOwnedCategory(request.categoryId(), user);
 
@@ -51,7 +52,7 @@ public class TransactionController {
     }
 
     @PutMapping("/{id}")
-    public Transaction update(@PathVariable Long id, @RequestBody TransactionRequest request) {
+    public Transaction update(@PathVariable Long id, @Valid @RequestBody TransactionRequest request) {
         User user = currentUserService.getCurrentUser();
         Transaction transaction = requireOwnedTransaction(id, user);
         Category category = categoryService.requireOwnedCategory(request.categoryId(), user);
@@ -84,7 +85,7 @@ public class TransactionController {
 
     public record TransactionRequest(
             @NotNull Transaction.Type type,
-            @NotNull @DecimalMin(value = "0.01") BigDecimal amount,
+            @NotNull @DecimalMin(value = "0") BigDecimal amount,
             @NotNull LocalDate date,
             String note,
             @NotNull Long categoryId

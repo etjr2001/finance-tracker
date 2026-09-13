@@ -2,6 +2,8 @@ package com.project.financetracker.controller;
 
 import com.project.financetracker.dto.AuthRequest;
 import com.project.financetracker.dto.AuthResponse;
+import com.project.financetracker.exception.EmailAlreadyRegisteredException;
+import com.project.financetracker.exception.InvalidCredentialsException;
 import com.project.financetracker.model.Category;
 import com.project.financetracker.model.User;
 import com.project.financetracker.repository.UserRepository;
@@ -29,6 +31,10 @@ public class AuthController {
 
     @PostMapping("/signup")
     public AuthResponse signup(@Valid @RequestBody AuthRequest request) {
+        if (userRepository.existsByEmail(request.email())) {
+            throw new EmailAlreadyRegisteredException("Email already registered");
+        }
+
         User user = new User();
         user.setEmail(request.email());
         user.setPasswordHash(passwordEncoder.encode(request.password()));
@@ -47,10 +53,10 @@ public class AuthController {
     @PostMapping("/login")
     public AuthResponse login(@Valid @RequestBody AuthRequest request) {
         User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid credentials"));
 
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new InvalidCredentialsException("Invalid credentials");
         }
 
         return new AuthResponse(jwtService.generateToken(user.getEmail()));

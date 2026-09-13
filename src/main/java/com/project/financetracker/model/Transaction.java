@@ -2,6 +2,7 @@ package com.project.financetracker.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -29,6 +30,7 @@ public class Transaction {
     private Type type;
 
     @Column(nullable = false, precision = 12, scale = 2)
+    @PositiveOrZero(message = "Amount cannot be negative")
     private BigDecimal amount;
 
     @Column(nullable = false)
