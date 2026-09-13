@@ -25,37 +25,60 @@ export default function SignupPage() {
         }
     }
 
+    const inputClass =
+        'w-full border border-rule bg-white px-3 py-2 rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-ink'
+
     return (
-        <div style={{ padding: 20, maxWidth: 320 }}>
-            <h1>Sign up</h1>
-            <form onSubmit={handleSubmit}>
-                <div>
-                    <label>Email</label><br />
-                    <input
-                        type="email"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                    />
-                </div>
-                <div style={{ marginTop: 8 }}>
-                    <label>Password</label><br />
-                    <input
-                        type="password"
-                        required
-                        minLength={8}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                    />
-                </div>
-                {error && <p style={{ color: 'red' }}>{error}</p>}
-                <button type="submit" disabled={submitting} style={{ marginTop: 12 }}>
-                    {submitting ? 'Creating account…' : 'Sign up'}
-                </button>
-            </form>
-            <p style={{ marginTop: 12 }}>
-                Already have an account? <Link to="/login">Log in</Link>
-            </p>
+        <div className="min-h-screen flex items-center justify-center px-6">
+            <div className="w-full max-w-sm">
+                <h1 className="font-serif text-3xl mb-1">Ledger</h1>
+                <p className="text-ink-soft text-sm mb-8">
+                    Create an account. We'll set you up with five starter categories.
+                </p>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-sm mb-1" htmlFor="email">Email</label>
+                        <input
+                            id="email"
+                            type="email"
+                            required
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className={inputClass}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm mb-1" htmlFor="password">Password</label>
+                        <input
+                            id="password"
+                            type="password"
+                            required
+                            minLength={8}
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className={inputClass}
+                        />
+                    </div>
+
+                    {error && <p className="text-withdrawal text-sm">{error}</p>}
+
+                    <button
+                        type="submit"
+                        disabled={submitting}
+                        className="w-full bg-ink text-paper py-2 rounded-sm text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
+                    >
+                        {submitting ? 'Creating account…' : 'Sign up'}
+                    </button>
+                </form>
+
+                <p className="text-sm text-ink-soft mt-6">
+                    Already have an account?{' '}
+                    <Link to="/login" className="text-ink underline underline-offset-2">
+                        Log in
+                    </Link>
+                </p>
+            </div>
         </div>
     )
 }

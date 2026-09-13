@@ -1,5 +1,27 @@
+@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
 @import "tailwindcss";
+
+@theme {
+  --color-paper: #EDEDE2;
+  --color-paper-raised: #E3E4D5;
+  --color-ink: #1C231D;
+  --color-ink-soft: #5B6355;
+  --color-rule: #B8BEA8;
+  --color-deposit: #3A5A45;
+  --color-withdrawal: #8C3B2E;
+  --color-brass: #9C7A2E;
+
+  --font-serif: 'Source Serif 4', Georgia, serif;
+  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+}
 
 body {
   margin: 0;
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
 }

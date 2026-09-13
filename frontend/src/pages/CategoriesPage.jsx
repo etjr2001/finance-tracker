@@ -55,44 +55,65 @@ export default function CategoriesPage() {
         }
     }
 
-    if (isLoading) return <div style={{ padding: 20 }}>Loading categories…</div>
-    if (isError) return <div style={{ padding: 20 }}>Could not load categories.</div>
+    const inputClass =
+        'border border-rule bg-white px-3 py-2 rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-ink'
 
     return (
-        <div style={{ padding: 20, maxWidth: 400 }}>
-            <h1>Categories</h1>
+        <div>
+            <h2 className="font-serif text-2xl mb-6">Categories</h2>
 
-            <form onSubmit={handleCreate} style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+            <form onSubmit={handleCreate} className="flex gap-2 mb-8 max-w-sm">
                 <input
                     type="text"
                     placeholder="New category name"
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
+                    className={`flex-1 ${inputClass}`}
                 />
-                <button type="submit">Add</button>
+                <button
+                    type="submit"
+                    className="bg-ink text-paper px-4 py-2 rounded-sm text-sm hover:opacity-90 transition-opacity"
+                >
+                    Add
+                </button>
             </form>
 
-            {error && <p style={{ color: 'red' }}>{error}</p>}
+            {error && <p className="text-withdrawal text-sm mb-4">{error}</p>}
 
-            <ul style={{ listStyle: 'none', padding: 0 }}>
-                {categories.map((category) => (
-                    <li key={category.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid #ddd' }}>
+            {isLoading && <p className="text-ink-soft text-sm">Loading categories…</p>}
+            {isError && <p className="text-withdrawal text-sm">Could not load categories.</p>}
+
+            {categories && categories.length === 0 && (
+                <p className="text-ink-soft text-sm">No categories yet.</p>
+            )}
+
+            <ul className="max-w-sm divide-y divide-rule border-t border-b border-rule">
+                {categories?.map((category) => (
+                    <li key={category.id} className="flex items-center gap-3 py-2.5">
                         {editingId === category.id ? (
                             <>
                                 <input
                                     autoFocus
                                     value={editingName}
                                     onChange={(e) => setEditingName(e.target.value)}
-                                    style={{ flex: 1 }}
+                                    className={`flex-1 ${inputClass}`}
                                 />
-                                <button onClick={() => handleSaveEdit(category.id)}>Save</button>
-                                <button onClick={() => setEditingId(null)}>Cancel</button>
+                                <button onClick={() => handleSaveEdit(category.id)} className="text-sm text-ink hover:opacity-70">
+                                    Save
+                                </button>
+                                <button onClick={() => setEditingId(null)} className="text-sm text-ink-soft hover:text-ink">
+                                    Cancel
+                                </button>
                             </>
                         ) : (
                             <>
-                                <span style={{ flex: 1 }}>{category.name}</span>
-                                <button onClick={() => startEdit(category)}>Edit</button>
-                                <button onClick={() => handleDelete(category.id)}>Delete</button>
+                                <span className="flex-1">{category.name}</span>
+                                <button onClick={() => startEdit(category)} className="text-sm text-ink-soft hover:text-ink">
+                                    Edit
+                                </button>
+                                <button onClick={() => handleDelete(category.id)} className="text-sm text-ink-soft hover:text-withdrawal">
+                                    Delete
+                                </button>
                             </>
                         )}
                     </li>
