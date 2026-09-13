@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../context/useAuth'
 import { apiErrorMessage } from '../api/client'
 
 export default function SignupPage() {
@@ -10,14 +10,19 @@ export default function SignupPage() {
     const [password, setPassword] = useState('')
     const [error, setError] = useState(null)
     const [submitting, setSubmitting] = useState(false)
+    const [confirmationSent, setConfirmationSent] = useState(false)
 
     async function handleSubmit(e) {
         e.preventDefault()
         setError(null)
         setSubmitting(true)
         try {
-            await signup({ email, password })
-            navigate('/', { replace: true })
+            const { needsConfirmation } = await signup({ email, password })
+            if (needsConfirmation) {
+                setConfirmationSent(true)
+            } else {
+                navigate('/', { replace: true })
+            }
         } catch (err) {
             setError(apiErrorMessage(err, 'Could not sign up.'))
         } finally {
@@ -27,6 +32,23 @@ export default function SignupPage() {
 
     const inputClass =
         'w-full border border-rule bg-white px-3 py-2 rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-ink'
+
+    if (confirmationSent) {
+        return (
+            <div className="min-h-screen flex items-center justify-center px-6">
+                <div className="w-full max-w-sm text-center">
+                    <h1 className="font-serif text-3xl mb-1">Check your email</h1>
+                    <p className="text-ink-soft text-sm mt-4">
+                        We've sent a confirmation link to <span className="text-ink">{email}</span>.
+                        Click it to activate your account, then log in.
+                    </p>
+                    <Link to="/login" className="inline-block mt-6 text-ink underline underline-offset-2 text-sm">
+                        Back to log in
+                    </Link>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="min-h-screen flex items-center justify-center px-6">

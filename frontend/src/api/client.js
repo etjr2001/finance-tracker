@@ -1,25 +1,13 @@
 import axios from "axios";
-
-const TOKEN_KEY = 'finance_tracker_token'
-
-export function getToken() {
-    return localStorage.getItem(TOKEN_KEY)
-}
-
-export function setToken(token) {
-    localStorage.setItem(TOKEN_KEY, token)
-}
-
-export function clearToken() {
-    localStorage.removeItem(TOKEN_KEY)
-}
+import { supabase } from '../lib/supabaseClient'
 
 export const api = axios.create({
     baseURL: '/api',
 })
 
-api.interceptors.request.use((config) => {
-    const token = getToken()
+api.interceptors.request.use(async (config) => {
+    const { data } = await supabase.auth.getSession()
+    const token = data.session?.access_token
     if (token) {
         config.headers.Authorization = `Bearer ${token}`
     }
@@ -28,9 +16,9 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
     (response) => response,
-    (error) => {
+    async (error) => {
         if (error.response?.status === 401) {
-            clearToken()
+            await supabase.auth.signOut()
             if (window.location.pathname !== '/login') {
                 window.location.assign('/login')
             }
@@ -40,5 +28,5 @@ api.interceptors.response.use(
 )
 
 export function apiErrorMessage(error, fallback = 'Something went wrong.') {
-    return error?.response?.data?.error || fallback
+    return error?.response?.data?.error || error?.message || fallback
 }
