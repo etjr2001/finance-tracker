@@ -28,7 +28,7 @@ public class CategoryService {
 
     public void deleteCategory(Long id, User user) {
         Category category = requireOwnedCategory(id, user);
-        boolean inUse = transactionRepository.existsById(id);
+        boolean inUse = transactionRepository.existsByCategoryId(id);
         if (inUse) {
             throw new CategoryInUseException(
                     "Cannot delete category '" + category.getName() + "' - it has existing transactions."
