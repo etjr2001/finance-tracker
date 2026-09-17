@@ -1,25 +1,24 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
 import { apiErrorMessage } from '../api/client'
 
-export default function LoginPage() {
-    const { login } = useAuth()
-    const navigate = useNavigate()
+export default function ForgotPasswordPage() {
+    const { requestPasswordReset } = useAuth()
     const [email, setEmail] = useState('')
-    const [password, setPassword] = useState('')
     const [error, setError] = useState(null)
     const [submitting, setSubmitting] = useState(false)
+    const [sent, setSent] = useState(false)
 
     async function handleSubmit(e) {
         e.preventDefault()
         setError(null)
         setSubmitting(true)
         try {
-            await login({ email, password })
-            navigate('/', { replace: true })
+            await requestPasswordReset(email)
+            setSent(true)
         } catch (err) {
-            setError(apiErrorMessage(err, 'Could not log in.'))
+            setError(apiErrorMessage(err, 'Could not send reset email.'))
         } finally {
             setSubmitting(false)
         }
@@ -28,11 +27,29 @@ export default function LoginPage() {
     const inputClass =
         'w-full border border-rule bg-white px-3 py-2 rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-ink'
 
+    if (sent) {
+        return (
+            <div className="min-h-screen flex items-center justify-center px-6">
+                <div className="w-full max-w-sm text-center">
+                    <h1 className="font-serif text-3xl mb-1">Check your email</h1>
+                    <p className="text-ink-soft text-sm mt-4">
+                        If an account exists for <span className="text-ink">{email}</span>, we've sent a link to reset your password.
+                    </p>
+                    <Link to="/login" className="inline-block mt-6 text-ink underline underline-offset-2 text-sm">
+                        Back to log in
+                    </Link>
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div className="min-h-screen flex items-center justify-center px-6">
             <div className="w-full max-w-sm">
-                <h1 className="font-serif text-3xl mb-1">Ledger</h1>
-                <p className="text-ink-soft text-sm mb-8">Log in to your account.</p>
+                <h1 className="font-serif text-3xl mb-1">Reset password</h1>
+                <p className="text-ink-soft text-sm mb-8">
+                    Enter your email and we'll send you a link to reset your password.
+                </p>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
@@ -46,20 +63,6 @@ export default function LoginPage() {
                             className={inputClass}
                         />
                     </div>
-                    <div>
-                        <label className="block text-sm mb-1" htmlFor="password">Password</label>
-                        <input
-                            id="password"
-                            type="password"
-                            required
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className={inputClass}
-                        />
-                        <Link to="/forgot-password" className="block mt-1 text-xs text-ink-soft underline underline-offset-2">
-                            Forgot password?
-                        </Link>
-                    </div>
 
                     {error && <p className="text-withdrawal text-sm">{error}</p>}
 
@@ -68,14 +71,13 @@ export default function LoginPage() {
                         disabled={submitting}
                         className="w-full bg-ink text-paper py-2 rounded-sm text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
                     >
-                        {submitting ? 'Logging in…' : 'Log in'}
+                        {submitting ? 'Sending…' : 'Send reset link'}
                     </button>
                 </form>
 
                 <p className="text-sm text-ink-soft mt-6">
-                    No account?{' '}
-                    <Link to="/signup" className="text-ink underline underline-offset-2">
-                        Sign up
+                    <Link to="/login" className="text-ink underline underline-offset-2">
+                        Back to log in
                     </Link>
                 </p>
             </div>

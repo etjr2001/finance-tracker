@@ -6,6 +6,7 @@ import { bootstrapUser } from '../api/users'
 export function AuthProvider({ children }) {
     const [session, setSession] = useState(null)
     const [loading, setLoading] = useState(true)
+    const [isPasswordRecovery, setIsPasswordRecovery] = useState(false)
 
     useEffect(() => {
         supabase.auth.getSession().then(({ data }) => {
@@ -18,6 +19,9 @@ export function AuthProvider({ children }) {
 
             if (event === 'SIGNED_IN') {
                 bootstrapUser().catch(() => {})
+            }
+            if (event === 'PASSWORD_RECOVERY') {
+                setIsPasswordRecovery(true)
             }
         })
 
@@ -43,7 +47,30 @@ export function AuthProvider({ children }) {
         await supabase.auth.signOut()
     }, [])
 
-    const value = { session, isAuthenticated: Boolean(session), loading, login, signup, logout }
+    const requestPasswordReset = useCallback(async (email) => {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: `${window.location.origin}/reset-password`,
+        })
+        if (error) throw error
+    }, [])
+
+    const updatePassword = useCallback(async (newPassword) => {
+        const { error } = await supabase.auth.updateUser({ password: newPassword })
+        if (error) throw error
+        setIsPasswordRecovery(false)
+    }, [])
+
+    const value = {
+        session,
+        isAuthenticated: Boolean(session),
+        isPasswordRecovery,
+        loading,
+        login,
+        signup,
+        logout,
+        requestPasswordReset,
+        updatePassword,
+    }
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
