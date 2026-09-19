@@ -2,8 +2,8 @@ import { useMemo, useState } from 'react'
 import { useDashboard } from '../hooks/useDashboard'
 import Money from '../components/Money'
 import { formatMoney } from '../lib/money'
+import { currentMonth } from '../lib/date'
 
-const currentMonth = () => new Date().toISOString().slice(0, 7)
 
 export default function DashboardPage() {
     const [month, setMonth] = useState(currentMonth())
