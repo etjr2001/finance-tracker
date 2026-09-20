@@ -12,10 +12,18 @@ export default function Layout() {
 
     return (
         <div className="min-h-screen flex flex-col md:flex-row">
-            <aside className="md:w-52 shrink-0 border-b md:border-b-0 md:border-r border-rule flex md:flex-col justify-between">
+            <aside className="md:w-52 shrink-0 border-b md:border-b-0 md:border-r border-rule flex flex-col md:justify-between">
                 <div className="p-6">
-                    <h1 className="font-serif text-xl">Ledger</h1>
-                    <nav className="mt-8 flex md:flex-col gap-1 -ml-3">
+                    <div className="flex items-center justify-between gap-3">
+                        <h1 className="font-serif text-xl">Ledger</h1>
+                        <button
+                            onClick={logout}
+                            className="md:hidden shrink-0 whitespace-nowrap text-sm text-ink-soft hover:text-ink transition-colors border border-rule rounded-sm px-3 py-1.5"
+                        >
+                            Log out
+                        </button>
+                    </div>
+                    <nav className="mt-8 flex md:flex-col flex-wrap gap-1 -ml-3">
                         {navItems.map((item) => (
                             <NavLink
                                 key={item.to}
@@ -34,7 +42,7 @@ export default function Layout() {
                         ))}
                     </nav>
                 </div>
-                <div className="p-6">
+                <div className="hidden md:block p-6">
                     <button
                         onClick={logout}
                         className="text-sm text-ink-soft hover:text-ink transition-colors"

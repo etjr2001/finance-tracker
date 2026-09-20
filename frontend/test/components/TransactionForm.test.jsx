@@ -1,7 +1,14 @@
-import { describe, it, expect, vi, afterEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import TransactionForm from '../../src/components/TransactionForm'
+import * as categoriesApi from '../../src/api/categories'
+
+// TransactionForm calls useCreateCategory() internally (a real React Query
+// hook), so every render needs a QueryClientProvider ancestor now, even
+// tests that never touch category creation.
+vi.mock('../../src/api/categories')
 
 // NOTE: the form's <label> elements aren't associated with their inputs via
 // htmlFor/id, so most of these tests fall back to role-based or container
@@ -13,6 +20,17 @@ const categories = [
     { id: 2, name: 'Salary' },
 ]
 
+function renderForm(props = {}) {
+    const queryClient = new QueryClient({
+        defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    })
+    return render(
+        <QueryClientProvider client={queryClient}>
+            <TransactionForm categories={categories} onSubmit={() => {}} {...props} />
+        </QueryClientProvider>
+    )
+}
+
 describe('TransactionForm date picker', () => {
     afterEach(() => {
         vi.restoreAllMocks()
@@ -23,9 +41,7 @@ describe('TransactionForm date picker', () => {
         HTMLInputElement.prototype.showPicker = showPicker
 
         const user = userEvent.setup()
-        const { container } = render(
-            <TransactionForm categories={categories} onSubmit={() => {}} />
-        )
+        const { container } = renderForm()
 
         const dateInput = container.querySelector('input[type="date"]')
         await user.click(dateInput)
@@ -39,9 +55,7 @@ describe('TransactionForm date picker', () => {
         delete HTMLInputElement.prototype.showPicker
 
         const user = userEvent.setup()
-        const { container } = render(
-            <TransactionForm categories={categories} onSubmit={() => {}} />
-        )
+        const { container } = renderForm()
 
         const dateInput = container.querySelector('input[type="date"]')
         await expect(user.click(dateInput)).resolves.not.toThrow()
@@ -50,7 +64,7 @@ describe('TransactionForm date picker', () => {
 
 describe('TransactionForm draft hint', () => {
     it('shows the Draft hint by default for a new transaction (defaults to $0)', () => {
-        render(<TransactionForm categories={categories} onSubmit={() => {}} />)
+        renderForm()
         expect(screen.getByText('Will show as a Draft (0 amount)')).toBeInTheDocument()
     })
 
@@ -63,15 +77,13 @@ describe('TransactionForm draft hint', () => {
             note: '',
             category: { id: 1, name: 'Groceries' },
         }
-        render(<TransactionForm categories={categories} initial={initial} onSubmit={() => {}} />)
+        renderForm({ initial })
         expect(screen.queryByText(/Will show as a Draft/)).not.toBeInTheDocument()
     })
 
     it('hides the Draft hint once a non-zero amount is entered', async () => {
         const user = userEvent.setup()
-        const { container } = render(
-            <TransactionForm categories={categories} onSubmit={() => {}} />
-        )
+        const { container } = renderForm()
 
         expect(screen.getByText('Will show as a Draft (0 amount)')).toBeInTheDocument()
 
@@ -83,9 +95,7 @@ describe('TransactionForm draft hint', () => {
 
     it('shows the Draft hint again if the amount is cleared back to 0', async () => {
         const user = userEvent.setup()
-        const { container } = render(
-            <TransactionForm categories={categories} onSubmit={() => {}} />
-        )
+        const { container } = renderForm()
 
         const amountInput = container.querySelector('input[type="number"]')
         await user.type(amountInput, '.01')
@@ -100,14 +110,14 @@ describe('TransactionForm draft hint', () => {
 describe('TransactionForm dirty tracking', () => {
     it('reports not dirty on initial mount (create mode)', () => {
         const onDirtyChange = vi.fn()
-        render(<TransactionForm categories={categories} onSubmit={() => {}} onDirtyChange={onDirtyChange} />)
+        renderForm({ onDirtyChange })
 
         expect(onDirtyChange).toHaveBeenCalledWith(false)
     })
 
     it('reports dirty after a field is changed', () => {
         const onDirtyChange = vi.fn()
-        render(<TransactionForm categories={categories} onSubmit={() => {}} onDirtyChange={onDirtyChange} />)
+        renderForm({ onDirtyChange })
 
         fireEvent.change(screen.getByRole('textbox'), { target: { value: 'coffee' } })
 
@@ -116,7 +126,7 @@ describe('TransactionForm dirty tracking', () => {
 
     it('reports not dirty again once a field is changed back to its initial value', () => {
         const onDirtyChange = vi.fn()
-        render(<TransactionForm categories={categories} onSubmit={() => {}} onDirtyChange={onDirtyChange} />)
+        renderForm({ onDirtyChange })
 
         const note = screen.getByRole('textbox')
         fireEvent.change(note, { target: { value: 'coffee' } })
@@ -135,14 +145,7 @@ describe('TransactionForm dirty tracking', () => {
             note: 'lunch',
             category: { id: 1, name: 'Groceries' },
         }
-        render(
-            <TransactionForm
-                categories={categories}
-                initial={initial}
-                onSubmit={() => {}}
-                onDirtyChange={onDirtyChange}
-            />
-        )
+        renderForm({ initial, onDirtyChange })
 
         expect(onDirtyChange).toHaveBeenCalledWith(false)
     })
@@ -157,14 +160,7 @@ describe('TransactionForm dirty tracking', () => {
             note: 'lunch',
             category: { id: 1, name: 'Groceries' },
         }
-        render(
-            <TransactionForm
-                categories={categories}
-                initial={initial}
-                onSubmit={() => {}}
-                onDirtyChange={onDirtyChange}
-            />
-        )
+        renderForm({ initial, onDirtyChange })
 
         fireEvent.change(screen.getByRole('textbox'), { target: { value: 'dinner' } })
 
@@ -175,7 +171,7 @@ describe('TransactionForm dirty tracking', () => {
 describe('TransactionForm submission', () => {
     it('submits the entered values with the right shape', () => {
         const onSubmit = vi.fn()
-        render(<TransactionForm categories={categories} onSubmit={onSubmit} />)
+        renderForm({ onSubmit })
 
         fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '42.5' } })
         fireEvent.change(screen.getByRole('combobox'), { target: { value: '2' } })
@@ -194,7 +190,7 @@ describe('TransactionForm submission', () => {
 
     it('sends note as null when left blank', () => {
         const onSubmit = vi.fn()
-        render(<TransactionForm categories={categories} onSubmit={onSubmit} />)
+        renderForm({ onSubmit })
 
         fireEvent.change(screen.getByRole('combobox'), { target: { value: '1' } })
         fireEvent.click(screen.getByRole('button', { name: 'Add transaction' }))
@@ -212,7 +208,7 @@ describe('TransactionForm submission', () => {
             note: 'lunch',
             category: { id: 1, name: 'Groceries' },
         }
-        render(<TransactionForm categories={categories} initial={initial} onSubmit={onSubmit} />)
+        renderForm({ initial, onSubmit })
 
         expect(screen.getByRole('button', { name: 'Save changes' })).toBeInTheDocument()
 
@@ -221,5 +217,141 @@ describe('TransactionForm submission', () => {
         expect(onSubmit).toHaveBeenCalledWith(
             expect.objectContaining({ amount: 12.5, categoryId: 1, note: 'lunch' })
         )
+    })
+})
+
+describe('TransactionForm category sorting', () => {
+    it('lists categories alphabetically regardless of prop order', () => {
+        renderForm({
+            categories: [
+                { id: 2, name: 'Salary' },
+                { id: 1, name: 'Groceries' },
+            ],
+        })
+
+        const options = screen.getAllByRole('option').map((o) => o.textContent)
+        // "Select one" first, then alphabetical, "+ Add new category…" last.
+        expect(options).toEqual(['Select one', 'Groceries', 'Salary', '+ Add new category…'])
+    })
+})
+
+describe('TransactionForm category creation', () => {
+    beforeEach(() => {
+        categoriesApi.createCategory.mockResolvedValue({ id: 99, name: 'Subscriptions' })
+    })
+
+    afterEach(() => {
+        vi.restoreAllMocks()
+    })
+
+    it('opens a modal with a name field when "+ Add new category…" is selected', () => {
+        renderForm()
+
+        fireEvent.change(screen.getByRole('combobox'), { target: { value: '__new__' } })
+
+        expect(screen.getByText('New category name')).toBeInTheDocument()
+        expect(screen.getByPlaceholderText('Category name')).toBeInTheDocument()
+    })
+
+    it('does not change the selected category while the add-category modal is open', () => {
+        renderForm()
+
+        const select = screen.getByRole('combobox')
+        fireEvent.change(select, { target: { value: '__new__' } })
+
+        // The select itself should have snapped back to its previous (empty) value.
+        expect(select).toHaveValue('')
+    })
+
+    it('creates a new category and selects it', async () => {
+        renderForm()
+
+        fireEvent.change(screen.getByRole('combobox'), { target: { value: '__new__' } })
+        fireEvent.change(screen.getByPlaceholderText('Category name'), {
+            target: { value: 'Subscriptions' },
+        })
+        fireEvent.click(screen.getByRole('button', { name: 'Create' }))
+
+        await waitFor(() => expect(categoriesApi.createCategory).toHaveBeenCalled())
+        expect(categoriesApi.createCategory.mock.calls[0][0]).toEqual(
+            expect.objectContaining({ name: 'Subscriptions' })
+        )
+        await waitFor(() => expect(screen.queryByText('New category name')).not.toBeInTheDocument())
+        expect(screen.getByRole('combobox')).toHaveValue('99')
+        expect(screen.getByRole('option', { name: 'Subscriptions' })).toBeInTheDocument()
+    })
+
+    it('creating via Enter in the name field works the same as clicking Create', async () => {
+        renderForm()
+
+        fireEvent.change(screen.getByRole('combobox'), { target: { value: '__new__' } })
+        const nameInput = screen.getByPlaceholderText('Category name')
+        fireEvent.change(nameInput, { target: { value: 'Subscriptions' } })
+        fireEvent.keyDown(nameInput, { key: 'Enter' })
+
+        await waitFor(() => expect(categoriesApi.createCategory).toHaveBeenCalled())
+    })
+
+    it('reuses an existing category instead of creating a duplicate, case-insensitively', () => {
+        renderForm()
+
+        fireEvent.change(screen.getByRole('combobox'), { target: { value: '__new__' } })
+        fireEvent.change(screen.getByPlaceholderText('Category name'), {
+            target: { value: 'groceries' }, // existing category is "Groceries"
+        })
+        fireEvent.click(screen.getByRole('button', { name: 'Create' }))
+
+        expect(categoriesApi.createCategory).not.toHaveBeenCalled()
+        expect(screen.queryByText('New category name')).not.toBeInTheDocument()
+        expect(screen.getByRole('combobox')).toHaveValue('1') // existing Groceries id
+    })
+
+    it('closes without creating anything when Cancel is clicked', () => {
+        renderForm()
+
+        fireEvent.change(screen.getByRole('combobox'), { target: { value: '__new__' } })
+        fireEvent.change(screen.getByPlaceholderText('Category name'), {
+            target: { value: 'Subscriptions' },
+        })
+        fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+
+        expect(categoriesApi.createCategory).not.toHaveBeenCalled()
+        expect(screen.queryByText('New category name')).not.toBeInTheDocument()
+        expect(screen.getByRole('combobox')).toHaveValue('')
+    })
+
+    it('closes without creating anything on outside click', () => {
+        renderForm()
+
+        fireEvent.change(screen.getByRole('combobox'), { target: { value: '__new__' } })
+        const backdrop = document.querySelector('.fixed.inset-0')
+        fireEvent.mouseDown(backdrop)
+
+        expect(categoriesApi.createCategory).not.toHaveBeenCalled()
+        expect(screen.queryByText('New category name')).not.toBeInTheDocument()
+    })
+
+    it('shows an error and keeps the modal open when creation fails', async () => {
+        categoriesApi.createCategory.mockRejectedValueOnce(new Error('boom'))
+        renderForm()
+
+        fireEvent.change(screen.getByRole('combobox'), { target: { value: '__new__' } })
+        fireEvent.change(screen.getByPlaceholderText('Category name'), {
+            target: { value: 'Subscriptions' },
+        })
+        fireEvent.click(screen.getByRole('button', { name: 'Create' }))
+
+        await screen.findByText('boom')
+        expect(screen.getByText('New category name')).toBeInTheDocument()
+    })
+
+    it('ignores a blank category name', () => {
+        renderForm()
+
+        fireEvent.change(screen.getByRole('combobox'), { target: { value: '__new__' } })
+        fireEvent.click(screen.getByRole('button', { name: 'Create' }))
+
+        expect(categoriesApi.createCategory).not.toHaveBeenCalled()
+        expect(screen.getByText('New category name')).toBeInTheDocument()
     })
 })

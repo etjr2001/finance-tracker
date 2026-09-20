@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react'
 // reports a close *request* (outside click or Escape) via onRequestClose.
 // The caller decides whether that should be silent or gated behind a confirm
 // (e.g. based on a form's dirty state).
-export default function Modal({ onRequestClose, children }) {
+export default function Modal({ onRequestClose, children, contentClassName = 'max-w-md' }) {
     const contentRef = useRef(null)
 
     useEffect(() => {
@@ -26,7 +26,7 @@ export default function Modal({ onRequestClose, children }) {
             className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4"
             onMouseDown={handleBackdropMouseDown}
         >
-            <div ref={contentRef} className="w-full max-w-md rounded-xl bg-paper-raised p-5">
+            <div ref={contentRef} className={`w-full ${contentClassName} rounded-xl bg-paper-raised p-5`}>
                 {children}
             </div>
         </div>

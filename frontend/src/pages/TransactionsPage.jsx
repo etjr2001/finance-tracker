@@ -124,10 +124,11 @@ export default function TransactionsPage() {
                 )}
             </div>
 
-            {error && <p className="text-withdrawal text-sm mb-4">{error}</p>}
+            {error && !showForm && !editing && <p className="text-withdrawal text-sm mb-4">{error}</p>}
 
             {showForm && (
                 <Modal onRequestClose={requestClose}>
+                    {error && <p className="text-withdrawal text-sm mb-3">{error}</p>}
                     <TransactionForm
                         categories={categories}
                         onSubmit={handleCreate}
@@ -140,6 +141,7 @@ export default function TransactionsPage() {
 
             {editing && (
                 <Modal onRequestClose={requestClose}>
+                    {error && <p className="text-withdrawal text-sm mb-3">{error}</p>}
                     <TransactionForm
                         key={editing.id}
                         categories={categories}
