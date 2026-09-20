@@ -5,6 +5,7 @@ import {
     useUpdateCategory,
     useDeleteCategory,
 } from '../hooks/useCategories'
+import ConfirmDialog from '../components/ConfirmDialog'
 import { apiErrorMessage } from '../api/client'
 
 export default function CategoriesPage() {
@@ -17,6 +18,7 @@ export default function CategoriesPage() {
     const [error, setError] = useState(null)
     const [editingId, setEditingId] = useState(null)
     const [editingName, setEditingName] = useState('')
+    const [deleteTarget, setDeleteTarget] = useState(null)
 
     async function handleCreate(e) {
         e.preventDefault()
@@ -47,8 +49,13 @@ export default function CategoriesPage() {
         }
     }
 
-    async function handleDelete(id, name) {
-        if (!window.confirm(`Delete category "${name}"? This can't be undone.`)) return
+    function requestDelete(category) {
+        setDeleteTarget(category)
+    }
+
+    async function confirmDelete() {
+        const { id } = deleteTarget
+        setDeleteTarget(null)
         setError(null)
         try {
             await deleteCategory.mutateAsync(id)
@@ -114,7 +121,7 @@ export default function CategoriesPage() {
                                     Edit
                                 </button>
                                 <button
-                                    onClick={() => handleDelete(category.id, category.name)}
+                                    onClick={() => requestDelete(category)}
                                     disabled={deleteCategory.isPending && deleteCategory.variables === category.id}
                                     className="text-sm text-ink-soft hover:text-withdrawal disabled:opacity-50 disabled:pointer-events-none"
                                 >
@@ -125,6 +132,15 @@ export default function CategoriesPage() {
                     </li>
                 ))}
             </ul>
+
+            {deleteTarget && (
+                <ConfirmDialog
+                    message={`Delete category "${deleteTarget.name}"? This can't be undone.`}
+                    confirmLabel="Delete"
+                    onConfirm={confirmDelete}
+                    onCancel={() => setDeleteTarget(null)}
+                />
+            )}
         </div>
     )
 }

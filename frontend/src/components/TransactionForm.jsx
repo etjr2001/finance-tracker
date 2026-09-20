@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 const today = () => new Date().toISOString().slice(0, 10)
 
@@ -20,11 +20,28 @@ function toFormShape(t) {
     }
 }
 
+function isDirty(form, initial) {
+    return Object.keys(form).some((key) => form[key] !== initial[key])
+}
+
 // Parent must pass a `key` (e.g. key={initial?.id ?? 'new'}) so switching
 // between editing different transactions — or between edit and create —
 // remounts this component instead of reusing state from the last one.
-export default function TransactionForm({ categories, initial, onSubmit, onCancel, submitting }) {
-    const [form, setForm] = useState(initial ? toFormShape(initial) : emptyForm)
+//
+// onDirtyChange (optional): called with a boolean whenever the form's dirty
+// state changes, so a parent wrapping this in a Modal can decide whether an
+// outside-click close needs confirming. Pass a stable function (e.g. a
+// useState setter) — a new function identity every render will still work
+// but re-fires the effect unnecessarily.
+export default function TransactionForm({ categories, initial, onSubmit, onCancel, submitting, onDirtyChange }) {
+    const initialShape = useRef(initial ? toFormShape(initial) : emptyForm)
+    const [form, setForm] = useState(initialShape.current)
+
+    useEffect(() => {
+        onDirtyChange?.(isDirty(form, initialShape.current))
+        // Only re-run when form changes; initialShape is fixed for this mount.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [form])
 
     function update(field, value) {
         setForm((f) => ({ ...f, [field]: value }))

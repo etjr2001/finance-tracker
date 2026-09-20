@@ -7,6 +7,8 @@ import {
 } from '../hooks/useTransactions'
 import { useCategories } from '../hooks/useCategories'
 import TransactionForm from '../components/TransactionForm'
+import Modal from '../components/Modal'
+import ConfirmDialog from '../components/ConfirmDialog'
 import Money from '../components/Money'
 import { apiErrorMessage } from '../api/client'
 
@@ -19,6 +21,9 @@ export default function TransactionsPage() {
 
     const [showForm, setShowForm] = useState(false)
     const [editing, setEditing] = useState(null)
+    const [isDirty, setIsDirty] = useState(false)
+    const [pendingCloseConfirm, setPendingCloseConfirm] = useState(false)
+    const [deleteTarget, setDeleteTarget] = useState(null)
     const [error, setError] = useState(null)
 
     const sorted = useMemo(
@@ -26,11 +31,49 @@ export default function TransactionsPage() {
         [transactions]
     )
 
+    function openCreate() {
+        setEditing(null)
+        setIsDirty(false)
+        setShowForm(true)
+    }
+
+    function openEdit(t) {
+        setShowForm(false)
+        setIsDirty(false)
+        setEditing(t)
+    }
+
+    function closeAny() {
+        setShowForm(false)
+        setEditing(null)
+        setIsDirty(false)
+    }
+
+    // Shared by the modal's outside-click/Escape handler and the form's own
+    // Cancel button: silent close if the form is untouched, confirm via
+    // ConfirmDialog if dirty.
+    function requestClose() {
+        if (isDirty) {
+            setPendingCloseConfirm(true)
+            return
+        }
+        closeAny()
+    }
+
+    function confirmDiscardChanges() {
+        setPendingCloseConfirm(false)
+        closeAny()
+    }
+
+    function cancelDiscardChanges() {
+        setPendingCloseConfirm(false)
+    }
+
     async function handleCreate(payload) {
         setError(null)
         try {
             await createTransaction.mutateAsync(payload)
-            setShowForm(false)
+            closeAny()
         } catch (err) {
             setError(apiErrorMessage(err, 'Could not add transaction.'))
         }
@@ -40,17 +83,25 @@ export default function TransactionsPage() {
         setError(null)
         try {
             await updateTransaction.mutateAsync({ id: editing.id, ...payload })
-            setEditing(null)
+            closeAny()
         } catch (err) {
             setError(apiErrorMessage(err, 'Could not update transaction.'))
         }
     }
 
-    async function handleDelete(t) {
-        const label = t.note
+    function deleteLabel(t) {
+        return t.note
             ? `${t.category?.name ?? 'transaction'} — ${t.note}`
             : t.category?.name ?? 'this transaction'
-        if (!window.confirm(`Delete ${label}? This can't be undone.`)) return
+    }
+
+    function requestDelete(t) {
+        setDeleteTarget(t)
+    }
+
+    async function confirmDelete() {
+        const t = deleteTarget
+        setDeleteTarget(null)
         setError(null)
         try {
             await deleteTransaction.mutateAsync(t.id)
@@ -65,7 +116,7 @@ export default function TransactionsPage() {
                 <h2 className="font-serif text-2xl">Transactions</h2>
                 {!showForm && !editing && (
                     <button
-                        onClick={() => setShowForm(true)}
+                        onClick={openCreate}
                         className="bg-ink text-paper px-4 py-2 rounded-sm text-sm hover:opacity-90 transition-opacity"
                     >
                         Add transaction
@@ -76,27 +127,29 @@ export default function TransactionsPage() {
             {error && <p className="text-withdrawal text-sm mb-4">{error}</p>}
 
             {showForm && (
-                <div className="mb-8 p-5 bg-paper-raised rounded-sm">
+                <Modal onRequestClose={requestClose}>
                     <TransactionForm
                         categories={categories}
                         onSubmit={handleCreate}
-                        onCancel={() => setShowForm(false)}
+                        onCancel={requestClose}
+                        onDirtyChange={setIsDirty}
                         submitting={createTransaction.isPending}
                     />
-                </div>
+                </Modal>
             )}
 
             {editing && (
-                <div className="mb-8 p-5 bg-paper-raised rounded-sm">
+                <Modal onRequestClose={requestClose}>
                     <TransactionForm
                         key={editing.id}
                         categories={categories}
                         initial={editing}
                         onSubmit={handleUpdate}
-                        onCancel={() => setEditing(null)}
+                        onCancel={requestClose}
+                        onDirtyChange={setIsDirty}
                         submitting={updateTransaction.isPending}
                     />
-                </div>
+                </Modal>
             )}
 
             {isLoading && <p className="text-ink-soft text-sm">Loading transactions…</p>}
@@ -130,16 +183,13 @@ export default function TransactionsPage() {
                             </span>
                             <div className="flex gap-3 text-sm">
                                 <button
-                                    onClick={() => {
-                                        setShowForm(false)
-                                        setEditing(t)
-                                    }}
+                                    onClick={() => openEdit(t)}
                                     className="text-ink-soft hover:text-ink"
                                 >
                                     Edit
                                 </button>
                                 <button
-                                    onClick={() => handleDelete(t)}
+                                    onClick={() => requestDelete(t)}
                                     disabled={deleteTransaction.isPending && deleteTransaction.variables === t.id}
                                     className="text-ink-soft hover:text-withdrawal disabled:opacity-50 disabled:pointer-events-none"
                                 >
@@ -150,6 +200,24 @@ export default function TransactionsPage() {
                     </li>
                 ))}
             </ul>
+
+            {pendingCloseConfirm && (
+                <ConfirmDialog
+                    message="Discard unsaved changes?"
+                    confirmLabel="Discard"
+                    onConfirm={confirmDiscardChanges}
+                    onCancel={cancelDiscardChanges}
+                />
+            )}
+
+            {deleteTarget && (
+                <ConfirmDialog
+                    message={`Delete ${deleteLabel(deleteTarget)}? This can't be undone.`}
+                    confirmLabel="Delete"
+                    onConfirm={confirmDelete}
+                    onCancel={() => setDeleteTarget(null)}
+                />
+            )}
         </div>
     )
 }

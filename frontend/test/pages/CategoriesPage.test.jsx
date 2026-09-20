@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, within, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import CategoriesPage from '../../src/pages/CategoriesPage'
@@ -30,35 +30,39 @@ describe('CategoriesPage delete confirmation', () => {
 
     it('asks for confirmation before deleting, naming the category', async () => {
         const user = userEvent.setup()
-        const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
         renderPage()
 
         await screen.findByText('Groceries')
         await user.click(screen.getByRole('button', { name: 'Delete' }))
 
-        expect(confirmSpy).toHaveBeenCalledWith(expect.stringContaining('Groceries'))
+        expect(screen.getByText('Delete category "Groceries"? This can\'t be undone.')).toBeInTheDocument()
     })
 
     it('does not delete when the confirmation is dismissed', async () => {
         const user = userEvent.setup()
-        vi.spyOn(window, 'confirm').mockReturnValue(false)
         renderPage()
 
         await screen.findByText('Groceries')
         await user.click(screen.getByRole('button', { name: 'Delete' }))
+
+        const dialog = screen.getByText(/This can't be undone/).closest('div')
+        await user.click(within(dialog).getByRole('button', { name: 'Cancel' }))
 
         expect(categoriesApi.deleteCategory).not.toHaveBeenCalled()
         // The category is still on screen, since nothing was deleted.
         expect(screen.getByText('Groceries')).toBeInTheDocument()
+        expect(screen.queryByText(/This can't be undone/)).not.toBeInTheDocument()
     })
 
     it('deletes when the confirmation is accepted', async () => {
         const user = userEvent.setup()
-        vi.spyOn(window, 'confirm').mockReturnValue(true)
         renderPage()
 
         await screen.findByText('Groceries')
         await user.click(screen.getByRole('button', { name: 'Delete' }))
+
+        const dialog = screen.getByText(/This can't be undone/).closest('div')
+        await user.click(within(dialog).getByRole('button', { name: 'Delete' }))
 
         await waitFor(() => expect(categoriesApi.deleteCategory).toHaveBeenCalledWith(1, expect.anything()))
     })
@@ -74,13 +78,14 @@ describe('CategoriesPage delete confirmation', () => {
         )
 
         const user = userEvent.setup()
-        vi.spyOn(window, 'confirm').mockReturnValue(true)
         renderPage()
 
         await screen.findByText('Groceries')
         const [groceriesDelete, salaryDelete] = screen.getAllByRole('button', { name: 'Delete' })
 
         await user.click(groceriesDelete)
+        const dialog = screen.getByText(/This can't be undone/).closest('div')
+        await user.click(within(dialog).getByRole('button', { name: 'Delete' }))
 
         await waitFor(() => expect(groceriesDelete).toBeDisabled())
         expect(salaryDelete).toBeEnabled()
