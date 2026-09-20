@@ -31,6 +31,7 @@ export default function CategoriesPage() {
     }
 
     function startEdit(category) {
+        setError(null)
         setEditingId(category.id)
         setEditingName(category.name)
     }
@@ -46,7 +47,8 @@ export default function CategoriesPage() {
         }
     }
 
-    async function handleDelete(id) {
+    async function handleDelete(id, name) {
+        if (!window.confirm(`Delete category "${name}"? This can't be undone.`)) return
         setError(null)
         try {
             await deleteCategory.mutateAsync(id)
@@ -111,7 +113,11 @@ export default function CategoriesPage() {
                                 <button onClick={() => startEdit(category)} className="text-sm text-ink-soft hover:text-ink">
                                     Edit
                                 </button>
-                                <button onClick={() => handleDelete(category.id)} className="text-sm text-ink-soft hover:text-withdrawal">
+                                <button
+                                    onClick={() => handleDelete(category.id, category.name)}
+                                    disabled={deleteCategory.isPending && deleteCategory.variables === category.id}
+                                    className="text-sm text-ink-soft hover:text-withdrawal disabled:opacity-50 disabled:pointer-events-none"
+                                >
                                     Delete
                                 </button>
                             </>

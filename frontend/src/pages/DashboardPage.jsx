@@ -2,8 +2,7 @@ import { useMemo, useState } from 'react'
 import { useDashboard } from '../hooks/useDashboard'
 import Money from '../components/Money'
 import { formatMoney } from '../lib/money'
-
-const currentMonth = () => new Date().toISOString().slice(0, 7)
+import { currentMonth } from '../lib/date'
 
 export default function DashboardPage() {
     const [month, setMonth] = useState(currentMonth())
@@ -22,6 +21,7 @@ export default function DashboardPage() {
                     type="month"
                     value={month}
                     onChange={(e) => setMonth(e.target.value)}
+                    onClick={(e) => e.target.showPicker?.()}
                     className="border border-rule bg-white px-3 py-1.5 rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-ink"
                 />
             </div>

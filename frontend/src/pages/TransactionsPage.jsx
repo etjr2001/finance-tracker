@@ -46,10 +46,14 @@ export default function TransactionsPage() {
         }
     }
 
-    async function handleDelete(id) {
+    async function handleDelete(t) {
+        const label = t.note
+            ? `${t.category?.name ?? 'transaction'} — ${t.note}`
+            : t.category?.name ?? 'this transaction'
+        if (!window.confirm(`Delete ${label}? This can't be undone.`)) return
         setError(null)
         try {
-            await deleteTransaction.mutateAsync(id)
+            await deleteTransaction.mutateAsync(t.id)
         } catch (err) {
             setError(apiErrorMessage(err, 'Could not delete transaction.'))
         }
@@ -108,7 +112,14 @@ export default function TransactionsPage() {
                         <div className="flex items-baseline gap-4 min-w-0">
                             <span className="text-sm text-ink-soft tabular w-24 shrink-0">{t.date}</span>
                             <div className="min-w-0">
-                                <div className="truncate">{t.category?.name ?? 'Unknown category'}</div>
+                                <div className="truncate flex items-center gap-2">
+                                    <span>{t.category?.name ?? 'Unknown category'}</span>
+                                    {Number(t.amount) === 0 && (
+                                        <span className="text-xs font-medium text-brass bg-brass/10 border border-brass/30 rounded-full px-2 py-0.5 shrink-0">
+                                            Draft
+                                        </span>
+                                    )}
+                                </div>
                                 {t.note && <div className="text-sm text-ink-soft truncate">{t.note}</div>}
                             </div>
                         </div>
@@ -128,8 +139,9 @@ export default function TransactionsPage() {
                                     Edit
                                 </button>
                                 <button
-                                    onClick={() => handleDelete(t.id)}
-                                    className="text-ink-soft hover:text-withdrawal"
+                                    onClick={() => handleDelete(t)}
+                                    disabled={deleteTransaction.isPending && deleteTransaction.variables === t.id}
+                                    className="text-ink-soft hover:text-withdrawal disabled:opacity-50 disabled:pointer-events-none"
                                 >
                                     Delete
                                 </button>
