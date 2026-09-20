@@ -46,10 +46,14 @@ export default function TransactionsPage() {
         }
     }
 
-    async function handleDelete(id) {
+    async function handleDelete(t) {
+        const label = t.note
+            ? `${t.category?.name ?? 'transaction'} — ${t.note}`
+            : t.category?.name ?? 'this transaction'
+        if (!window.confirm(`Delete ${label}? This can't be undone.`)) return
         setError(null)
         try {
-            await deleteTransaction.mutateAsync(id)
+            await deleteTransaction.mutateAsync(t.id)
         } catch (err) {
             setError(apiErrorMessage(err, 'Could not delete transaction.'))
         }
@@ -128,8 +132,9 @@ export default function TransactionsPage() {
                                     Edit
                                 </button>
                                 <button
-                                    onClick={() => handleDelete(t.id)}
-                                    className="text-ink-soft hover:text-withdrawal"
+                                    onClick={() => handleDelete(t)}
+                                    disabled={deleteTransaction.isPending && deleteTransaction.variables === t.id}
+                                    className="text-ink-soft hover:text-withdrawal disabled:opacity-50 disabled:pointer-events-none"
                                 >
                                     Delete
                                 </button>
