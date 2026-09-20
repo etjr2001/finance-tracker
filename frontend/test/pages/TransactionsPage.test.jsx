@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, within, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import TransactionsPage from '../../src/pages/TransactionsPage'
@@ -29,6 +29,12 @@ function renderPage() {
     )
 }
 
+// Grabs the currently-open modal/dialog's backdrop, for simulating an
+// outside click. Assumes only one Modal is open at the time it's called.
+function getBackdrop(container) {
+    return container.querySelector('.fixed.inset-0')
+}
+
 describe('TransactionsPage delete confirmation', () => {
     beforeEach(() => {
         transactionsApi.listTransactions.mockResolvedValue([sampleTransaction])
@@ -42,35 +48,37 @@ describe('TransactionsPage delete confirmation', () => {
 
     it('asks for confirmation before deleting, describing the transaction', async () => {
         const user = userEvent.setup()
-        const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
         renderPage()
 
         await screen.findByText('Weekly shop')
         await user.click(screen.getByRole('button', { name: 'Delete' }))
 
-        expect(confirmSpy).toHaveBeenCalledWith(
-            expect.stringContaining('Groceries — Weekly shop')
-        )
+        expect(screen.getByText("Delete Groceries — Weekly shop? This can't be undone.")).toBeInTheDocument()
     })
 
     it('does not delete when the confirmation is dismissed', async () => {
         const user = userEvent.setup()
-        vi.spyOn(window, 'confirm').mockReturnValue(false)
         renderPage()
 
         await screen.findByText('Weekly shop')
         await user.click(screen.getByRole('button', { name: 'Delete' }))
 
+        const dialog = screen.getByText(/This can't be undone/).closest('div')
+        await user.click(within(dialog).getByRole('button', { name: 'Cancel' }))
+
         expect(transactionsApi.deleteTransaction).not.toHaveBeenCalled()
+        expect(screen.queryByText(/This can't be undone/)).not.toBeInTheDocument()
     })
 
     it('deletes when the confirmation is accepted', async () => {
         const user = userEvent.setup()
-        vi.spyOn(window, 'confirm').mockReturnValue(true)
         renderPage()
 
         await screen.findByText('Weekly shop')
         await user.click(screen.getByRole('button', { name: 'Delete' }))
+
+        const dialog = screen.getByText(/This can't be undone/).closest('div')
+        await user.click(within(dialog).getByRole('button', { name: 'Delete' }))
 
         await waitFor(() => expect(transactionsApi.deleteTransaction).toHaveBeenCalledWith(42, expect.anything()))
     })
@@ -91,13 +99,14 @@ describe('TransactionsPage delete confirmation', () => {
         )
 
         const user = userEvent.setup()
-        vi.spyOn(window, 'confirm').mockReturnValue(true)
         renderPage()
 
         await screen.findByText('Weekly shop')
         const [firstDelete, secondDelete] = screen.getAllByRole('button', { name: 'Delete' })
 
         await user.click(firstDelete)
+        const dialog = screen.getByText(/This can't be undone/).closest('div')
+        await user.click(within(dialog).getByRole('button', { name: 'Delete' }))
 
         await waitFor(() => expect(firstDelete).toBeDisabled())
         expect(secondDelete).toBeEnabled()
@@ -130,5 +139,97 @@ describe('TransactionsPage draft badge', () => {
 
         await screen.findByText('Weekly shop')
         expect(screen.queryByText('Draft')).not.toBeInTheDocument()
+    })
+})
+
+describe('TransactionsPage add/edit modal', () => {
+    beforeEach(() => {
+        transactionsApi.listTransactions.mockResolvedValue([sampleTransaction])
+        transactionsApi.createTransaction.mockResolvedValue({ ...sampleTransaction, id: 99 })
+        categoriesApi.listCategories.mockResolvedValue([
+            { id: 1, name: 'Groceries' },
+            { id: 2, name: 'Salary' },
+        ])
+    })
+
+    afterEach(() => {
+        vi.restoreAllMocks()
+    })
+
+    it('opens the Add form in a modal', async () => {
+        const user = userEvent.setup()
+        renderPage()
+
+        await screen.findByText('Weekly shop')
+        await user.click(screen.getByRole('button', { name: 'Add transaction' }))
+
+        expect(screen.getByRole('spinbutton')).toBeInTheDocument()
+    })
+
+    it('closes silently on outside click when the form is untouched', async () => {
+        const user = userEvent.setup()
+        const { container } = renderPage()
+
+        await screen.findByText('Weekly shop')
+        await user.click(screen.getByRole('button', { name: 'Add transaction' }))
+
+        await user.click(getBackdrop(container))
+
+        expect(screen.queryByText('Discard unsaved changes?')).not.toBeInTheDocument()
+        expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument()
+    })
+
+    it('shows a discard-confirmation on outside click when dirty, and keeps the form open on Cancel', async () => {
+        const user = userEvent.setup()
+        const { container } = renderPage()
+
+        await screen.findByText('Weekly shop')
+        await user.click(screen.getByRole('button', { name: 'Add transaction' }))
+        await user.type(screen.getByRole('textbox'), 'concert tickets')
+
+        await user.click(getBackdrop(container))
+        expect(screen.getByText('Discard unsaved changes?')).toBeInTheDocument()
+
+        const dialog = screen.getByText('Discard unsaved changes?').closest('div')
+        await user.click(within(dialog).getByRole('button', { name: 'Cancel' }))
+
+        expect(screen.queryByText('Discard unsaved changes?')).not.toBeInTheDocument()
+        expect(screen.getByRole('textbox')).toHaveValue('concert tickets')
+    })
+
+    it('closes the form and discards the value when discard is confirmed', async () => {
+        const user = userEvent.setup()
+        const { container } = renderPage()
+
+        await screen.findByText('Weekly shop')
+        await user.click(screen.getByRole('button', { name: 'Add transaction' }))
+        await user.type(screen.getByRole('textbox'), 'concert tickets')
+
+        await user.click(getBackdrop(container))
+        const dialog = screen.getByText('Discard unsaved changes?').closest('div')
+        await user.click(within(dialog).getByRole('button', { name: 'Discard' }))
+
+        expect(screen.queryByText('Discard unsaved changes?')).not.toBeInTheDocument()
+        expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument()
+    })
+
+    it('submits a new transaction and closes the modal on success', async () => {
+        const user = userEvent.setup()
+        renderPage()
+
+        await screen.findByText('Weekly shop')
+        await user.click(screen.getByRole('button', { name: 'Add transaction' }))
+
+        const amountInput = screen.getByRole('spinbutton')
+        await user.clear(amountInput)
+        await user.type(amountInput, '15')
+        await user.selectOptions(screen.getByRole('combobox'), '2')
+        await user.click(screen.getByRole('button', { name: 'Add transaction' }))
+
+        await waitFor(() => expect(transactionsApi.createTransaction).toHaveBeenCalled())
+        expect(transactionsApi.createTransaction.mock.calls[0][0]).toEqual(
+            expect.objectContaining({ amount: 15, categoryId: 2 })
+        )
+        expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument()
     })
 })
