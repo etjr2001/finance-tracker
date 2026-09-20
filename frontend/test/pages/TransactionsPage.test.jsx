@@ -106,3 +106,29 @@ describe('TransactionsPage delete confirmation', () => {
         await waitFor(() => expect(firstDelete).toBeEnabled())
     })
 })
+
+describe('TransactionsPage draft badge', () => {
+    afterEach(() => {
+        vi.restoreAllMocks()
+    })
+
+    it('shows a Draft badge for a $0 transaction', async () => {
+        transactionsApi.listTransactions.mockResolvedValue([
+            { ...sampleTransaction, amount: 0 },
+        ])
+        categoriesApi.listCategories.mockResolvedValue([{ id: 1, name: 'Groceries' }])
+        renderPage()
+
+        await screen.findByText('Weekly shop')
+        expect(screen.getByText('Draft')).toBeInTheDocument()
+    })
+
+    it('does not show a Draft badge for a non-zero transaction', async () => {
+        transactionsApi.listTransactions.mockResolvedValue([sampleTransaction])
+        categoriesApi.listCategories.mockResolvedValue([{ id: 1, name: 'Groceries' }])
+        renderPage()
+
+        await screen.findByText('Weekly shop')
+        expect(screen.queryByText('Draft')).not.toBeInTheDocument()
+    })
+})

@@ -112,7 +112,14 @@ export default function TransactionsPage() {
                         <div className="flex items-baseline gap-4 min-w-0">
                             <span className="text-sm text-ink-soft tabular w-24 shrink-0">{t.date}</span>
                             <div className="min-w-0">
-                                <div className="truncate">{t.category?.name ?? 'Unknown category'}</div>
+                                <div className="truncate flex items-center gap-2">
+                                    <span>{t.category?.name ?? 'Unknown category'}</span>
+                                    {Number(t.amount) === 0 && (
+                                        <span className="text-xs font-medium text-brass bg-brass/10 border border-brass/30 rounded-full px-2 py-0.5 shrink-0">
+                                            Draft
+                                        </span>
+                                    )}
+                                </div>
                                 {t.note && <div className="text-sm text-ink-soft truncate">{t.note}</div>}
                             </div>
                         </div>

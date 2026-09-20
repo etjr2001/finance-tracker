@@ -4,7 +4,7 @@ const today = () => new Date().toISOString().slice(0, 10)
 
 const emptyForm = {
     type: 'EXPENSE',
-    amount: '',
+    amount: '0',
     date: today(),
     note: '',
     categoryId: '',
@@ -84,6 +84,10 @@ export default function TransactionForm({ categories, initial, onSubmit, onCance
                     className={inputClass}
                 />
             </div>
+
+            {form.amount !== '' && Number(form.amount) === 0 && (
+                <p className="col-span-2 -mt-1.5 text-xs text-ink-soft">Will show as a Draft (0 amount)</p>
+            )}
 
             <div>
                 <label className="block text-sm text-ink-soft mb-1">Category</label>

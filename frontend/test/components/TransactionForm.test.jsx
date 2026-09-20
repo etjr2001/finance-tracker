@@ -39,3 +39,52 @@ describe('TransactionForm date picker', () => {
         await expect(user.click(dateInput)).resolves.not.toThrow()
     })
 })
+
+describe('TransactionForm draft hint', () => {
+    it('shows the Draft hint by default for a new transaction (defaults to $0)', () => {
+        render(<TransactionForm categories={categories} onSubmit={() => {}} />)
+        expect(screen.getByText('Will show as a Draft (0 amount)')).toBeInTheDocument()
+    })
+
+    it('shows no hint when editing an existing non-zero transaction', () => {
+        const initial = {
+            id: 1,
+            type: 'EXPENSE',
+            amount: 12.5,
+            date: '2026-09-01',
+            note: '',
+            category: { id: 1, name: 'Groceries' },
+        }
+        render(<TransactionForm categories={categories} initial={initial} onSubmit={() => {}} />)
+        expect(screen.queryByText(/Will show as a Draft/)).not.toBeInTheDocument()
+    })
+
+    it('hides the Draft hint once a non-zero amount is entered', async () => {
+        const user = userEvent.setup()
+        const { container } = render(
+            <TransactionForm categories={categories} onSubmit={() => {}} />
+        )
+
+        expect(screen.getByText('Will show as a Draft (0 amount)')).toBeInTheDocument()
+
+        const amountInput = container.querySelector('input[type="number"]')
+        await user.type(amountInput, '.01')
+
+        expect(screen.queryByText(/Will show as a Draft/)).not.toBeInTheDocument()
+    })
+
+    it('shows the Draft hint again if the amount is cleared back to 0', async () => {
+        const user = userEvent.setup()
+        const { container } = render(
+            <TransactionForm categories={categories} onSubmit={() => {}} />
+        )
+
+        const amountInput = container.querySelector('input[type="number"]')
+        await user.type(amountInput, '.01')
+        expect(screen.queryByText(/Will show as a Draft/)).not.toBeInTheDocument()
+
+        await user.clear(amountInput)
+        await user.type(amountInput, '0')
+        expect(screen.getByText('Will show as a Draft (0 amount)')).toBeInTheDocument()
+    })
+})
