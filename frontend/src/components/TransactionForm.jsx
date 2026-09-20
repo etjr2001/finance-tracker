@@ -65,7 +65,7 @@ export default function TransactionForm({ categories, initial, onSubmit, onCance
                 <input
                     type="number"
                     step="0.01"
-                    min="0.01"
+                    min="0"
                     required
                     value={form.amount}
                     onChange={(e) => update('amount', e.target.value)}
@@ -80,6 +80,7 @@ export default function TransactionForm({ categories, initial, onSubmit, onCance
                     required
                     value={form.date}
                     onChange={(e) => update('date', e.target.value)}
+                    onClick={(e) => e.target.showPicker?.()}
                     className={inputClass}
                 />
             </div>

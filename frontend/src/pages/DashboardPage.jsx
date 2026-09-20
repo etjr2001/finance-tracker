@@ -4,7 +4,6 @@ import Money from '../components/Money'
 import { formatMoney } from '../lib/money'
 import { currentMonth } from '../lib/date'
 
-
 export default function DashboardPage() {
     const [month, setMonth] = useState(currentMonth())
     const { data, isLoading, isError } = useDashboard(month)
@@ -22,6 +21,7 @@ export default function DashboardPage() {
                     type="month"
                     value={month}
                     onChange={(e) => setMonth(e.target.value)}
+                    onClick={(e) => e.target.showPicker?.()}
                     className="border border-rule bg-white px-3 py-1.5 rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-ink"
                 />
             </div>
