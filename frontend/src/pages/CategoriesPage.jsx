@@ -31,6 +31,7 @@ export default function CategoriesPage() {
     }
 
     function startEdit(category) {
+        setError(null)
         setEditingId(category.id)
         setEditingName(category.name)
     }

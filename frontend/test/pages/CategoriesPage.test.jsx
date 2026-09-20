@@ -89,3 +89,39 @@ describe('CategoriesPage delete confirmation', () => {
         await waitFor(() => expect(groceriesDelete).toBeEnabled())
     })
 })
+
+describe('CategoriesPage stale edit-error', () => {
+    beforeEach(() => {
+        categoriesApi.listCategories.mockResolvedValue([
+            { id: 1, name: 'Groceries' },
+            { id: 2, name: 'Salary' },
+        ])
+    })
+
+    afterEach(() => {
+        vi.restoreAllMocks()
+    })
+
+    it('clears a failed-edit error when starting a new edit', async () => {
+        categoriesApi.updateCategory.mockRejectedValueOnce(new Error('boom'))
+        const user = userEvent.setup()
+        renderPage()
+
+        await screen.findByText('Groceries')
+        await user.click(screen.getAllByRole('button', { name: 'Edit' })[0])
+
+        const nameInput = screen.getByDisplayValue('Groceries')
+        await user.clear(nameInput)
+        await user.type(nameInput, 'Food')
+        await user.click(screen.getByRole('button', { name: 'Save' }))
+
+        await screen.findByText('boom')
+
+        // Cancel out of the failed edit, then start editing the other category —
+        // the old error shouldn't still be showing.
+        await user.click(screen.getByRole('button', { name: 'Cancel' }))
+        await user.click(screen.getAllByRole('button', { name: 'Edit' })[1])
+
+        expect(screen.queryByText('boom')).not.toBeInTheDocument()
+    })
+})
