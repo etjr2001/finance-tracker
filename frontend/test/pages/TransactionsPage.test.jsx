@@ -232,4 +232,26 @@ describe('TransactionsPage add/edit modal', () => {
         )
         expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument()
     })
+
+    it('stacks the add-category modal over the transaction modal, and an outside click closes only the inner one', async () => {
+        const user = userEvent.setup()
+        renderPage()
+
+        await screen.findByText('Weekly shop')
+        await user.click(screen.getByRole('button', { name: 'Add transaction' }))
+        await user.selectOptions(screen.getByRole('combobox'), '__new__')
+
+        expect(screen.getByText('New category name')).toBeInTheDocument()
+
+        // Two Modal backdrops are now stacked; the category modal's is the
+        // one rendered last (it's nested inside TransactionForm, which is
+        // itself inside the transaction Modal), so it's last in DOM order.
+        const backdrops = document.querySelectorAll('.fixed.inset-0')
+        expect(backdrops).toHaveLength(2)
+        await user.click(backdrops[backdrops.length - 1])
+
+        // The category modal closed, but the transaction form is still open.
+        expect(screen.queryByText('New category name')).not.toBeInTheDocument()
+        expect(screen.getByRole('spinbutton')).toBeInTheDocument()
+    })
 })
