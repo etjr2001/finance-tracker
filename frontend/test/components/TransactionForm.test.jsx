@@ -220,6 +220,53 @@ describe('TransactionForm submission', () => {
     })
 })
 
+describe('TransactionForm amount input', () => {
+    afterEach(() => {
+        vi.restoreAllMocks()
+    })
+
+    it('selects the existing value when the amount field is focused', () => {
+        const select = vi.spyOn(HTMLInputElement.prototype, 'select')
+        renderForm()
+
+        fireEvent.focus(screen.getByRole('spinbutton'))
+
+        expect(select).toHaveBeenCalledTimes(1)
+    })
+
+    it('greys out the amount text while it is 0', () => {
+        renderForm()
+        expect(screen.getByRole('spinbutton')).toHaveClass('text-ink-soft')
+    })
+
+    it('uses normal text color once a non-zero amount is entered', async () => {
+        const { container } = renderForm()
+        const amountInput = container.querySelector('input[type="number"]')
+
+        await userEvent.setup().type(amountInput, '.01')
+
+        expect(amountInput).not.toHaveClass('text-ink-soft')
+    })
+})
+
+describe('TransactionForm field limits', () => {
+    it('caps the amount field to fit the numeric(12,2) column', () => {
+        renderForm()
+        expect(screen.getByRole('spinbutton')).toHaveAttribute('max', '9999999999.99')
+    })
+
+    it('caps the note field length', () => {
+        renderForm()
+        expect(screen.getByRole('textbox')).toHaveAttribute('maxLength', '256')
+    })
+
+    it('caps the new-category name field length', () => {
+        renderForm()
+        fireEvent.change(screen.getByRole('combobox'), { target: { value: '__new__' } })
+        expect(screen.getByPlaceholderText('Category name')).toHaveAttribute('maxLength', '50')
+    })
+})
+
 describe('TransactionForm category sorting', () => {
     it('lists categories alphabetically regardless of prop order', () => {
         renderForm({

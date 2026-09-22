@@ -95,6 +95,31 @@ describe('CategoriesPage delete confirmation', () => {
     })
 })
 
+describe('CategoriesPage field limits', () => {
+    beforeEach(() => {
+        categoriesApi.listCategories.mockResolvedValue([{ id: 1, name: 'Groceries' }])
+    })
+
+    afterEach(() => {
+        vi.restoreAllMocks()
+    })
+
+    it('caps the new-category name field length', () => {
+        renderPage()
+        expect(screen.getByPlaceholderText('New category name')).toHaveAttribute('maxLength', '50')
+    })
+
+    it('caps the rename field length', async () => {
+        const user = userEvent.setup()
+        renderPage()
+
+        await screen.findByText('Groceries')
+        await user.click(screen.getByRole('button', { name: 'Edit' }))
+
+        expect(screen.getByDisplayValue('Groceries')).toHaveAttribute('maxLength', '50')
+    })
+})
+
 describe('CategoriesPage stale edit-error', () => {
     beforeEach(() => {
         categoriesApi.listCategories.mockResolvedValue([

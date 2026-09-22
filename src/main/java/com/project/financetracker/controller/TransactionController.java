@@ -6,7 +6,9 @@ import com.project.financetracker.security.CurrentUserService;
 import com.project.financetracker.service.TransactionService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -54,11 +56,13 @@ public class TransactionController {
         return ResponseEntity.noContent().build();
     }
 
+    public static final int MAX_NOTE_LENGTH = 256;
+
     public record TransactionRequest(
             @NotNull Transaction.Type type,
-            @NotNull @DecimalMin(value = "0") BigDecimal amount,
+            @NotNull @DecimalMin(value = "0") @Digits(integer = 10, fraction = 2) BigDecimal amount,
             @NotNull LocalDate date,
-            String note,
+            @Size(max = MAX_NOTE_LENGTH) String note,
             @NotNull Long categoryId
     ) {}
 }

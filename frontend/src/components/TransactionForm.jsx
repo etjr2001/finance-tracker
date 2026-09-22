@@ -148,10 +148,12 @@ export default function TransactionForm({ categories, initial, onSubmit, onCance
                         type="number"
                         step="0.01"
                         min="0"
+                        max="9999999999.99"
                         required
                         value={form.amount}
                         onChange={(e) => update('amount', e.target.value)}
-                        className={inputClass}
+                        onFocus={(e) => e.target.select()}
+                        className={`${inputClass} ${Number(form.amount) === 0 ? 'text-ink-soft' : ''}`}
                     />
                 </div>
 
@@ -202,6 +204,7 @@ export default function TransactionForm({ categories, initial, onSubmit, onCance
                     <label className="block text-sm text-ink-soft mb-1">Note (optional)</label>
                     <input
                         type="text"
+                        maxLength={256}
                         value={form.note}
                         onChange={(e) => update('note', e.target.value)}
                         className={inputClass}
@@ -230,6 +233,7 @@ export default function TransactionForm({ categories, initial, onSubmit, onCance
                     <input
                         autoFocus
                         type="text"
+                        maxLength={50}
                         value={newCategoryName}
                         onChange={(e) => setNewCategoryName(e.target.value)}
                         onKeyDown={(e) => {
