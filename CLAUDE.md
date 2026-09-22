@@ -11,6 +11,7 @@ A personal finance tracker. Spring Boot (Java 25, Maven) serves a REST API under
 | `docs/adr/README.md` | Before changing auth, data, deployment, branching, testing, or anything that might contradict a past decision. It's a one-line index; open only the ADRs that apply. |
 | `docs/backlog.md` | Picking up new work, or when a change touches a known debt item. |
 | `docs/sprints/` | You need the history of why something was built the way it was. |
+| `docs/commit-message-format.md` | Writing any commit message. |
 
 ## Working rules
 - Use `CONTEXT.md` terms exactly. If a request uses a term that conflicts with it, stop and ask which is meant.
