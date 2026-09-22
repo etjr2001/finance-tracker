@@ -5,7 +5,6 @@ Living document. Not an ADR: this tracks *what's outstanding*, not *decisions ma
 ## Tech debt
 
 - **No backend test suite (pre-ADR0007).** The boilerplate smoke test was deleted in sprint 1, and nothing has replaced it yet. This is being addressed going forward per ADR0007 (tests land alongside whatever code is next touched), not backfilled all at once.
-- **#4 changed `GlobalExceptionHandler` without a test.** This slipped past ADR0007. The next change to that file should bring a unit test covering the handlers it touches, with no Spring context needed.
 - **Category uniqueness is case-sensitive in the backend.** `CONTEXT.md` says names are unique per User ignoring case, and inline create in `TransactionForm` follows that. But the `(user_id, name)` unique constraint and `existsByUserIdAndName` are case-sensitive, so the Categories page can create "groceries" next to "Groceries". The planned fix, with tests per ADR0007:
   - Use `existsByUserIdAndNameIgnoreCase` in `CategoryService`, for both create and rename.
   - A Flyway `V2__…` migration that replaces the existing unique constraint with a unique index on `(user_id, upper(name))`. The index uses `upper` because Spring Data's `IgnoreCase` generates `upper(name) = upper(?)`, and Postgres only uses a function index when the query calls the same function.
@@ -22,18 +21,6 @@ Living document. Not an ADR: this tracks *what's outstanding*, not *decisions ma
 - **Payment Method.** Explicitly deferred to v2 per `CONTEXT.md`. Not a candidate for any near-term sprint; it's a genuinely separate domain concept, not a bug or polish item.
 - **Installable PWA (manifest + service worker, offline support).** Out of scope for the pre-Sprint-3 hardening batch below, which only adds a minimal manifest to fix iOS storage persistence. A real installable PWA is a separate feature, not a bug fix.
 
-## Pre-Sprint-3 hardening
-
-Not a numbered sprint — a batch of bug fixes and tech debt cleanup found ahead of Sprint 3, shipped as independent branches so each can be reviewed and merged on its own:
-
-- **Request validation gaps.** `TransactionRequest`/`CategoryRequest` already validate presence and non-negative amount, but `amount` has no upper bound (the `numeric(12,2)` column can overflow and currently leaks a raw DB error — see next item), and `note`/category `name` have no length cap, frontend or backend. Fix: cap `amount` to fit `numeric(12,2)` (±9,999,999,999.99), cap `note` to 256 chars and `name` to 50, matched on both frontend and backend. `date` stays unbounded — no domain reason to restrict it yet.
-  - DB-level `CHECK` constraints (`V2__note_and_name_length_checks.sql`) were added `NOT VALID` so the migration can't fail on existing over-length rows — they're enforced for new writes immediately but existing data is grandfathered in.
-  - **Open:** check prod for existing `note`/`name` values over the new limits, decide how to shorten them, then run `ALTER TABLE ... VALIDATE CONSTRAINT ...` to close the gap. Same open item as the category case-insensitivity fix below — worth doing both checks in the same pass.
-- **Raw DB error leaked to the frontend.** `GlobalExceptionHandler.handleDataIntegrityViolation` returns `ex.getMessage()` directly — raw Postgres/Hibernate text (e.g. constraint names) reaching the client. Every other handler already returns a hand-written, safe message. Fix: generic message for this one handler; log the real exception server-side (see next item). Bundled with the logging fix since it's the same file/methods.
-- **No logging anywhere in the backend.** No `Logger`/SLF4J usage exists despite Spring Boot bundling it for free. Fix: every handler in `GlobalExceptionHandler` logs the exception before responding, stdout only (Railway captures it). Auth-event/request logging is a possible future item, not part of this fix.
-- **Date input wider than other fields in `TransactionForm`.** Cosmetic only — the native calendar-icon chrome inside `type="date"` makes it look wider than the amount field despite sharing the same class. CSS-only fix, no test needed (not a logic change per ADR0007).
-- **JWT lost on every iOS home-screen relaunch.** Not a Supabase config issue — iOS home-screen bookmarks added without a Web App Manifest don't reliably persist `localStorage` across relaunches. Fix: minimal `manifest.json` (name, icons, `display: standalone`, `start_url`) plus `apple-touch-icon`/`apple-mobile-web-app-capable` meta tags. No service worker, no offline support — this is scoped purely to fix storage persistence, not to make the app an installable PWA (see backlog item above).
-
 ## Sprint history
 
 ### Sprint 1: complete
@@ -41,6 +28,15 @@ See `docs/sprints/sprint-1-review.md`.
 
 ### Sprint 2: complete
 Branch 1 quick fixes (#2), Branch 2 transaction modal and dirty-check (#3), and the Category dropdown sort and inline create (#4). See `docs/sprints/sprint-2-review.md`.
+
+### Pre-Sprint-3 hardening: complete
+Not a numbered sprint — a batch of bug fixes and tech debt cleanup found ahead of Sprint 3, shipped as independent branches:
+
+- **Request validation gaps (#6).** `amount` capped to fit `numeric(12,2)` (±9,999,999,999.99), `note` capped to 256 chars, category `name` to 50 — matched on frontend and backend. DB-level `CHECK` constraints added `NOT VALID` (`V2__note_and_name_length_checks.sql`) so the migration couldn't fail on existing over-length rows.
+  - **Still open:** check prod for existing `note`/`name` values over the new limits, decide how to shorten them, then run `ALTER TABLE ... VALIDATE CONSTRAINT ...` to close the gap. Same open item as the category case-insensitivity fix above — worth doing both checks in the same pass.
+- **Raw DB error leaked to the frontend + no backend logging (#7).** `GlobalExceptionHandler.handleDataIntegrityViolation` no longer returns `ex.getMessage()` (raw Postgres/Hibernate text) to the client — generic message instead, real exception logged server-side. Every handler now logs via SLF4J, where previously none did, including the catch-all. Added `GlobalExceptionHandlerTest` covering every handler, closing the tech-debt item from #4 where this file was changed without a test.
+- **Date input rendering wider/taller than other fields on iOS Safari (#8, #9).** Root cause was iOS's native `<input type="date">` rendering, not generic browser chrome — confirmed only reproducible on real Safari, not Chrome's mobile device emulation (which still renders form controls with Blink, not WebKit). First attempt (`min-w-0`/`h-10`) didn't fix it; the working fix was `appearance-none`/`-webkit-appearance:none` on the date input, same technique already used for the Category select.
+- **JWT lost on every iOS home-screen relaunch (#10).** Not a Supabase config issue — iOS home-screen bookmarks added without a Web App Manifest don't reliably persist `localStorage` across relaunches. Added a minimal `manifest.json` (name, icons, `display: standalone`, `start_url`) plus `apple-touch-icon`/`apple-mobile-web-app-capable` meta tags. No service worker, no offline support — scoped purely to fix storage persistence, not to make the app an installable PWA (see backlog item above). Also replaced `favicon.svg` (previously a generic purple/blue mark that didn't match the app's palette) with a design in the app's actual colors, and fixed `index.html`'s `<title>` (was the default Vite placeholder).
 
 ### Sprint 3: planned, not started
 The rough order was chosen for dependency reasons (Category color feeds the chart) and to bundle work that touches the same files:
