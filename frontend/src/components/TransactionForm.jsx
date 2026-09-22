@@ -4,6 +4,7 @@ import { apiErrorMessage } from '../api/client'
 import Modal from './Modal'
 
 const NEW_CATEGORY_VALUE = '__new__'
+const MAX_AMOUNT = 9999999999.99
 
 const today = () => new Date().toISOString().slice(0, 10)
 
@@ -41,6 +42,7 @@ function isDirty(form, initial) {
 export default function TransactionForm({ categories, initial, onSubmit, onCancel, submitting, onDirtyChange }) {
     const initialShape = useRef(initial ? toFormShape(initial) : emptyForm)
     const [form, setForm] = useState(initialShape.current)
+    const [amountAtMax, setAmountAtMax] = useState(false)
 
     const [addingCategory, setAddingCategory] = useState(false)
     const [newCategoryName, setNewCategoryName] = useState('')
@@ -67,6 +69,21 @@ export default function TransactionForm({ categories, initial, onSubmit, onCance
 
     function update(field, value) {
         setForm((f) => ({ ...f, [field]: value }))
+    }
+
+    // Blocks keystrokes that would push the amount past what numeric(12,2)
+    // can hold, rather than only warning on submit — but silently blocking
+    // input with no feedback reads as broken, especially on mobile where the
+    // field may be scrolled off-screen behind the keyboard, so amountAtMax
+    // drives a visible hint instead.
+    function handleAmountChange(e) {
+        const value = e.target.value
+        if (value !== '' && Number(value) > MAX_AMOUNT) {
+            setAmountAtMax(true)
+            return
+        }
+        setAmountAtMax(false)
+        update('amount', value)
     }
 
     function handleCategorySelectChange(e) {
@@ -122,13 +139,15 @@ export default function TransactionForm({ categories, initial, onSubmit, onCance
         })
     }
 
+    // text-base (16px), not text-sm: iOS Safari auto-zooms the viewport on
+    // focus for any input under 16px, and doesn't reliably zoom back out.
     const inputClass =
-        'w-full border border-rule bg-white px-3 py-2 rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-ink'
+        'w-full border border-rule bg-white px-3 py-2 rounded-sm text-base focus:outline-none focus:ring-1 focus:ring-ink'
 
     return (
         <>
-            <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-3">
-                <div className="col-span-2 flex gap-4">
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="md:col-span-2 flex gap-4">
                     {['EXPENSE', 'INCOME'].map((type) => (
                         <label key={type} className="flex items-center gap-1.5 text-sm">
                             <input
@@ -148,13 +167,16 @@ export default function TransactionForm({ categories, initial, onSubmit, onCance
                         type="number"
                         step="0.01"
                         min="0"
-                        max="9999999999.99"
+                        max={MAX_AMOUNT}
                         required
                         value={form.amount}
-                        onChange={(e) => update('amount', e.target.value)}
+                        onChange={handleAmountChange}
                         onFocus={(e) => e.target.select()}
                         className={`${inputClass} ${Number(form.amount) === 0 ? 'text-ink-soft' : ''}`}
                     />
+                    {amountAtMax && (
+                        <p className="mt-1 text-xs text-withdrawal">Max amount is 9,999,999,999.99</p>
+                    )}
                 </div>
 
                 <div>
@@ -170,7 +192,7 @@ export default function TransactionForm({ categories, initial, onSubmit, onCance
                 </div>
 
                 {form.amount !== '' && Number(form.amount) === 0 && (
-                    <p className="col-span-2 -mt-1.5 text-xs text-ink-soft">Will show as a Draft (0 amount)</p>
+                    <p className="md:col-span-2 -mt-1.5 text-xs text-ink-soft">Will show as a Draft (0 amount)</p>
                 )}
 
                 <div>
@@ -211,7 +233,7 @@ export default function TransactionForm({ categories, initial, onSubmit, onCance
                     />
                 </div>
 
-                <div className="col-span-2 flex gap-4 pt-1">
+                <div className="md:col-span-2 flex gap-4 pt-1">
                     <button
                         type="submit"
                         disabled={submitting}

@@ -64,8 +64,10 @@ export default function CategoriesPage() {
         }
     }
 
+    // text-base (16px), not text-sm: iOS Safari auto-zooms the viewport on
+    // focus for any input under 16px, and doesn't reliably zoom back out.
     const inputClass =
-        'border border-rule bg-white px-3 py-2 rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-ink'
+        'border border-rule bg-white px-3 py-2 rounded-sm text-base focus:outline-none focus:ring-1 focus:ring-ink'
 
     return (
         <div>
