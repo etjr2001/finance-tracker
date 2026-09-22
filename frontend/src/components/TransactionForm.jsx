@@ -123,7 +123,7 @@ export default function TransactionForm({ categories, initial, onSubmit, onCance
     }
 
     const inputClass =
-        'w-full border border-rule bg-white px-3 py-2 rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-ink'
+        'w-full min-w-0 h-10 border border-rule bg-white px-3 py-2 rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-ink'
 
     return (
         <>

@@ -15,6 +15,7 @@ A personal finance tracker. Spring Boot (Java 25, Maven) serves a REST API under
 
 ## Working rules
 - Use `CONTEXT.md` terms exactly. If a request uses a term that conflicts with it, stop and ask which is meant.
+- The frontend must stay responsive for both desktop web and mobile web — check any CSS/layout change against mobile viewport widths too, not just desktop. There's no installed PWA yet, so "mobile" means responsive mobile browser, not a native/installed app shell.
 - Branches: short-lived `<type>/<short-description>` cut from `main` (ADR0006). `main` is always deployable: every merge redeploys prod.
 - Any substantive logic change (new behavior, bug fix, validation) comes with tests in the same change (ADR0007). Backend: JUnit 5 + Mockito. Frontend: Vitest + React Testing Library in `frontend/test/`.
 - Backend tests must not need a live Supabase connection. See `src/test/java/com/project/financetracker/README.md`.
