@@ -6,6 +6,7 @@ import com.project.financetracker.security.CurrentUserService;
 import com.project.financetracker.service.CategoryService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -47,5 +48,7 @@ public class CategoryController {
         return ResponseEntity.noContent().build();
     }
 
-    public record CategoryRequest(@NotBlank String name) {}
+    public static final int MAX_NAME_LENGTH = 50;
+
+    public record CategoryRequest(@NotBlank @Size(max = MAX_NAME_LENGTH) String name) {}
 }

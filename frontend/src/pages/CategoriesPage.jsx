@@ -75,6 +75,7 @@ export default function CategoriesPage() {
                 <input
                     type="text"
                     placeholder="New category name"
+                    maxLength={50}
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
                     className={`flex-1 ${inputClass}`}
@@ -103,6 +104,7 @@ export default function CategoriesPage() {
                             <>
                                 <input
                                     autoFocus
+                                    maxLength={50}
                                     value={editingName}
                                     onChange={(e) => setEditingName(e.target.value)}
                                     className={`flex-1 ${inputClass}`}
