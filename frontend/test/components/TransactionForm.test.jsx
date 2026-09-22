@@ -249,6 +249,48 @@ describe('TransactionForm amount input', () => {
     })
 })
 
+describe('TransactionForm amount max cue', () => {
+    const hintText = 'Max amount is 9,999,999,999.99'
+
+    it('does not show the max hint by default', () => {
+        renderForm()
+        expect(screen.queryByText(hintText)).not.toBeInTheDocument()
+    })
+
+    it('blocks an amount that would exceed the numeric(12,2) column and shows a hint', () => {
+        renderForm()
+        const amountInput = screen.getByRole('spinbutton')
+
+        fireEvent.change(amountInput, { target: { value: '99999999999.99' } })
+
+        expect(amountInput).toHaveValue(0)
+        expect(screen.getByText(hintText)).toBeInTheDocument()
+    })
+
+    it('allows an amount exactly at the max', () => {
+        renderForm()
+        const amountInput = screen.getByRole('spinbutton')
+
+        fireEvent.change(amountInput, { target: { value: '9999999999.99' } })
+
+        expect(amountInput).toHaveValue(9999999999.99)
+        expect(screen.queryByText(hintText)).not.toBeInTheDocument()
+    })
+
+    it('clears the hint once a valid amount is entered', () => {
+        renderForm()
+        const amountInput = screen.getByRole('spinbutton')
+
+        fireEvent.change(amountInput, { target: { value: '99999999999.99' } })
+        expect(screen.getByText(hintText)).toBeInTheDocument()
+
+        fireEvent.change(amountInput, { target: { value: '42.5' } })
+
+        expect(screen.queryByText(hintText)).not.toBeInTheDocument()
+        expect(amountInput).toHaveValue(42.5)
+    })
+})
+
 describe('TransactionForm field limits', () => {
     it('caps the amount field to fit the numeric(12,2) column', () => {
         renderForm()
