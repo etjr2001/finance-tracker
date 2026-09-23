@@ -9,7 +9,10 @@ export default function ProtectedRoute() {
     }
 
     if (!isAuthenticated) {
-        return <Navigate to="/login" replace />
+        // /demo is the default landing page for logged-out visitors (ADR0009)
+        // — a recruiter or interviewer should hit a working app, not a
+        // signup wall.
+        return <Navigate to="/demo" replace />
     }
     return <Outlet />
 }

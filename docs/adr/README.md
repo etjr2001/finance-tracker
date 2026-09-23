@@ -12,3 +12,4 @@ One line per ADR: read the file only when the task touches its area. When an ADR
 | [0006](0006-trunk-based-branching-with-short-lived-feature-branches.md) Trunk-based branching | Accepted | Creating branches or proposing commits |
 | [0007](0007-write-tests-for-code-touched-going-forward.md) Write tests for code touched going forward | Accepted | Any substantive code change (almost always) |
 | [0008](0008-allow-zero-amount-draft-transactions.md) Allow zero-amount Draft transactions | Accepted | Touching Transaction amount validation, Drafts, or the Dashboard |
+| [0009](0009-frontend-only-demo-mode.md) Frontend-only demo mode | Accepted | Touching `/demo`, `frontend/src/demo/`, or any hook that branches on demo mode |

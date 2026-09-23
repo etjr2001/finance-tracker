@@ -291,6 +291,48 @@ describe('TransactionForm amount max cue', () => {
     })
 })
 
+describe('TransactionForm amount decimal-place cue', () => {
+    const hintText = 'Only 2 decimal places allowed'
+
+    it('does not show the decimal-place hint by default', () => {
+        renderForm()
+        expect(screen.queryByText(hintText)).not.toBeInTheDocument()
+    })
+
+    it('blocks a 3rd decimal digit and shows a hint', () => {
+        renderForm()
+        const amountInput = screen.getByRole('spinbutton')
+
+        fireEvent.change(amountInput, { target: { value: '12.345' } })
+
+        expect(amountInput).toHaveValue(0)
+        expect(screen.getByText(hintText)).toBeInTheDocument()
+    })
+
+    it('allows exactly 2 decimal digits', () => {
+        renderForm()
+        const amountInput = screen.getByRole('spinbutton')
+
+        fireEvent.change(amountInput, { target: { value: '12.34' } })
+
+        expect(amountInput).toHaveValue(12.34)
+        expect(screen.queryByText(hintText)).not.toBeInTheDocument()
+    })
+
+    it('clears the hint once corrected to a valid amount', () => {
+        renderForm()
+        const amountInput = screen.getByRole('spinbutton')
+
+        fireEvent.change(amountInput, { target: { value: '12.345' } })
+        expect(screen.getByText(hintText)).toBeInTheDocument()
+
+        fireEvent.change(amountInput, { target: { value: '12.34' } })
+
+        expect(screen.queryByText(hintText)).not.toBeInTheDocument()
+        expect(amountInput).toHaveValue(12.34)
+    })
+})
+
 describe('TransactionForm field limits', () => {
     it('caps the amount field to fit the numeric(12,2) column', () => {
         renderForm()

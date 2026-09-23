@@ -78,6 +78,11 @@ export default function LoginPage() {
                         Sign up
                     </Link>
                 </p>
+                <p className="text-sm text-ink-soft mt-2">
+                    <Link to="/demo" className="text-ink underline underline-offset-2">
+                        Back to demo
+                    </Link>
+                </p>
             </div>
         </div>
     )
