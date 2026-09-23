@@ -43,6 +43,7 @@ export default function TransactionForm({ categories, initial, onSubmit, onCance
     const initialShape = useRef(initial ? toFormShape(initial) : emptyForm)
     const [form, setForm] = useState(initialShape.current)
     const [amountAtMax, setAmountAtMax] = useState(false)
+    const [amountTooManyDecimals, setAmountTooManyDecimals] = useState(false)
 
     const [addingCategory, setAddingCategory] = useState(false)
     const [newCategoryName, setNewCategoryName] = useState('')
@@ -72,12 +73,19 @@ export default function TransactionForm({ categories, initial, onSubmit, onCance
     }
 
     // Blocks keystrokes that would push the amount past what numeric(12,2)
-    // can hold, rather than only warning on submit — but silently blocking
-    // input with no feedback reads as broken, especially on mobile where the
-    // field may be scrolled off-screen behind the keyboard, so amountAtMax
-    // drives a visible hint instead.
+    // can hold, or past its 2-decimal-place scale, rather than only warning
+    // on submit — but silently blocking input with no feedback reads as
+    // broken, especially on mobile where the field may be scrolled
+    // off-screen behind the keyboard, so these drive a visible hint instead.
     function handleAmountChange(e) {
         const value = e.target.value
+        const decimalDigits = value.match(/\.(\d+)$/)?.[1]?.length ?? 0
+        if (decimalDigits > 2) {
+            setAmountTooManyDecimals(true)
+            return
+        }
+        setAmountTooManyDecimals(false)
+
         if (value !== '' && Number(value) > MAX_AMOUNT) {
             setAmountAtMax(true)
             return
@@ -176,6 +184,9 @@ export default function TransactionForm({ categories, initial, onSubmit, onCance
                     />
                     {amountAtMax && (
                         <p className="mt-1 text-xs text-withdrawal">Max amount is 9,999,999,999.99</p>
+                    )}
+                    {amountTooManyDecimals && (
+                        <p className="mt-1 text-xs text-withdrawal">Only 2 decimal places allowed</p>
                     )}
                 </div>
 
