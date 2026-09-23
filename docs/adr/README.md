@@ -13,3 +13,5 @@ One line per ADR: read the file only when the task touches its area. When an ADR
 | [0007](0007-write-tests-for-code-touched-going-forward.md) Write tests for code touched going forward | Accepted | Any substantive code change (almost always) |
 | [0008](0008-allow-zero-amount-draft-transactions.md) Allow zero-amount Draft transactions | Accepted | Touching Transaction amount validation, Drafts, or the Dashboard |
 | [0009](0009-frontend-only-demo-mode.md) Frontend-only demo mode | Accepted | Touching `/demo`, `frontend/src/demo/`, or any hook that branches on demo mode |
+| [0010](0010-passbook-visual-design-system.md) "Passbook" visual design system | Accepted | Touching styling, theme tokens in `index.css`, icons, layout/nav, or the Dashboard chart |
+| [0011](0011-global-month-scope-for-dashboard-and-transactions.md) Global month scope for the Dashboard and Transactions | Accepted | Touching the month picker, month filtering, `useSelectedMonth`, the Transactions list query, or pagination |

@@ -7,23 +7,47 @@ Living document. Not an ADR: this tracks *what's outstanding*, not *decisions ma
 - **No backend test suite (pre-ADR0007).** The boilerplate smoke test was deleted in sprint 1, and nothing has replaced it yet. This is being addressed going forward per ADR0007 (tests land alongside whatever code is next touched), not backfilled all at once.
 - **Category uniqueness is case-sensitive in the backend.** `CONTEXT.md` says names are unique per User ignoring case, and inline create in `TransactionForm` follows that. But the `(user_id, name)` unique constraint and `existsByUserIdAndName` are case-sensitive, so the Categories page can create "groceries" next to "Groceries". The planned fix, with tests per ADR0007:
   - Use `existsByUserIdAndNameIgnoreCase` in `CategoryService`, for both create and rename.
-  - A Flyway `V2__…` migration that replaces the existing unique constraint with a unique index on `(user_id, upper(name))`. The index uses `upper` because Spring Data's `IgnoreCase` generates `upper(name) = upper(?)`, and Postgres only uses a function index when the query calls the same function.
+  - A Flyway migration that replaces the existing unique constraint with a unique index on `(user_id, upper(name))`. The index uses `upper` because Spring Data's `IgnoreCase` generates `upper(name) = upper(?)`, and Postgres only uses a function index when the query calls the same function.
+    - **Migration number:** this was originally planned as `V2__…`, but `V2__note_and_name_length_checks.sql` (#6) already took V2. It will be V3 or later; the Category colour/icon columns (Sprint 3) also need a migration, so whichever lands first takes V3.
   - Replacing the index rather than adding one keeps the index count the same. With tens of Categories per User and rare inserts, the lookup cost is negligible.
   - **Open, and must happen first:** check prod for existing case-duplicates per User. The migration fails if any exist, so decide how to merge them (re-point their Transactions, then delete the duplicate).
   - *Considered and rejected:* storing only uppercase names. It gives the same speed but throws away the casing the User typed.
 - **Inconsistent DTO usage.** Some endpoints serialize entities directly; others use `Response` DTOs. This was never unified. Scoped into sprint 3, Bundle A.
-- **No pagination on `GET /api/transactions`.** Fine at current volume, but it will degrade as the transaction count grows. Scoped into sprint 3, Bundle A.
+- **No pagination on `GET /api/transactions`.** Much less urgent since ADR0011: the Transactions page now shows one month at a time. Scoped into sprint 3, Bundle A, as optional and deferrable.
+- **Inconsistent money formatting.** The Dashboard's Net renders a hyphen-minus (`-$957.50`) while the Transaction list uses U+2212 (`−$5.67`); demo shows `SGD 4,200.00` while a real account shows `$908.37`. ADR0010 standardises on U+2212 via `Money.jsx`. Fix in the revamp's `style/design-tokens` branch, and find out why the currency display differs between demo and real accounts.
 - **No custom domain/DNS.** The app is live on the default Railway URL. Explicitly non-blocking, parked indefinitely.
 
 ## Backlog (not yet scheduled into a sprint)
 
 - **Payment Method.** Explicitly deferred to v2 per `CONTEXT.md`. Not a candidate for any near-term sprint; it's a genuinely separate domain concept, not a bug or polish item.
 - **Installable PWA (manifest + service worker, offline support).** Out of scope for the pre-Sprint-3 hardening batch below, which only adds a minimal manifest to fix iOS storage persistence. A real installable PWA is a separate feature, not a bug fix.
-- **Transaction row: collapsed mobile row + detail view card.** On narrow viewports, `TransactionsPage.jsx`'s row crams date, category, Draft badge, note, amount, and inline Edit/Delete into one line with no responsive variant — the note truncates to near-illegible. Settled design (grilled — not yet built):
+- **Transaction row: collapsed mobile row + detail view card.** On narrow viewports, `TransactionsPage.jsx`'s row crams date, category, Draft badge, note, amount, and inline Edit/Delete into one line with no responsive variant — the note truncates to near-illegible. Settled design (grilled, then amended during revamp planning — not yet built):
   - Gate on viewport width (same `md:` breakpoint `TransactionForm.jsx` already uses for `grid-cols-1 md:grid-cols-2`), not platform/PWA detection — `manifest.json` already sets `display: standalone` for the home-screen launch, but it's the same responsive CSS either way.
-  - Below `md`: each row collapses to date + category + Draft badge only (no note preview — avoids reintroducing the same crowding one field earlier). Tapping the row opens a read-only detail card (`Modal.jsx`-based, mirroring `ConfirmDialog.jsx`'s shape) showing the full transaction — date, category, amount, type, untruncated note — with Edit and Delete buttons that close the card and hand off to the page's existing `openEdit`/`requestDelete` flows. No new mutation logic.
-  - At `md` and up (including desktop web): unchanged, current inline-row behavior.
-  - Suggested branch: `feat/transaction-detail-view`, cut from `main`.
+  - Transactions are grouped into day sections ("Today", "Yesterday", then e.g. "Tue 22 Sep"), each with its day total (ADR0010). This applies at every width.
+  - Below `md`: each row shows the Category icon tile, Category, a one-line truncated note preview (when there is a note), the amount, and the Draft badge. The date lives in the day header, not the row. Tapping the row opens a read-only detail card (`Modal.jsx`-based, mirroring `ConfirmDialog.jsx`'s shape) showing the full transaction — date, category, amount, type, untruncated note — with Edit and Delete buttons that close the card and hand off to the page's existing `openEdit`/`requestDelete` flows. No new mutation logic.
+  - At `md` and up (including desktop web): inline Edit/Delete stay on the row, restyled as icon buttons, with the full note shown.
+  - *Amended from the grilled spec:* the original listed "date + category + Draft badge only". The missing amount was an oversight, since a list without amounts isn't usable. The note preview was dropped only to avoid crowding; once the date moves to day headers and Edit/Delete leave the row, that crowding is gone, and without notes a list reads "Food, Food, Food…" with nothing to tell rows apart.
+  - Built as `feat/mobile-transaction-row` within the frontend revamp below, not as a standalone branch first.
+- **Duplicate transaction (clone action).** Pick an existing transaction, get a prefilled form to create a new one from it. Settled scope (grilled) — not yet scoped into a branch.
+- **Duplicate transaction detection.** Distinct from the clone action above — the app flagging likely-accidental double-entries (e.g. same amount/category/date entered twice). Parked as an idea to explore later; no definition yet of what counts as a match.
+- **Favourite transactions.** Settled domain concept (`CONTEXT.md`): a reusable Transaction template (Category + amount + note) created from an existing Transaction, picked again later to prefill a new one — manual trigger only, no scheduling. Ship before Recurring below; needs no new infrastructure.
+- **Recurring transactions.** Time-based repetition (e.g. a monthly subscription or a paycheck) — distinct from Favourite (`CONTEXT.md`). Not yet fully defined: schedule granularity, and whether it auto-creates Transactions (or Drafts, for amounts that vary) or just reminds the User to enter one. Needs real domain definition before implementation, and new scheduling/background-job infrastructure this app doesn't have today — the account-pool approach ADR0009 considered and rejected for demo accounts hit the same gap.
+- **CSV export of all Transactions.** Since ADR0011 the UI only ever shows one month; this is the route to a User's full history. Not yet scheduled. Planned shape:
+  - Real accounts: a backend endpoint (e.g. `GET /api/transactions/export`) returning every Transaction as CSV, rather than paging through the list endpoint client-side.
+  - Demo mode: generated in the browser from `demoApi.js`'s data. Both go through a hook, per ADR0009.
+  - The Supabase token is attached by the axios interceptor, so a plain `<a href>` download would be unauthenticated. Fetch through axios as a blob, then save it.
+- **Frontend revamp.** Full visual makeover — the "Passbook" design system (ADR0010) plus the global month picker (ADR0011). Interaction flow stays the same, except that mobile nav moves to a bottom tab bar. Frontend-only: no backend or API changes, and all data goes through `hooks/` so `/demo` keeps working (ADR0009). No feature flag: every merge redeploys prod, so each branch must leave every page it touches fully in one style. Branches, in order (ADR0006):
+  1. `docs/adr-0010-0011` — ADR0010, ADR0011, and this backlog update.
+  2. `style/design-tokens` — retuned and new tokens in `index.css`, tabular numerals, U+2212 in `Money.jsx`, and the money-formatting debt above.
+  3. `refactor/ui-primitives` — `Button`, `Badge`, `Card`, `FormField`; `Modal`/`ConfirmDialog` moved onto them.
+  4. `feat/icons` — `lucide-react` and the icon conventions.
+  5. `style/layout-shell` — sidebar at `md:` and up, bottom tab bar below, compact mobile header, demo banner.
+  6. `style/auth-pages`.
+  7. `style/categories-page`.
+  8. `style/transactions-page` — cards and day grouping. Category tiles use a deterministic colour and a default icon until Category colour/icon exists.
+  9. `feat/mobile-transaction-row` — the amended spec above.
+  10. `feat/global-month-picker` — per ADR0011: `useSelectedMonth()` with `?month=YYYY-MM`, month bar, month-grid sheet/popover, client-side month filtering of the Transactions list, empty state, switch-to-month after save, Drafts-in-other-months notice.
+  11. `style/dashboard-page` — summary cards and the Expense-by-Category bar list built from the existing `byCategory` response.
 
 ## Sprint history
 
@@ -48,15 +72,26 @@ Not a numbered sprint — a batch of bug fixes and tech debt cleanup found ahead
 See `docs/sprints/pre-sprint-3-hardening-review.md`.
 
 ### Sprint 3: planned, not started
-The rough order was chosen for dependency reasons (Category color feeds the chart) and to bundle work that touches the same files:
+Follows the frontend revamp above, so its UI is built directly in the new design system. The rough order was chosen for dependency reasons (Category color feeds the chart) and to bundle work that touches the same files. Every item that touches the API keeps `demoApi.js` returning the same shapes, in the same branch (ADR0009).
 
-1. **Category color/icon.** Standalone, cheap, no dependencies.
-2. **Bundle A: transaction querying.** Search/filter, pagination, and the DTO consistency cleanup. Grouped because they all touch `TransactionController`, `TransactionRepository`, and the response shape.
-3. **Bundle B: dashboard visuals.** Grouped because the chart is more useful once a range can be picked, and benefits from Category color existing first if it's color-coded by Category.
-   - Date range picker.
-   - Dashboard chart.
-   - Dashboard tabs: Expense / Income / Overall. The Income tab mirrors the Expense one. There are two open questions to settle before building "Overall":
-     - What Overall shows per Category: net (Income − Expense, so a Groceries refund reduces Groceries spend), or both side by side.
-     - Whether Categories should become typed (Income-only or Expense-only). Today any Category can hold either. Typing them would be a glossary change and probably an ADR.
+1. **Category color/icon.** Standalone, cheap, no dependencies. Settled design (grilled — a DB-backed lookup table with FK-validated keys was considered and rejected: it would need a synced-but-duplicate frontend registry anyway, since ADR0010 requires code-based colour tokens and explicitly-imported icons for tree-shaking, for no real integrity benefit in a single-developer, low-write table):
+   - Two nullable columns on Category: `color_key` (e.g. `"ochre"`) and `icon_key` (e.g. `"food"`). Store keys, not hex values or icon names, so the palette can be retuned (ADR0010) and icon-library renames never touch stored data.
+   - The frontend maps keys through a curated registry: the ADR0010 swatch set, and about 40–60 explicitly imported Lucide icons.
+   - Backend validation checks format only (a short lowercase slug), not an allowlist; unknown or missing keys fall back to a default on the frontend. Adding an icon is then a frontend-only change.
+   - Inline Category creation in `TransactionForm` stays quick: new Categories get an auto-assigned colour and the default icon, customisable on the Categories page.
+   - Seed colours and icons on the demo Categories.
+   - `CONTEXT.md`'s Category entry gains colour and icon.
+   - *Considered and rejected:* emoji (inconsistent rendering across platforms, clash with ADR0010), stored SVG markup (XSS risk), user uploads (needs storage infrastructure).
+2. **Bundle A: transaction querying.** Grouped because they all touch `TransactionController`, `TransactionRepository`, and the response shape. In order:
+   - Server-side month filter on `GET /api/transactions`, replacing the revamp's client-side filtering (ADR0011). Must land before or with pagination.
+   - DTO consistency cleanup.
+   - Search/filter.
+   - Pagination: optional and deferrable since ADR0011. If built, "Load more" with a stable sort (date descending, then id descending), and no day total on the last day group until it is fully loaded.
+3. **Bundle B: dashboard visuals.** Grouped because they share the Dashboard, and benefit from Category color existing first.
+   - ~~Date range picker~~ — superseded by the global month picker (ADR0011), built in the revamp.
+   - Per-Category Income breakdown. Backend change: `DashboardService.buildCategoryBreakdown` only includes Expense Transactions today, and total income is a single figure. Return `{ income, expense }` per Category rather than a precomputed net, so the frontend can derive net and still show both parts.
+   - Dashboard tabs: Expense / Income / Overall. The Expense tab's bars are built in the revamp from the existing response; the Income tab mirrors it. Settled (grilled):
+     - Overall shows net per Category (Income − Expense, so a Groceries refund reduces Groceries spend) as a diverging CSS bar, with tap or hover revealing both parts.
+     - Categories stay untyped — rejected typing them at all, not just deferred it. `Transaction` already has `type` (Expense/Income, `CONTEXT.md`), which is sufficient for the tabs to filter by; there's no need for `Category` to carry a type too, not even as a non-blocking hint. No schema change, no `CONTEXT.md` change, no ADR.
 
 All sprint 3 work follows ADR0007: tests land with each bundle, not as a separate pass.
