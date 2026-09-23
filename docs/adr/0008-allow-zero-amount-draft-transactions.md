@@ -25,5 +25,5 @@ Zero is not used for genuinely zero-value movements (such as a waived fee). Thos
 - Users can capture a transaction before its amount is known, which was the motivation.
 - Zero-amount rows already exist in prod, so reversing this later means deciding what to do with existing Drafts (delete them, or force the user to fill them in). That's why this gets an ADR.
 - Because Draft is derived from the amount, there is no way to mark a Draft "done" without giving it a non-zero amount, and no way to represent a real zero-value movement. If either is ever needed, Draft becomes a stored status, which would supersede this ADR.
-- Dashboard totals are unaffected (zero adds nothing), but the Category breakdown currently still lists Categories that contain only Drafts as `$0.00` rows. Excluding them is tracked in `docs/backlog.md`.
+- Dashboard totals are unaffected (zero adds nothing). The Category breakdown excludes Drafts, including a Category that contains only Drafts — `DashboardService.buildCategoryBreakdown` filters them out before grouping.
 - The Sprint 1 review is left as written, with a correction note pointing here.

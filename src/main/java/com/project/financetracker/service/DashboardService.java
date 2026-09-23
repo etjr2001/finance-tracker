@@ -49,6 +49,7 @@ public class DashboardService {
 
         return transactions.stream()
                 .filter(t -> t.getType() == Transaction.Type.EXPENSE)
+                .filter(t -> t.getAmount().compareTo(BigDecimal.ZERO) != 0)
                 .collect(Collectors.groupingBy(
                         t -> new CategoryKey(t.getCategory().getId(), t.getCategory().getName()),
                         Collectors.reducing(BigDecimal.ZERO, Transaction::getAmount, BigDecimal::add)

@@ -11,8 +11,6 @@ Living document. Not an ADR: this tracks *what's outstanding*, not *decisions ma
   - Replacing the index rather than adding one keeps the index count the same. With tens of Categories per User and rare inserts, the lookup cost is negligible.
   - **Open, and must happen first:** check prod for existing case-duplicates per User. The migration fails if any exist, so decide how to merge them (re-point their Transactions, then delete the duplicate).
   - *Considered and rejected:* storing only uppercase names. It gives the same speed but throws away the casing the User typed.
-- **The Dashboard breakdown includes Drafts.** `DashboardService.buildCategoryBreakdown` should exclude zero-amount Transactions, so that Categories containing only Drafts don't appear as `$0.00` rows (ADR0008, `CONTEXT.md`). Needs a test.
-  - **Higher priority as of ADR0009 (`/demo` mode):** `frontend/src/demo/demoApi.js` implements the correct (Draft-excluding) behavior client-side, so the real backend now visibly disagrees with the app's own demo. Re-prioritize into an upcoming sprint rather than leaving unscheduled.
 - **Inconsistent DTO usage.** Some endpoints serialize entities directly; others use `Response` DTOs. This was never unified. Scoped into sprint 3, Bundle A.
 - **No pagination on `GET /api/transactions`.** Fine at current volume, but it will degrade as the transaction count grows. Scoped into sprint 3, Bundle A.
 - **No custom domain/DNS.** The app is live on the default Railway URL. Explicitly non-blocking, parked indefinitely.
