@@ -43,8 +43,8 @@ Living document. Not an ADR: this tracks *what's outstanding*, not *decisions ma
   4. `feat/icons` — `lucide-react` and the icon conventions.
   5. `style/layout-shell` — sidebar at `md:` and up, bottom tab bar below, compact mobile header, demo banner.
   6. `style/auth-pages`.
-  7. `style/categories-page`.
-  8. `style/transactions-page` — cards and day grouping. Category tiles use a deterministic colour and a default icon until Category colour/icon exists.
+  7. `style/categories-page` — grid layout; category tiles get a deterministic colour (`lib/categorySwatch.js`) and an icon guessed from the category's name via a small keyword lookup (`lib/categoryIcon.js`, falls back to a shared default), both frontend-only stopgaps until real Category colour/icon exists (Sprint 3). Edit stays rename-only — no colour/icon picker, since there's nothing to persist a choice to yet.
+  8. `style/transactions-page` — cards and day grouping, reusing `categoryTileClasses`/`categoryIcon` from the branch above for the row's icon tile.
   9. `feat/mobile-transaction-row` — the amended spec above.
   10. `feat/global-month-picker` — per ADR0011: `useSelectedMonth()` with `?month=YYYY-MM`, month bar, month-grid sheet/popover, client-side month filtering of the Transactions list, empty state, switch-to-month after save, Drafts-in-other-months notice.
   11. `style/dashboard-page` — summary cards and the Expense-by-Category bar list built from the existing `byCategory` response. Layout reference (mockups shared 2026-09-24, not yet in ADR0010): a single hero card — "Net this month" as the headline figure, a two-colour Income/Expense bar directly under it, then Income and Expenses as sub-stats inside the same card — replacing the current three-tile grid. Category rows get a percentage-of-total figure alongside the amount, and coloured bars (per-category swatch, not uniform ink). Capture this precisely in ADR0010 (or a follow-up ADR) once built, rather than improvising off the screenshot at build time.

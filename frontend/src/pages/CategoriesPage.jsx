@@ -7,7 +7,10 @@ import {
 } from '../hooks/useCategories'
 import ConfirmDialog from '../components/ConfirmDialog'
 import Button from '../components/Button'
+import Card from '../components/Card'
 import { inputClass } from '../components/FormField'
+import { categoryTileClasses } from '../lib/categorySwatch'
+import { categoryIcon } from '../lib/categoryIcon'
 import { apiErrorMessage } from '../api/client'
 
 export default function CategoriesPage() {
@@ -70,7 +73,7 @@ export default function CategoriesPage() {
         <div>
             <h2 className="font-serif font-semibold text-2xl mb-6">Categories</h2>
 
-            <form onSubmit={handleCreate} className="flex gap-2 mb-8 max-w-sm">
+            <form onSubmit={handleCreate} className="flex gap-2 mb-6 max-w-md">
                 <input
                     type="text"
                     placeholder="New category name"
@@ -91,43 +94,57 @@ export default function CategoriesPage() {
                 <p className="text-ink-soft text-sm">No categories yet.</p>
             )}
 
-            <ul className="max-w-sm divide-y divide-rule border-t border-b border-rule">
-                {categories?.map((category) => (
-                    <li key={category.id} className="flex items-center gap-3 py-2.5">
-                        {editingId === category.id ? (
-                            <>
-                                <input
-                                    autoFocus
-                                    maxLength={50}
-                                    value={editingName}
-                                    onChange={(e) => setEditingName(e.target.value)}
-                                    className={`flex-1 ${inputClass}`}
-                                />
-                                <button onClick={() => handleSaveEdit(category.id)} className="text-sm text-ink hover:opacity-70">
-                                    Save
-                                </button>
-                                <button onClick={() => setEditingId(null)} className="text-sm text-ink-soft hover:text-ink">
-                                    Cancel
-                                </button>
-                            </>
-                        ) : (
-                            <>
-                                <span className="flex-1">{category.name}</span>
-                                <button onClick={() => startEdit(category)} className="text-sm text-ink-soft hover:text-ink">
-                                    Edit
-                                </button>
-                                <button
-                                    onClick={() => requestDelete(category)}
-                                    disabled={deleteCategory.isPending && deleteCategory.variables === category.id}
-                                    className="text-sm text-ink-soft hover:text-withdrawal disabled:opacity-50 disabled:pointer-events-none"
-                                >
-                                    Delete
-                                </button>
-                            </>
-                        )}
-                    </li>
-                ))}
-            </ul>
+            {categories && categories.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {categories.map((category) => {
+                        const Icon = categoryIcon(category.name)
+                        return (
+                            <Card key={category.id} className="p-3 flex items-center gap-3">
+                                {editingId === category.id ? (
+                                    <>
+                                        <input
+                                            autoFocus
+                                            maxLength={50}
+                                            value={editingName}
+                                            onChange={(e) => setEditingName(e.target.value)}
+                                            className={`flex-1 min-w-0 ${inputClass}`}
+                                        />
+                                        <button onClick={() => handleSaveEdit(category.id)} className="text-sm text-ink hover:opacity-70 shrink-0">
+                                            Save
+                                        </button>
+                                        <button onClick={() => setEditingId(null)} className="text-sm text-ink-soft hover:text-ink shrink-0">
+                                            Cancel
+                                        </button>
+                                    </>
+                                ) : (
+                                    <>
+                                        {/* Deterministic tile colour (ADR0010) + an icon
+                                            guessed from the category's name, both stopgaps
+                                            until real Category colour/icon exists (Sprint 3,
+                                            docs/backlog.md). */}
+                                        <div
+                                            className={`h-9 w-9 shrink-0 rounded-xl flex items-center justify-center ${categoryTileClasses(category.id)}`}
+                                        >
+                                            <Icon aria-hidden="true" strokeWidth={1.7} className="h-4 w-4" />
+                                        </div>
+                                        <span className="flex-1 min-w-0 truncate">{category.name}</span>
+                                        <button onClick={() => startEdit(category)} className="text-sm text-ink-soft hover:text-ink shrink-0">
+                                            Edit
+                                        </button>
+                                        <button
+                                            onClick={() => requestDelete(category)}
+                                            disabled={deleteCategory.isPending && deleteCategory.variables === category.id}
+                                            className="text-sm text-ink-soft hover:text-withdrawal disabled:opacity-50 disabled:pointer-events-none shrink-0"
+                                        >
+                                            Delete
+                                        </button>
+                                    </>
+                                )}
+                            </Card>
+                        )
+                    })}
+                </div>
+            )}
 
             {deleteTarget && (
                 <ConfirmDialog
