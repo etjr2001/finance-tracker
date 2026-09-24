@@ -23,10 +23,15 @@ export default function Modal({ onRequestClose, children, contentClassName = 'ma
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4"
+            // A true neutral black, not bg-ink/40 — ink has a deliberate
+            // green cast (right for text) that reads as a murky olive tint
+            // once spread across the whole backdrop at low opacity.
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4"
             onMouseDown={handleBackdropMouseDown}
         >
-            <div ref={contentRef} className={`w-full ${contentClassName} rounded-xl bg-paper-raised p-5`}>
+            {/* Shadow here, not on in-page Cards — ADR0010 reserves shadows
+                for floating layers, and a modal is exactly that. */}
+            <div ref={contentRef} className={`w-full ${contentClassName} rounded-[14px] bg-paper-raised p-6 shadow-xl`}>
                 {children}
             </div>
         </div>

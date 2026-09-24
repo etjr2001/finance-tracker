@@ -21,10 +21,12 @@ function renderLayout({ isDemo = false, path = '/' } = {}) {
                         <Route path="/" element={<Layout />}>
                             <Route index element={<div>Dashboard</div>} />
                             <Route path="transactions" element={<div>Transactions page</div>} />
+                            <Route path="categories" element={<div>Categories page</div>} />
                         </Route>
                         <Route path="/demo" element={<Layout />}>
                             <Route index element={<div>Dashboard</div>} />
                             <Route path="transactions" element={<div>Transactions page</div>} />
+                            <Route path="categories" element={<div>Categories page</div>} />
                         </Route>
                     </Routes>
                 </DemoModeContext.Provider>
@@ -76,12 +78,44 @@ describe('Layout logout / exit-demo button', () => {
     it('prefixes nav links with /demo in demo mode', () => {
         renderLayout({ isDemo: true, path: '/demo' })
 
-        expect(screen.getByRole('link', { name: 'Transactions' })).toHaveAttribute('href', '/demo/transactions')
+        expect(screen.getAllByRole('link', { name: 'Transactions' })[0]).toHaveAttribute('href', '/demo/transactions')
     })
 
     it('does not prefix nav links outside demo mode', () => {
         renderLayout({ isDemo: false, path: '/' })
 
-        expect(screen.getByRole('link', { name: 'Transactions' })).toHaveAttribute('href', '/transactions')
+        expect(screen.getAllByRole('link', { name: 'Transactions' })[0]).toHaveAttribute('href', '/transactions')
+    })
+
+    it('carries ?month= across month-scoped nav links (ADR0011)', () => {
+        renderLayout({ isDemo: false, path: '/?month=2026-03' })
+
+        expect(screen.getAllByRole('link', { name: 'Transactions' })[0]).toHaveAttribute(
+            'href',
+            '/transactions?month=2026-03'
+        )
+    })
+
+    it('does not add ?month= to the Categories link, which is not month-scoped', () => {
+        renderLayout({ isDemo: false, path: '/?month=2026-03' })
+
+        expect(screen.getAllByRole('link', { name: 'Categories' })[0]).toHaveAttribute('href', '/categories')
+    })
+
+    // Regression guard: Dashboard and Transactions' `to` becomes an object
+    // ({ pathname, search }) once ?month= is set, and keying NavLink by
+    // `item.to` used to collapse both onto the same "[object Object]"
+    // React key — duplicate keys confuse reconciliation and can leave a
+    // stale nav icon in the DOM after navigating away (reported as "an
+    // additional dashboard icon appears" when switching to Categories).
+    it('gives every nav item a unique key even when ?month= makes `to` an object', () => {
+        const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+        renderLayout({ isDemo: false, path: '/?month=2026-03' })
+
+        const duplicateKeyWarning = errorSpy.mock.calls.some((args) =>
+            args.some((arg) => typeof arg === 'string' && arg.includes('same key'))
+        )
+        expect(duplicateKeyWarning).toBe(false)
     })
 })

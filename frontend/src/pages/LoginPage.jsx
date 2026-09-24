@@ -2,6 +2,9 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
 import { apiErrorMessage } from '../api/client'
+import FormField from '../components/FormField'
+import Button from '../components/Button'
+import Card from '../components/Card'
 
 export default function LoginPage() {
     const { login } = useAuth()
@@ -25,36 +28,29 @@ export default function LoginPage() {
         }
     }
 
-    const inputClass =
-        'w-full border border-rule bg-white px-3 py-2 rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-ink'
-
     return (
-        <div className="min-h-screen flex items-center justify-center px-6">
-            <div className="w-full max-w-sm">
-                <h1 className="font-serif text-3xl mb-1">Ledger</h1>
+        <div className="min-h-screen flex items-center justify-center px-6 bg-paper">
+            <Card className="w-full max-w-sm p-8">
+                <h1 className="font-serif font-semibold text-3xl mb-1">Ledger</h1>
                 <p className="text-ink-soft text-sm mb-8">Log in to your account.</p>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
+                    <FormField
+                        label="Email"
+                        htmlFor="email"
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                    />
                     <div>
-                        <label className="block text-sm mb-1" htmlFor="email">Email</label>
-                        <input
-                            id="email"
-                            type="email"
-                            required
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className={inputClass}
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm mb-1" htmlFor="password">Password</label>
-                        <input
-                            id="password"
+                        <FormField
+                            label="Password"
+                            htmlFor="password"
                             type="password"
                             required
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className={inputClass}
                         />
                         <Link to="/forgot-password" className="block mt-1 text-xs text-ink-soft underline underline-offset-2">
                             Forgot password?
@@ -63,13 +59,9 @@ export default function LoginPage() {
 
                     {error && <p className="text-withdrawal text-sm">{error}</p>}
 
-                    <button
-                        type="submit"
-                        disabled={submitting}
-                        className="w-full bg-ink text-paper py-2 rounded-sm text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
-                    >
+                    <Button type="submit" fullWidth disabled={submitting}>
                         {submitting ? 'Logging in…' : 'Log in'}
-                    </button>
+                    </Button>
                 </form>
 
                 <p className="text-sm text-ink-soft mt-6">
@@ -83,7 +75,7 @@ export default function LoginPage() {
                         Back to demo
                     </Link>
                 </p>
-            </div>
+            </Card>
         </div>
     )
 }

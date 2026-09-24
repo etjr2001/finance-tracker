@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, within, waitFor } from '@testing-library/react'
+import { render, screen, within, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { MemoryRouter } from 'react-router-dom'
 import TransactionsPage from '../../src/pages/TransactionsPage'
 import * as transactionsApi from '../../src/api/transactions'
 import * as categoriesApi from '../../src/api/categories'
@@ -18,14 +19,29 @@ const sampleTransaction = {
     category: { id: 1, name: 'Groceries' },
 }
 
-function renderPage() {
+// The global test/setup.js polyfill always "matches" (desktop). Tests that
+// need mobile behavior override window.matchMedia for their own scope,
+// same pattern as test/hooks/useIsMobile.test.jsx.
+function mockMobileViewport() {
+    window.matchMedia = vi.fn().mockImplementation(() => ({
+        matches: false,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+    }))
+}
+
+// Fixtures below are dated in September 2026, so tests view that month
+// explicitly rather than relying on whatever "today" happens to be.
+function renderPage(initialEntry = '/transactions?month=2026-09') {
     const queryClient = new QueryClient({
         defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
     })
     return render(
-        <QueryClientProvider client={queryClient}>
-            <TransactionsPage />
-        </QueryClientProvider>
+        <MemoryRouter initialEntries={[initialEntry]}>
+            <QueryClientProvider client={queryClient}>
+                <TransactionsPage />
+            </QueryClientProvider>
+        </MemoryRouter>
     )
 }
 
@@ -161,9 +177,9 @@ describe('TransactionsPage add/edit modal', () => {
         renderPage()
 
         await screen.findByText('Weekly shop')
-        await user.click(screen.getByRole('button', { name: 'Add transaction' }))
+        await user.click(screen.getByRole('button', { name: 'Add' }))
 
-        expect(screen.getByRole('spinbutton')).toBeInTheDocument()
+        expect(screen.getByLabelText('Amount')).toBeInTheDocument()
     })
 
     it('closes silently on outside click when the form is untouched', async () => {
@@ -171,12 +187,12 @@ describe('TransactionsPage add/edit modal', () => {
         const { container } = renderPage()
 
         await screen.findByText('Weekly shop')
-        await user.click(screen.getByRole('button', { name: 'Add transaction' }))
+        await user.click(screen.getByRole('button', { name: 'Add' }))
 
         await user.click(getBackdrop(container))
 
         expect(screen.queryByText('Discard unsaved changes?')).not.toBeInTheDocument()
-        expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument()
+        expect(screen.queryByLabelText('Amount')).not.toBeInTheDocument()
     })
 
     it('shows a discard-confirmation on outside click when dirty, and keeps the form open on Cancel', async () => {
@@ -184,8 +200,8 @@ describe('TransactionsPage add/edit modal', () => {
         const { container } = renderPage()
 
         await screen.findByText('Weekly shop')
-        await user.click(screen.getByRole('button', { name: 'Add transaction' }))
-        await user.type(screen.getByRole('textbox'), 'concert tickets')
+        await user.click(screen.getByRole('button', { name: 'Add' }))
+        await user.type(screen.getByLabelText('Note (optional)'), 'concert tickets')
 
         await user.click(getBackdrop(container))
         expect(screen.getByText('Discard unsaved changes?')).toBeInTheDocument()
@@ -194,7 +210,7 @@ describe('TransactionsPage add/edit modal', () => {
         await user.click(within(dialog).getByRole('button', { name: 'Cancel' }))
 
         expect(screen.queryByText('Discard unsaved changes?')).not.toBeInTheDocument()
-        expect(screen.getByRole('textbox')).toHaveValue('concert tickets')
+        expect(screen.getByLabelText('Note (optional)')).toHaveValue('concert tickets')
     })
 
     it('closes the form and discards the value when discard is confirmed', async () => {
@@ -202,15 +218,15 @@ describe('TransactionsPage add/edit modal', () => {
         const { container } = renderPage()
 
         await screen.findByText('Weekly shop')
-        await user.click(screen.getByRole('button', { name: 'Add transaction' }))
-        await user.type(screen.getByRole('textbox'), 'concert tickets')
+        await user.click(screen.getByRole('button', { name: 'Add' }))
+        await user.type(screen.getByLabelText('Note (optional)'), 'concert tickets')
 
         await user.click(getBackdrop(container))
         const dialog = screen.getByText('Discard unsaved changes?').closest('div')
         await user.click(within(dialog).getByRole('button', { name: 'Discard' }))
 
         expect(screen.queryByText('Discard unsaved changes?')).not.toBeInTheDocument()
-        expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument()
+        expect(screen.queryByLabelText('Amount')).not.toBeInTheDocument()
     })
 
     it('submits a new transaction and closes the modal on success', async () => {
@@ -218,9 +234,9 @@ describe('TransactionsPage add/edit modal', () => {
         renderPage()
 
         await screen.findByText('Weekly shop')
-        await user.click(screen.getByRole('button', { name: 'Add transaction' }))
+        await user.click(screen.getByRole('button', { name: 'Add' }))
 
-        const amountInput = screen.getByRole('spinbutton')
+        const amountInput = screen.getByLabelText('Amount')
         await user.clear(amountInput)
         await user.type(amountInput, '15')
         await user.selectOptions(screen.getByRole('combobox'), '2')
@@ -230,7 +246,7 @@ describe('TransactionsPage add/edit modal', () => {
         expect(transactionsApi.createTransaction.mock.calls[0][0]).toEqual(
             expect.objectContaining({ amount: 15, categoryId: 2 })
         )
-        expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument()
+        expect(screen.queryByLabelText('Amount')).not.toBeInTheDocument()
     })
 
     it('stacks the add-category modal over the transaction modal, and an outside click closes only the inner one', async () => {
@@ -238,7 +254,7 @@ describe('TransactionsPage add/edit modal', () => {
         renderPage()
 
         await screen.findByText('Weekly shop')
-        await user.click(screen.getByRole('button', { name: 'Add transaction' }))
+        await user.click(screen.getByRole('button', { name: 'Add' }))
         await user.selectOptions(screen.getByRole('combobox'), '__new__')
 
         expect(screen.getByText('New category name')).toBeInTheDocument()
@@ -252,6 +268,123 @@ describe('TransactionsPage add/edit modal', () => {
 
         // The category modal closed, but the transaction form is still open.
         expect(screen.queryByText('New category name')).not.toBeInTheDocument()
-        expect(screen.getByRole('spinbutton')).toBeInTheDocument()
+        expect(screen.getByLabelText('Amount')).toBeInTheDocument()
+    })
+})
+
+describe('TransactionsPage mobile row', () => {
+    beforeEach(() => {
+        mockMobileViewport()
+        transactionsApi.listTransactions.mockResolvedValue([sampleTransaction])
+        transactionsApi.deleteTransaction.mockResolvedValue(undefined)
+        categoriesApi.listCategories.mockResolvedValue([{ id: 1, name: 'Groceries' }])
+    })
+
+    afterEach(() => {
+        vi.restoreAllMocks()
+    })
+
+    it('does not show inline Edit/Delete on the row', async () => {
+        renderPage()
+
+        await screen.findByText('Weekly shop')
+
+        expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument()
+    })
+
+    it('opens a read-only detail card when the row is tapped', async () => {
+        const user = userEvent.setup()
+        renderPage()
+
+        await screen.findByText('Weekly shop')
+        await user.click(screen.getByText('Groceries'))
+
+        // The detail card repeats the category name and note, so there are
+        // now two of each — one in the row (still visible behind the
+        // modal), one in the card.
+        expect(screen.getAllByText('Groceries')).toHaveLength(2)
+        expect(screen.getAllByText('Weekly shop')).toHaveLength(2)
+    })
+
+    it('hands off to the edit form and closes the detail card', async () => {
+        const user = userEvent.setup()
+        renderPage()
+
+        await screen.findByText('Weekly shop')
+        await user.click(screen.getByText('Groceries'))
+        await user.click(screen.getByRole('button', { name: 'Edit' }))
+
+        expect(screen.getByLabelText('Amount')).toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument()
+    })
+
+    it('hands off to the delete confirmation and closes the detail card', async () => {
+        const user = userEvent.setup()
+        renderPage()
+
+        await screen.findByText('Weekly shop')
+        await user.click(screen.getByText('Groceries'))
+        await user.click(screen.getByRole('button', { name: 'Delete' }))
+
+        expect(screen.getByText("Delete Groceries — Weekly shop? This can't be undone.")).toBeInTheDocument()
+
+        await user.click(screen.getByRole('button', { name: 'Delete' }))
+
+        await waitFor(() => expect(transactionsApi.deleteTransaction).toHaveBeenCalledWith(42, expect.anything()))
+    })
+})
+
+describe('TransactionsPage month scope', () => {
+    afterEach(() => {
+        vi.restoreAllMocks()
+    })
+
+    it('only shows transactions dated in the viewed month', async () => {
+        transactionsApi.listTransactions.mockResolvedValue([
+            sampleTransaction, // 2026-09-01
+            { ...sampleTransaction, id: 43, date: '2026-08-15', note: 'August thing' },
+        ])
+        categoriesApi.listCategories.mockResolvedValue([{ id: 1, name: 'Groceries' }])
+
+        renderPage('/transactions?month=2026-09')
+
+        await screen.findByText('Weekly shop')
+        expect(screen.queryByText('August thing')).not.toBeInTheDocument()
+    })
+
+    it('shows an empty state with an Add action when the month has no transactions', async () => {
+        transactionsApi.listTransactions.mockResolvedValue([sampleTransaction]) // 2026-09-01
+        categoriesApi.listCategories.mockResolvedValue([{ id: 1, name: 'Groceries' }])
+
+        renderPage('/transactions?month=2026-03')
+
+        expect(await screen.findByText('No transactions in March 2026.')).toBeInTheDocument()
+        // Just the header's Add button — no second one in the empty state,
+        // which would just be a visible duplicate of it.
+        expect(screen.getAllByRole('button', { name: 'Add' })).toHaveLength(1)
+    })
+
+    it('switches to the saved transaction\'s month when it falls outside the viewed month', async () => {
+        transactionsApi.listTransactions.mockResolvedValue([])
+        transactionsApi.createTransaction.mockResolvedValue({ ...sampleTransaction, date: '2026-11-05' })
+        categoriesApi.listCategories.mockResolvedValue([
+            { id: 1, name: 'Groceries' },
+            { id: 2, name: 'Salary' },
+        ])
+
+        const user = userEvent.setup()
+        renderPage('/transactions?month=2026-09')
+
+        await user.click(screen.getByRole('button', { name: 'Add' }))
+        const amountInput = screen.getByLabelText('Amount')
+        await user.clear(amountInput)
+        await user.type(amountInput, '15')
+        fireEvent.change(screen.getByLabelText('Date'), { target: { value: '2026-11-05' } })
+        await user.selectOptions(screen.getByRole('combobox'), '2')
+        await user.click(screen.getByRole('button', { name: 'Add transaction' }))
+
+        await waitFor(() => expect(transactionsApi.createTransaction).toHaveBeenCalled())
+        await screen.findByText('November 2026')
     })
 })
