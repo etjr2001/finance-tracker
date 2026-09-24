@@ -29,4 +29,12 @@ describe('Button', () => {
 
         expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
     })
+
+    it('dangerGhost is text-only red, not the solid danger block', () => {
+        render(<Button variant="dangerGhost">Delete</Button>)
+
+        const button = screen.getByRole('button', { name: 'Delete' })
+        expect(button).toHaveClass('text-withdrawal')
+        expect(button).not.toHaveClass('bg-withdrawal')
+    })
 })

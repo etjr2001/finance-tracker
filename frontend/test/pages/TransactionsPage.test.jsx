@@ -18,6 +18,17 @@ const sampleTransaction = {
     category: { id: 1, name: 'Groceries' },
 }
 
+// The global test/setup.js polyfill always "matches" (desktop). Tests that
+// need mobile behavior override window.matchMedia for their own scope,
+// same pattern as test/hooks/useIsMobile.test.jsx.
+function mockMobileViewport() {
+    window.matchMedia = vi.fn().mockImplementation(() => ({
+        matches: false,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+    }))
+}
+
 function renderPage() {
     const queryClient = new QueryClient({
         defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
@@ -253,5 +264,68 @@ describe('TransactionsPage add/edit modal', () => {
         // The category modal closed, but the transaction form is still open.
         expect(screen.queryByText('New category name')).not.toBeInTheDocument()
         expect(screen.getByLabelText('Amount')).toBeInTheDocument()
+    })
+})
+
+describe('TransactionsPage mobile row', () => {
+    beforeEach(() => {
+        mockMobileViewport()
+        transactionsApi.listTransactions.mockResolvedValue([sampleTransaction])
+        transactionsApi.deleteTransaction.mockResolvedValue(undefined)
+        categoriesApi.listCategories.mockResolvedValue([{ id: 1, name: 'Groceries' }])
+    })
+
+    afterEach(() => {
+        vi.restoreAllMocks()
+    })
+
+    it('does not show inline Edit/Delete on the row', async () => {
+        renderPage()
+
+        await screen.findByText('Weekly shop')
+
+        expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument()
+    })
+
+    it('opens a read-only detail card when the row is tapped', async () => {
+        const user = userEvent.setup()
+        renderPage()
+
+        await screen.findByText('Weekly shop')
+        await user.click(screen.getByText('Groceries'))
+
+        // The detail card repeats the category name and note, so there are
+        // now two of each — one in the row (still visible behind the
+        // modal), one in the card.
+        expect(screen.getAllByText('Groceries')).toHaveLength(2)
+        expect(screen.getAllByText('Weekly shop')).toHaveLength(2)
+    })
+
+    it('hands off to the edit form and closes the detail card', async () => {
+        const user = userEvent.setup()
+        renderPage()
+
+        await screen.findByText('Weekly shop')
+        await user.click(screen.getByText('Groceries'))
+        await user.click(screen.getByRole('button', { name: 'Edit' }))
+
+        expect(screen.getByLabelText('Amount')).toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument()
+    })
+
+    it('hands off to the delete confirmation and closes the detail card', async () => {
+        const user = userEvent.setup()
+        renderPage()
+
+        await screen.findByText('Weekly shop')
+        await user.click(screen.getByText('Groceries'))
+        await user.click(screen.getByRole('button', { name: 'Delete' }))
+
+        expect(screen.getByText("Delete Groceries — Weekly shop? This can't be undone.")).toBeInTheDocument()
+
+        await user.click(screen.getByRole('button', { name: 'Delete' }))
+
+        await waitFor(() => expect(transactionsApi.deleteTransaction).toHaveBeenCalledWith(42, expect.anything()))
     })
 })
