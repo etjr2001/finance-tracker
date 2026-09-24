@@ -14,10 +14,13 @@ import TransactionDetail from '../components/TransactionDetail'
 import Money from '../components/Money'
 import AddButton from '../components/AddButton'
 import Card from '../components/Card'
+import MonthBar from '../components/MonthBar'
 import { categoryTileClasses } from '../lib/categorySwatch'
 import { categoryIcon } from '../lib/categoryIcon'
 import { groupByDay } from '../lib/dayGroups'
+import { formatMonth } from '../lib/date'
 import { useIsMobile } from '../hooks/useIsMobile'
+import { useSelectedMonth } from '../hooks/useSelectedMonth'
 import { apiErrorMessage } from '../api/client'
 
 export default function TransactionsPage() {
@@ -35,13 +38,29 @@ export default function TransactionsPage() {
     const [viewingDetail, setViewingDetail] = useState(null)
     const [error, setError] = useState(null)
     const isMobile = useIsMobile()
+    const [month, setMonth] = useSelectedMonth()
+
+    // Client-side for now (ADR0011): GET /api/transactions is unpaginated
+    // and still returns the User's whole history, so this just narrows
+    // what's displayed. Moves server-side once that endpoint is paginated.
+    const monthTransactions = useMemo(
+        () => (transactions ?? []).filter((t) => t.date.slice(0, 7) === month),
+        [transactions, month]
+    )
 
     const sorted = useMemo(
-        () => [...(transactions ?? [])].sort((a, b) => b.date.localeCompare(a.date)),
-        [transactions]
+        () => [...monthTransactions].sort((a, b) => b.date.localeCompare(a.date)),
+        [monthTransactions]
     )
 
     const dayGroups = useMemo(() => groupByDay(sorted), [sorted])
+
+    // ADR0011: a saved Transaction dated outside the viewed month switches
+    // the view to that month, so it never silently disappears.
+    function switchToMonthOf(dateString) {
+        const savedMonth = dateString.slice(0, 7)
+        if (savedMonth !== month) setMonth(savedMonth)
+    }
 
     function openCreate() {
         setEditing(null)
@@ -86,6 +105,7 @@ export default function TransactionsPage() {
         try {
             await createTransaction.mutateAsync(payload)
             closeAny()
+            switchToMonthOf(payload.date)
         } catch (err) {
             setError(apiErrorMessage(err, 'Could not add transaction.'))
         }
@@ -96,6 +116,7 @@ export default function TransactionsPage() {
         try {
             await updateTransaction.mutateAsync({ id: editing.id, ...payload })
             closeAny()
+            switchToMonthOf(payload.date)
         } catch (err) {
             setError(apiErrorMessage(err, 'Could not update transaction.'))
         }
@@ -124,8 +145,15 @@ export default function TransactionsPage() {
 
     return (
         <div>
-            <div className="flex items-center justify-between mb-6">
-                <h2 className="font-serif font-semibold text-2xl">Transactions</h2>
+            {/* Title alone on its own row, matching Dashboard/Categories
+                exactly — pairing Add with it made the row taller than a
+                bare <h2> (Button's min-h-11), visibly misaligning
+                "Transactions" against the other pages' headings. */}
+            <h2 className="font-serif font-semibold text-2xl mb-4">Transactions</h2>
+            {/* MonthBar + Add, single row, no wrap: MonthBar hides its
+                "This month" text below sm: to leave room. */}
+            <div className="flex items-center justify-between gap-3 mb-6">
+                <MonthBar month={month} onChange={setMonth} />
                 {!showForm && !editing && <AddButton onClick={openCreate} />}
             </div>
 
@@ -162,8 +190,14 @@ export default function TransactionsPage() {
             {isLoading && <p className="text-ink-soft text-sm">Loading transactions…</p>}
             {isError && <p className="text-withdrawal text-sm">Could not load transactions.</p>}
 
-            {sorted.length === 0 && !isLoading && (
-                <p className="text-ink-soft text-sm">No transactions yet.</p>
+            {sorted.length === 0 && !isLoading && !showForm && !editing && (
+                <div className="text-center py-12">
+                    {/* No AddButton here — the header above already has one
+                        (per ADR0011's "an Add action, not a blank list"),
+                        and this page never hides the header's version, so a
+                        second one here would just be a visible duplicate. */}
+                    <p className="text-ink-soft text-sm">No transactions in {formatMonth(month)}.</p>
+                </div>
             )}
 
             <div className="space-y-6">

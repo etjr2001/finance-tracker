@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { currentMonth } from '../../src/lib/date'
+import { currentMonth, isValidMonth, formatMonth, shiftMonth } from '../../src/lib/date'
 
 describe('currentMonth', () => {
     afterEach(() => {
@@ -35,5 +35,68 @@ describe('currentMonth', () => {
         // here as documentation of the exact bug this replaces, not asserted
         // against, since CI commonly defaults to UTC where the two coincide.
         void oldBuggyImplementation
+    })
+})
+
+describe('isValidMonth', () => {
+    it('accepts a real YYYY-MM', () => {
+        expect(isValidMonth('2026-09')).toBe(true)
+    })
+
+    it('rejects a month over 12', () => {
+        expect(isValidMonth('2026-13')).toBe(false)
+    })
+
+    it('rejects a month of 00', () => {
+        expect(isValidMonth('2026-00')).toBe(false)
+    })
+
+    it('rejects a single-digit month with no leading zero', () => {
+        expect(isValidMonth('2026-9')).toBe(false)
+    })
+
+    it('rejects garbage', () => {
+        expect(isValidMonth('not-a-month')).toBe(false)
+    })
+
+    it('rejects null/undefined', () => {
+        expect(isValidMonth(null)).toBe(false)
+        expect(isValidMonth(undefined)).toBe(false)
+    })
+})
+
+describe('formatMonth', () => {
+    it('formats a YYYY-MM as "Month YYYY"', () => {
+        expect(formatMonth('2026-09')).toBe('September 2026')
+    })
+
+    it('formats January correctly (no off-by-one on the 0-indexed lookup)', () => {
+        expect(formatMonth('2026-01')).toBe('January 2026')
+    })
+
+    it('formats December correctly', () => {
+        expect(formatMonth('2026-12')).toBe('December 2026')
+    })
+})
+
+describe('shiftMonth', () => {
+    it('moves forward one month', () => {
+        expect(shiftMonth('2026-09', 1)).toBe('2026-10')
+    })
+
+    it('moves backward one month', () => {
+        expect(shiftMonth('2026-09', -1)).toBe('2026-08')
+    })
+
+    it('wraps forward across a year boundary', () => {
+        expect(shiftMonth('2026-12', 1)).toBe('2027-01')
+    })
+
+    it('wraps backward across a year boundary', () => {
+        expect(shiftMonth('2026-01', -1)).toBe('2025-12')
+    })
+
+    it('supports jumping by a year (delta of 12)', () => {
+        expect(shiftMonth('2026-09', 12)).toBe('2027-09')
     })
 })

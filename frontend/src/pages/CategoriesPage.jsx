@@ -72,17 +72,24 @@ export default function CategoriesPage() {
 
     return (
         <div>
-            <h2 className="font-serif font-semibold text-2xl mb-6">Categories</h2>
+            <h2 className="font-serif font-semibold text-2xl mb-4">Categories</h2>
 
-            <form onSubmit={handleCreate} className="flex gap-2 mb-6 max-w-md">
-                <input
-                    type="text"
-                    placeholder="New category name"
-                    maxLength={50}
-                    value={newName}
-                    onChange={(e) => setNewName(e.target.value)}
-                    className={`flex-1 ${inputClass}`}
-                />
+            {/* justify-between on the full-width row + a fixed-width input
+                wrapper (not flex-1, and the row itself isn't max-w capped):
+                matches Transactions' MonthBar+Add row exactly, with Add at
+                the true far right of the content area, not just the far
+                edge of some narrower cap. */}
+            <form onSubmit={handleCreate} className="flex items-center justify-between gap-3 mb-6">
+                <div className="w-56">
+                    <input
+                        type="text"
+                        placeholder="New category name"
+                        maxLength={50}
+                        value={newName}
+                        onChange={(e) => setNewName(e.target.value)}
+                        className={inputClass}
+                    />
+                </div>
                 <AddButton type="submit" />
             </form>
 

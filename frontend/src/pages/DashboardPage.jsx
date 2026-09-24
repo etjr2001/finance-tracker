@@ -1,11 +1,12 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { useDashboard } from '../hooks/useDashboard'
 import Money from '../components/Money'
+import MonthBar from '../components/MonthBar'
 import { formatMoney } from '../lib/money'
-import { currentMonth } from '../lib/date'
+import { useSelectedMonth } from '../hooks/useSelectedMonth'
 
 export default function DashboardPage() {
-    const [month, setMonth] = useState(currentMonth())
+    const [month, setMonth] = useSelectedMonth()
     const { data, isLoading, isError } = useDashboard(month)
 
     const maxCategoryTotal = useMemo(() => {
@@ -15,15 +16,9 @@ export default function DashboardPage() {
 
     return (
         <div>
-            <div className="flex items-center justify-between mb-8">
-                <h2 className="font-serif font-semibold text-2xl">Dashboard</h2>
-                <input
-                    type="month"
-                    value={month}
-                    onChange={(e) => setMonth(e.target.value)}
-                    onClick={(e) => e.target.showPicker?.()}
-                    className="border border-rule-strong bg-white px-3 py-1.5 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-ink"
-                />
+            <h2 className="font-serif font-semibold text-2xl mb-4">Dashboard</h2>
+            <div className="mb-8">
+                <MonthBar month={month} onChange={setMonth} />
             </div>
 
             {isLoading && <p className="text-ink-soft text-sm">Loading dashboard…</p>}
