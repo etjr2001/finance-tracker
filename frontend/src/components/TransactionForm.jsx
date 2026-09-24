@@ -3,6 +3,7 @@ import { useCreateCategory } from '../hooks/useCategories'
 import { apiErrorMessage } from '../api/client'
 import Modal from './Modal'
 import Button from './Button'
+import AddButton from './AddButton'
 import FormField, { inputClass } from './FormField'
 import { ChevronDown } from 'lucide-react'
 
@@ -252,9 +253,18 @@ export default function TransactionForm({ categories, initial, onSubmit, onCance
                 />
 
                 <div className="md:col-span-2 flex gap-4 pt-1">
-                    <Button type="submit" disabled={submitting}>
-                        {initial ? 'Save changes' : 'Add transaction'}
-                    </Button>
+                    {/* Add gets the shared + icon (it's genuinely adding a
+                        Transaction, same as the page-level CTAs); Save
+                        changes doesn't — it's an edit, not an add. */}
+                    {initial ? (
+                        <Button type="submit" disabled={submitting}>
+                            Save changes
+                        </Button>
+                    ) : (
+                        <AddButton type="submit" disabled={submitting}>
+                            Add transaction
+                        </AddButton>
+                    )}
                     {onCancel && (
                         <Button variant="ghost" onClick={onCancel}>
                             Cancel
@@ -283,9 +293,9 @@ export default function TransactionForm({ categories, initial, onSubmit, onCance
                     />
                     {newCategoryError && <p className="mt-1 text-xs text-withdrawal">{newCategoryError}</p>}
                     <div className="flex gap-4 mt-4">
-                        <Button onClick={handleCreateCategory} disabled={createCategory.isPending}>
+                        <AddButton onClick={handleCreateCategory} disabled={createCategory.isPending}>
                             Create
-                        </Button>
+                        </AddButton>
                         <Button variant="ghost" onClick={cancelAddingCategory}>
                             Cancel
                         </Button>

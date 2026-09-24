@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Pencil, Trash2 } from 'lucide-react'
 import {
     useTransactions,
     useCreateTransaction,
@@ -10,7 +11,11 @@ import TransactionForm from '../components/TransactionForm'
 import Modal from '../components/Modal'
 import ConfirmDialog from '../components/ConfirmDialog'
 import Money from '../components/Money'
-import Button from '../components/Button'
+import AddButton from '../components/AddButton'
+import Card from '../components/Card'
+import { categoryTileClasses } from '../lib/categorySwatch'
+import { categoryIcon } from '../lib/categoryIcon'
+import { groupByDay } from '../lib/dayGroups'
 import { apiErrorMessage } from '../api/client'
 
 export default function TransactionsPage() {
@@ -31,6 +36,8 @@ export default function TransactionsPage() {
         () => [...(transactions ?? [])].sort((a, b) => b.date.localeCompare(a.date)),
         [transactions]
     )
+
+    const dayGroups = useMemo(() => groupByDay(sorted), [sorted])
 
     function openCreate() {
         setEditing(null)
@@ -115,7 +122,7 @@ export default function TransactionsPage() {
         <div>
             <div className="flex items-center justify-between mb-6">
                 <h2 className="font-serif font-semibold text-2xl">Transactions</h2>
-                {!showForm && !editing && <Button onClick={openCreate}>Add transaction</Button>}
+                {!showForm && !editing && <AddButton onClick={openCreate} />}
             </div>
 
             {error && !showForm && !editing && <p className="text-withdrawal text-sm mb-4">{error}</p>}
@@ -155,47 +162,76 @@ export default function TransactionsPage() {
                 <p className="text-ink-soft text-sm">No transactions yet.</p>
             )}
 
-            <ul className="divide-y divide-rule border-t border-b border-rule">
-                {sorted.map((t) => (
-                    <li key={t.id} className="flex items-center justify-between py-3 gap-4">
-                        <div className="flex items-baseline gap-4 min-w-0">
-                            <span className="text-sm text-ink-soft tabular w-24 shrink-0">{t.date}</span>
-                            <div className="min-w-0">
-                                <div className="truncate flex items-center gap-2">
-                                    <span>{t.category?.name ?? 'Unknown category'}</span>
-                                    {Number(t.amount) === 0 && (
-                                        <span className="text-xs font-medium text-brass-ink bg-brass/10 border border-brass/30 rounded-full px-2 py-0.5 shrink-0">
-                                            Draft
-                                        </span>
-                                    )}
-                                </div>
-                                {t.note && <div className="text-sm text-ink-soft truncate">{t.note}</div>}
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-4 shrink-0">
-                            <span className={t.type === 'INCOME' ? 'text-deposit' : 'text-ink'}>
-                                {t.type === 'INCOME' ? '+' : '\u2212'}
-                                <Money amount={t.amount} />
+            <div className="space-y-6">
+                {dayGroups.map((group) => (
+                    <div key={group.date}>
+                        <div className="flex items-baseline justify-between mb-2 px-1">
+                            <span className="text-sm">
+                                {group.label.relative ? (
+                                    <>
+                                        <span className="font-medium">{group.label.relative}</span>{' '}
+                                        <span className="text-ink-soft">{group.label.formatted}</span>
+                                    </>
+                                ) : (
+                                    <span className="font-medium">{group.label.formatted}</span>
+                                )}
                             </span>
-                            <div className="flex gap-3 text-sm">
-                                <button
-                                    onClick={() => openEdit(t)}
-                                    className="text-ink-soft hover:text-ink"
-                                >
-                                    Edit
-                                </button>
-                                <button
-                                    onClick={() => requestDelete(t)}
-                                    disabled={deleteTransaction.isPending && deleteTransaction.variables === t.id}
-                                    className="text-ink-soft hover:text-withdrawal disabled:opacity-50 disabled:pointer-events-none"
-                                >
-                                    Delete
-                                </button>
-                            </div>
+                            <span className="text-sm text-ink-soft tabular">
+                                <Money amount={group.total} />
+                            </span>
                         </div>
-                    </li>
+
+                        <Card className="divide-y divide-rule-soft">
+                            {group.transactions.map((t) => {
+                                const Icon = categoryIcon(t.category?.name)
+                                return (
+                                    <div key={t.id} className="flex items-center gap-3 px-4 py-3">
+                                        <div
+                                            className={`h-9 w-9 shrink-0 rounded-xl flex items-center justify-center ${categoryTileClasses(t.category?.id ?? 0)}`}
+                                        >
+                                            <Icon aria-hidden="true" strokeWidth={1.7} className="h-4 w-4" />
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex items-center gap-2 min-w-0">
+                                                <span className="truncate min-w-0">{t.category?.name ?? 'Unknown category'}</span>
+                                                {Number(t.amount) === 0 && (
+                                                    <span className="text-xs font-medium text-brass-ink bg-brass/10 border border-brass/30 rounded-full px-2 py-0.5 shrink-0">
+                                                        Draft
+                                                    </span>
+                                                )}
+                                            </div>
+                                            {t.note && <div className="text-sm text-ink-soft truncate">{t.note}</div>}
+                                        </div>
+                                        <div className="flex items-center gap-4 shrink-0">
+                                            <span className={t.type === 'INCOME' ? 'text-deposit' : 'text-ink'}>
+                                                {t.type === 'INCOME' ? '+' : '\u2212'}
+                                                <Money amount={t.amount} />
+                                            </span>
+                                            <div className="flex items-center gap-1">
+                                                <button
+                                                    onClick={() => openEdit(t)}
+                                                    aria-label="Edit"
+                                                    className="h-11 w-11 flex items-center justify-center rounded-sm text-ink-soft hover:text-ink"
+                                                >
+                                                    <Pencil aria-hidden="true" strokeWidth={1.7} className="h-4 w-4" />
+                                                </button>
+                                                <button
+                                                    onClick={() => requestDelete(t)}
+                                                    disabled={deleteTransaction.isPending && deleteTransaction.variables === t.id}
+                                                    aria-label="Delete"
+                                                    className="h-11 w-11 flex items-center justify-center rounded-sm text-ink-soft hover:text-withdrawal disabled:opacity-50 disabled:pointer-events-none"
+                                                >
+                                                    <Trash2 aria-hidden="true" strokeWidth={1.7} className="h-4 w-4" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                        </Card>
+                    </div>
                 ))}
-            </ul>
+            </div>
 
             {pendingCloseConfirm && (
                 <ConfirmDialog

@@ -161,7 +161,7 @@ describe('TransactionsPage add/edit modal', () => {
         renderPage()
 
         await screen.findByText('Weekly shop')
-        await user.click(screen.getByRole('button', { name: 'Add transaction' }))
+        await user.click(screen.getByRole('button', { name: 'Add' }))
 
         expect(screen.getByLabelText('Amount')).toBeInTheDocument()
     })
@@ -171,7 +171,7 @@ describe('TransactionsPage add/edit modal', () => {
         const { container } = renderPage()
 
         await screen.findByText('Weekly shop')
-        await user.click(screen.getByRole('button', { name: 'Add transaction' }))
+        await user.click(screen.getByRole('button', { name: 'Add' }))
 
         await user.click(getBackdrop(container))
 
@@ -184,7 +184,7 @@ describe('TransactionsPage add/edit modal', () => {
         const { container } = renderPage()
 
         await screen.findByText('Weekly shop')
-        await user.click(screen.getByRole('button', { name: 'Add transaction' }))
+        await user.click(screen.getByRole('button', { name: 'Add' }))
         await user.type(screen.getByLabelText('Note (optional)'), 'concert tickets')
 
         await user.click(getBackdrop(container))
@@ -202,7 +202,7 @@ describe('TransactionsPage add/edit modal', () => {
         const { container } = renderPage()
 
         await screen.findByText('Weekly shop')
-        await user.click(screen.getByRole('button', { name: 'Add transaction' }))
+        await user.click(screen.getByRole('button', { name: 'Add' }))
         await user.type(screen.getByLabelText('Note (optional)'), 'concert tickets')
 
         await user.click(getBackdrop(container))
@@ -218,7 +218,7 @@ describe('TransactionsPage add/edit modal', () => {
         renderPage()
 
         await screen.findByText('Weekly shop')
-        await user.click(screen.getByRole('button', { name: 'Add transaction' }))
+        await user.click(screen.getByRole('button', { name: 'Add' }))
 
         const amountInput = screen.getByLabelText('Amount')
         await user.clear(amountInput)
@@ -238,7 +238,7 @@ describe('TransactionsPage add/edit modal', () => {
         renderPage()
 
         await screen.findByText('Weekly shop')
-        await user.click(screen.getByRole('button', { name: 'Add transaction' }))
+        await user.click(screen.getByRole('button', { name: 'Add' }))
         await user.selectOptions(screen.getByRole('combobox'), '__new__')
 
         expect(screen.getByText('New category name')).toBeInTheDocument()

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Pencil, Trash2 } from 'lucide-react'
 import {
     useCategories,
     useCreateCategory,
@@ -6,7 +7,7 @@ import {
     useDeleteCategory,
 } from '../hooks/useCategories'
 import ConfirmDialog from '../components/ConfirmDialog'
-import Button from '../components/Button'
+import AddButton from '../components/AddButton'
 import Card from '../components/Card'
 import { inputClass } from '../components/FormField'
 import { categoryTileClasses } from '../lib/categorySwatch'
@@ -82,7 +83,7 @@ export default function CategoriesPage() {
                     onChange={(e) => setNewName(e.target.value)}
                     className={`flex-1 ${inputClass}`}
                 />
-                <Button type="submit">Add</Button>
+                <AddButton type="submit" />
             </form>
 
             {error && <p className="text-withdrawal text-sm mb-4">{error}</p>}
@@ -128,15 +129,20 @@ export default function CategoriesPage() {
                                             <Icon aria-hidden="true" strokeWidth={1.7} className="h-4 w-4" />
                                         </div>
                                         <span className="flex-1 min-w-0 truncate">{category.name}</span>
-                                        <button onClick={() => startEdit(category)} className="text-sm text-ink-soft hover:text-ink shrink-0">
-                                            Edit
+                                        <button
+                                            onClick={() => startEdit(category)}
+                                            aria-label="Edit"
+                                            className="h-11 w-11 shrink-0 flex items-center justify-center rounded-sm text-ink-soft hover:text-ink"
+                                        >
+                                            <Pencil aria-hidden="true" strokeWidth={1.7} className="h-4 w-4" />
                                         </button>
                                         <button
                                             onClick={() => requestDelete(category)}
                                             disabled={deleteCategory.isPending && deleteCategory.variables === category.id}
-                                            className="text-sm text-ink-soft hover:text-withdrawal disabled:opacity-50 disabled:pointer-events-none shrink-0"
+                                            aria-label="Delete"
+                                            className="h-11 w-11 shrink-0 flex items-center justify-center rounded-sm text-ink-soft hover:text-withdrawal disabled:opacity-50 disabled:pointer-events-none"
                                         >
-                                            Delete
+                                            <Trash2 aria-hidden="true" strokeWidth={1.7} className="h-4 w-4" />
                                         </button>
                                     </>
                                 )}
