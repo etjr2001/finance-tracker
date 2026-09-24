@@ -26,7 +26,7 @@ export default function Modal({ onRequestClose, children, contentClassName = 'ma
             className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4"
             onMouseDown={handleBackdropMouseDown}
         >
-            <div ref={contentRef} className={`w-full ${contentClassName} rounded-xl bg-paper-raised p-5`}>
+            <div ref={contentRef} className={`w-full ${contentClassName} rounded-[14px] bg-paper-raised p-5`}>
                 {children}
             </div>
         </div>

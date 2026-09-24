@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useCreateCategory } from '../hooks/useCategories'
 import { apiErrorMessage } from '../api/client'
 import Modal from './Modal'
+import Button from './Button'
+import FormField, { inputClass } from './FormField'
 
 const NEW_CATEGORY_VALUE = '__new__'
 const MAX_AMOUNT = 9999999999.99
@@ -147,11 +149,6 @@ export default function TransactionForm({ categories, initial, onSubmit, onCance
         })
     }
 
-    // text-base (16px), not text-sm: iOS Safari auto-zooms the viewport on
-    // focus for any input under 16px, and doesn't reliably zoom back out.
-    const inputClass =
-        'w-full border border-rule-strong bg-white px-3 py-2 rounded-sm text-base focus:outline-none focus:ring-1 focus:ring-ink'
-
     return (
         <>
             <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -170,8 +167,9 @@ export default function TransactionForm({ categories, initial, onSubmit, onCance
                 </div>
 
                 <div>
-                    <label className="block text-sm text-ink-soft mb-1">Amount</label>
+                    <label className="block text-sm text-ink-soft mb-1" htmlFor="amount">Amount</label>
                     <input
+                        id="amount"
                         type="number"
                         step="0.01"
                         min="0"
@@ -191,8 +189,9 @@ export default function TransactionForm({ categories, initial, onSubmit, onCance
                 </div>
 
                 <div>
-                    <label className="block text-sm text-ink-soft mb-1">Date</label>
+                    <label className="block text-sm text-ink-soft mb-1" htmlFor="date">Date</label>
                     <input
+                        id="date"
                         type="date"
                         required
                         value={form.date}
@@ -207,9 +206,10 @@ export default function TransactionForm({ categories, initial, onSubmit, onCance
                 )}
 
                 <div>
-                    <label className="block text-sm text-ink-soft mb-1">Category</label>
+                    <label className="block text-sm text-ink-soft mb-1" htmlFor="categoryId">Category</label>
                     <div className="relative">
                         <select
+                            id="categoryId"
                             required
                             value={form.categoryId}
                             onChange={handleCategorySelectChange}
@@ -233,37 +233,32 @@ export default function TransactionForm({ categories, initial, onSubmit, onCance
                     </div>
                 </div>
 
-                <div>
-                    <label className="block text-sm text-ink-soft mb-1">Note (optional)</label>
-                    <input
-                        type="text"
-                        maxLength={256}
-                        value={form.note}
-                        onChange={(e) => update('note', e.target.value)}
-                        className={inputClass}
-                    />
-                </div>
+                <FormField
+                    label="Note (optional)"
+                    htmlFor="note"
+                    type="text"
+                    maxLength={256}
+                    value={form.note}
+                    onChange={(e) => update('note', e.target.value)}
+                />
 
                 <div className="md:col-span-2 flex gap-4 pt-1">
-                    <button
-                        type="submit"
-                        disabled={submitting}
-                        className="bg-ink text-paper px-4 py-2 rounded-sm text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
-                    >
+                    <Button type="submit" disabled={submitting}>
                         {initial ? 'Save changes' : 'Add transaction'}
-                    </button>
+                    </Button>
                     {onCancel && (
-                        <button type="button" onClick={onCancel} className="text-sm text-ink-soft hover:text-ink">
+                        <Button variant="ghost" onClick={onCancel}>
                             Cancel
-                        </button>
+                        </Button>
                     )}
                 </div>
             </form>
 
             {addingCategory && (
                 <Modal onRequestClose={cancelAddingCategory}>
-                    <label className="block text-sm text-ink-soft mb-1">New category name</label>
-                    <input
+                    <FormField
+                        label="New category name"
+                        htmlFor="newCategoryName"
                         autoFocus
                         type="text"
                         maxLength={50}
@@ -276,21 +271,15 @@ export default function TransactionForm({ categories, initial, onSubmit, onCance
                             }
                         }}
                         placeholder="Category name"
-                        className={inputClass}
                     />
                     {newCategoryError && <p className="mt-1 text-xs text-withdrawal">{newCategoryError}</p>}
                     <div className="flex gap-4 mt-4">
-                        <button
-                            type="button"
-                            onClick={handleCreateCategory}
-                            disabled={createCategory.isPending}
-                            className="bg-ink text-paper px-4 py-2 rounded-sm text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
-                        >
+                        <Button onClick={handleCreateCategory} disabled={createCategory.isPending}>
                             Create
-                        </button>
-                        <button type="button" onClick={cancelAddingCategory} className="text-sm text-ink-soft hover:text-ink">
+                        </Button>
+                        <Button variant="ghost" onClick={cancelAddingCategory}>
                             Cancel
-                        </button>
+                        </Button>
                     </div>
                 </Modal>
             )}

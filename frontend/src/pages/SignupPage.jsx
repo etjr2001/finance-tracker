@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
 import { apiErrorMessage } from '../api/client'
+import FormField from '../components/FormField'
+import Button from '../components/Button'
 
 export default function SignupPage() {
     const { signup } = useAuth()
@@ -30,9 +32,6 @@ export default function SignupPage() {
         }
     }
 
-    const inputClass =
-        'w-full border border-rule-strong bg-white px-3 py-2 rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-ink'
-
     if (confirmationSent) {
         return (
             <div className="min-h-screen flex items-center justify-center px-6">
@@ -59,39 +58,29 @@ export default function SignupPage() {
                 </p>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <label className="block text-sm mb-1" htmlFor="email">Email</label>
-                        <input
-                            id="email"
-                            type="email"
-                            required
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className={inputClass}
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm mb-1" htmlFor="password">Password</label>
-                        <input
-                            id="password"
-                            type="password"
-                            required
-                            minLength={8}
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className={inputClass}
-                        />
-                    </div>
+                    <FormField
+                        label="Email"
+                        htmlFor="email"
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                    />
+                    <FormField
+                        label="Password"
+                        htmlFor="password"
+                        type="password"
+                        required
+                        minLength={8}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                    />
 
                     {error && <p className="text-withdrawal text-sm">{error}</p>}
 
-                    <button
-                        type="submit"
-                        disabled={submitting}
-                        className="w-full bg-ink text-paper py-2 rounded-sm text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
-                    >
+                    <Button type="submit" fullWidth disabled={submitting}>
                         {submitting ? 'Creating account…' : 'Sign up'}
-                    </button>
+                    </Button>
                 </form>
 
                 <p className="text-sm text-ink-soft mt-6">
