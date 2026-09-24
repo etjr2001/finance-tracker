@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, afterEach } from 'vitest'
-import { renderHook, waitFor } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { useCategories } from '../../src/hooks/useCategories'
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
+import { renderHook, waitFor, act } from '@testing-library/react'
+import { QueryClient, QueryClientProvider, onlineManager } from '@tanstack/react-query'
+import { useCategories, useCreateCategory } from '../../src/hooks/useCategories'
 import { DemoModeContext } from '../../src/demo/DemoModeContext'
 import * as categoriesApi from '../../src/api/categories'
 import * as demoApi from '../../src/demo/demoApi'
@@ -41,5 +41,43 @@ describe('useCategories demo branching', () => {
 
         expect(demoApi.listCategories).toHaveBeenCalled()
         expect(categoriesApi.listCategories).not.toHaveBeenCalled()
+    })
+})
+
+describe('useCategories while offline', () => {
+    beforeEach(() => {
+        onlineManager.setOnline(false)
+    })
+
+    afterEach(() => {
+        onlineManager.setOnline(true)
+        vi.restoreAllMocks()
+    })
+
+    it('runs the demo query instead of pausing', async () => {
+        demoApi.listCategories.mockResolvedValue([{ id: 2, name: 'Rent' }])
+        const { result } = renderHook(() => useCategories(), { wrapper: wrapper(true) })
+
+        await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    })
+
+    it('runs a demo create instead of pausing', async () => {
+        demoApi.createCategory.mockResolvedValue({ id: 3, name: 'Gifts' })
+        const { result } = renderHook(() => useCreateCategory(), { wrapper: wrapper(true) })
+
+        await act(() => result.current.mutateAsync({ name: 'Gifts' }))
+
+        expect(demoApi.createCategory).toHaveBeenCalled()
+        await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    })
+
+    it('still pauses a real-API create', async () => {
+        categoriesApi.createCategory.mockResolvedValue({ id: 4, name: 'Gifts' })
+        const { result } = renderHook(() => useCreateCategory(), { wrapper: wrapper(false) })
+
+        act(() => result.current.mutate({ name: 'Gifts' }))
+
+        await waitFor(() => expect(result.current.isPaused).toBe(true))
+        expect(categoriesApi.createCategory).not.toHaveBeenCalled()
     })
 })

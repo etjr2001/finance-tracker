@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, afterEach } from 'vitest'
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import { renderHook, waitFor } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClient, QueryClientProvider, onlineManager } from '@tanstack/react-query'
 import { useDashboard } from '../../src/hooks/useDashboard'
 import { DemoModeContext } from '../../src/demo/DemoModeContext'
 import * as dashboardApi from '../../src/api/dashboard'
@@ -41,5 +41,23 @@ describe('useDashboard demo branching', () => {
 
         expect(demoApi.getDashboard).toHaveBeenCalledWith('2026-09')
         expect(dashboardApi.getDashboard).not.toHaveBeenCalled()
+    })
+})
+
+describe('useDashboard while offline', () => {
+    beforeEach(() => {
+        onlineManager.setOnline(false)
+    })
+
+    afterEach(() => {
+        onlineManager.setOnline(true)
+        vi.restoreAllMocks()
+    })
+
+    it('runs the demo query instead of pausing', async () => {
+        demoApi.getDashboard.mockResolvedValue({ totalIncome: 0, totalExpenses: 0, net: 0, byCategory: [] })
+        const { result } = renderHook(() => useDashboard('2026-09'), { wrapper: wrapper(true) })
+
+        await waitFor(() => expect(result.current.isSuccess).toBe(true))
     })
 })
