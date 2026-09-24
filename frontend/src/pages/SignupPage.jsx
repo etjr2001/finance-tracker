@@ -31,13 +31,13 @@ export default function SignupPage() {
     }
 
     const inputClass =
-        'w-full border border-rule bg-white px-3 py-2 rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-ink'
+        'w-full border border-rule-strong bg-white px-3 py-2 rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-ink'
 
     if (confirmationSent) {
         return (
             <div className="min-h-screen flex items-center justify-center px-6">
                 <div className="w-full max-w-sm text-center">
-                    <h1 className="font-serif text-3xl mb-1">Check your email</h1>
+                    <h1 className="font-serif font-semibold text-3xl mb-1">Check your email</h1>
                     <p className="text-ink-soft text-sm mt-4">
                         We've sent a confirmation link to <span className="text-ink">{email}</span>.
                         Click it to activate your account, then log in.
@@ -53,7 +53,7 @@ export default function SignupPage() {
     return (
         <div className="min-h-screen flex items-center justify-center px-6">
             <div className="w-full max-w-sm">
-                <h1 className="font-serif text-3xl mb-1">Ledger</h1>
+                <h1 className="font-serif font-semibold text-3xl mb-1">Ledger</h1>
                 <p className="text-ink-soft text-sm mb-8">
                     Create an account. We'll set you up with five starter categories.
                 </p>

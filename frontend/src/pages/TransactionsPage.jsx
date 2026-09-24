@@ -113,7 +113,7 @@ export default function TransactionsPage() {
     return (
         <div>
             <div className="flex items-center justify-between mb-6">
-                <h2 className="font-serif text-2xl">Transactions</h2>
+                <h2 className="font-serif font-semibold text-2xl">Transactions</h2>
                 {!showForm && !editing && (
                     <button
                         onClick={openCreate}
@@ -170,7 +170,7 @@ export default function TransactionsPage() {
                                 <div className="truncate flex items-center gap-2">
                                     <span>{t.category?.name ?? 'Unknown category'}</span>
                                     {Number(t.amount) === 0 && (
-                                        <span className="text-xs font-medium text-brass bg-brass/10 border border-brass/30 rounded-full px-2 py-0.5 shrink-0">
+                                        <span className="text-xs font-medium text-brass-ink bg-brass/10 border border-brass/30 rounded-full px-2 py-0.5 shrink-0">
                                             Draft
                                         </span>
                                     )}
@@ -179,7 +179,7 @@ export default function TransactionsPage() {
                             </div>
                         </div>
                         <div className="flex items-center gap-4 shrink-0">
-                            <span className={t.type === 'INCOME' ? 'text-deposit' : 'text-withdrawal'}>
+                            <span className={t.type === 'INCOME' ? 'text-deposit' : 'text-ink'}>
                                 {t.type === 'INCOME' ? '+' : '\u2212'}
                                 <Money amount={t.amount} />
                             </span>

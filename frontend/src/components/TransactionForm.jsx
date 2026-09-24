@@ -150,7 +150,7 @@ export default function TransactionForm({ categories, initial, onSubmit, onCance
     // text-base (16px), not text-sm: iOS Safari auto-zooms the viewport on
     // focus for any input under 16px, and doesn't reliably zoom back out.
     const inputClass =
-        'w-full border border-rule bg-white px-3 py-2 rounded-sm text-base focus:outline-none focus:ring-1 focus:ring-ink'
+        'w-full border border-rule-strong bg-white px-3 py-2 rounded-sm text-base focus:outline-none focus:ring-1 focus:ring-ink'
 
     return (
         <>
