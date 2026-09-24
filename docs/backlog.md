@@ -16,6 +16,7 @@ Living document. Not an ADR: this tracks *what's outstanding*, not *decisions ma
 - **No pagination on `GET /api/transactions`.** Much less urgent since ADR0011: the Transactions page now shows one month at a time. Scoped into sprint 3, Bundle A, as optional and deferrable.
 - **Inconsistent money formatting.** The Dashboard's Net renders a hyphen-minus (`-$957.50`) while the Transaction list uses U+2212 (`−$5.67`); demo shows `SGD 4,200.00` while a real account shows `$908.37`. ADR0010 standardises on U+2212 via `Money.jsx`. Fix in the revamp's `style/design-tokens` branch, and find out why the currency display differs between demo and real accounts.
 - **No custom domain/DNS.** The app is live on the default Railway URL. Explicitly non-blocking, parked indefinitely.
+- ~~**Bottom tab bar feels too narrow to tap comfortably on phone.**~~ Fixed (`fix/nav-bar-tap-targets-and-new-transaction-date`): grew the `NavLink`s from `min-h-11`/`py-1.5` to `min-h-14`/`py-2`, so the tap targets themselves sit clear of the iPhone home-indicator gesture area — the existing `pb-[env(safe-area-inset-bottom)]` only cleared the bar's *background* there, not the tappable zone. Awaiting on-device confirmation this was the whole story.
 
 ## Backlog (not yet scheduled into a sprint)
 

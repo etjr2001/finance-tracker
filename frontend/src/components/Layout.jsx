@@ -144,6 +144,12 @@ export default function Layout() {
             {/* Below md:, a fixed bottom tab bar replaces the top nav
                 (ADR0010). pb-[env(...)] clears the home-indicator area on
                 iPhones without a physical home button. */}
+            {/* min-h-14 (56px), not the bare min-h-11 (44px) ADR0010 sets as
+                a floor elsewhere: pb-safe-area above only clears the
+                background past the home-indicator gesture area, not the
+                tap targets themselves, so on an iPhone without a home
+                button the 44px zone still sat close enough to the edge to
+                make bottom-row taps imprecise (docs/backlog.md). */}
             <nav className="md:hidden fixed inset-x-0 bottom-0 z-40 flex bg-paper-raised border-t border-rule pb-[env(safe-area-inset-bottom)]">
                 {items.map((item) => (
                     <NavLink
@@ -151,7 +157,7 @@ export default function Layout() {
                         to={item.to}
                         end={item.end}
                         className={({ isActive }) =>
-                            `flex-1 flex flex-col items-center justify-center gap-0.5 min-h-11 py-1.5 text-xs transition-colors ${
+                            `flex-1 flex flex-col items-center justify-center gap-0.5 min-h-14 py-2 text-xs transition-colors ${
                                 isActive ? 'text-deposit font-medium' : 'text-ink-soft'
                             }`
                         }

@@ -6,18 +6,24 @@ import Button from './Button'
 import AddButton from './AddButton'
 import FormField, { inputClass } from './FormField'
 import { ChevronDown } from 'lucide-react'
+import { currentDate } from '../lib/date'
 
 const NEW_CATEGORY_VALUE = '__new__'
 const MAX_AMOUNT = 9999999999.99
 
-const today = () => new Date().toISOString().slice(0, 10)
-
-const emptyForm = {
-    type: 'EXPENSE',
-    amount: '0',
-    date: today(),
-    note: '',
-    categoryId: '',
+// A function, not a module-level constant: emptyForm's old `date: today()`
+// was computed once when the module first loaded and then frozen, so a
+// tab left open past midnight kept defaulting new transactions to the
+// stale load-time date. Calling this fresh each time a new form mounts
+// keeps `date` genuinely "today".
+function emptyForm() {
+    return {
+        type: 'EXPENSE',
+        amount: '0',
+        date: currentDate(),
+        note: '',
+        categoryId: '',
+    }
 }
 
 function toFormShape(t) {
@@ -44,7 +50,7 @@ function isDirty(form, initial) {
 // useState setter) — a new function identity every render will still work
 // but re-fires the effect unnecessarily.
 export default function TransactionForm({ categories, initial, onSubmit, onCancel, submitting, onDirtyChange }) {
-    const initialShape = useRef(initial ? toFormShape(initial) : emptyForm)
+    const initialShape = useRef(initial ? toFormShape(initial) : emptyForm())
     const [form, setForm] = useState(initialShape.current)
     const [amountAtMax, setAmountAtMax] = useState(false)
     const [amountTooManyDecimals, setAmountTooManyDecimals] = useState(false)
