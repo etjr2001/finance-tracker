@@ -75,13 +75,27 @@ export default function TransactionForm({ categories, initial, onSubmit, onCance
         setForm((f) => ({ ...f, [field]: value }))
     }
 
-    // Blocks keystrokes that would push the amount past what numeric(12,2)
-    // can hold, or past its 2-decimal-place scale, rather than only warning
-    // on submit — but silently blocking input with no feedback reads as
-    // broken, especially on mobile where the field may be scrolled
-    // off-screen behind the keyboard, so these drive a visible hint instead.
+    // The field is type="text" + inputMode="decimal", not type="number":
+    // iOS Safari's number keyboard is the "numbers and punctuation" page
+    // (includes -, comma), not the clean 0-9 + decimal keypad that decimal
+    // inputMode gives on both iOS and Android. That means the browser no
+    // longer filters keystrokes for us, so this rejects anything that isn't
+    // a digit or a single decimal point outright (silently — there was
+    // never visible feedback for a stray letter/minus with type="number"
+    // either, since the browser just refused the keystroke).
+    //
+    // On top of that, blocks keystrokes that would push the amount past
+    // what numeric(12,2) can hold, or past its 2-decimal-place scale,
+    // rather than only warning on submit — but silently blocking input
+    // with no feedback there reads as broken, especially on mobile where
+    // the field may be scrolled off-screen behind the keyboard, so those
+    // two drive a visible hint instead.
     function handleAmountChange(e) {
         const value = e.target.value
+        if (!/^\d*\.?\d*$/.test(value)) {
+            return
+        }
+
         const decimalDigits = value.match(/\.(\d+)$/)?.[1]?.length ?? 0
         if (decimalDigits > 2) {
             setAmountTooManyDecimals(true)
@@ -171,10 +185,8 @@ export default function TransactionForm({ categories, initial, onSubmit, onCance
                     <label className="block text-sm text-ink-soft mb-1" htmlFor="amount">Amount</label>
                     <input
                         id="amount"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        max={MAX_AMOUNT}
+                        type="text"
+                        inputMode="decimal"
                         required
                         value={form.amount}
                         onChange={handleAmountChange}
