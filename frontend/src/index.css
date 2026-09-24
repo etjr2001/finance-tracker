@@ -1,15 +1,29 @@
-@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --color-paper: #EDEDE2;
-  --color-paper-raised: #E3E4D5;
-  --color-ink: #1C231D;
-  --color-ink-soft: #5B6355;
-  --color-rule: #B8BEA8;
-  --color-deposit: #3A5A45;
-  --color-withdrawal: #8C3B2E;
+  --color-paper: #F4F5F1;
+  --color-paper-raised: #FFFFFF;
+  --color-ink: #15231B;
+  --color-ink-soft: #56615A;
+  --color-rule: #E1E4DD;
+  --color-rule-soft: #ECEEE8;
+  --color-rule-strong: #8A938A;
+  --color-deposit: #1F5C45;
+  --color-withdrawal: #9E3A2B;
   --color-brass: #9C7A2E;
+  --color-brass-ink: #7A5A12;
+  --color-track: #EEF0EB;
+
+  /* Category swatches (ADR0010): bars, and icon tiles at ~12% opacity. */
+  --color-swatch-slate: #2E6B8F;
+  --color-swatch-ochre: #B07A1F;
+  --color-swatch-moss: #4F7F4F;
+  --color-swatch-clay: #A5483A;
+  --color-swatch-plum: #6E5A8A;
+  --color-swatch-teal: #3F8A84;
+  --color-swatch-tan: #8A7A5A;
+  --color-swatch-olive: #6B6F3A;
+  --color-swatch-rose: #9A4D6B;
 
   --font-serif: 'Source Serif 4', Georgia, serif;
   --font-sans: 'IBM Plex Sans', system-ui, sans-serif;

@@ -25,13 +25,13 @@ export default function ForgotPasswordPage() {
     }
 
     const inputClass =
-        'w-full border border-rule bg-white px-3 py-2 rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-ink'
+        'w-full border border-rule-strong bg-white px-3 py-2 rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-ink'
 
     if (sent) {
         return (
             <div className="min-h-screen flex items-center justify-center px-6">
                 <div className="w-full max-w-sm text-center">
-                    <h1 className="font-serif text-3xl mb-1">Check your email</h1>
+                    <h1 className="font-serif font-semibold text-3xl mb-1">Check your email</h1>
                     <p className="text-ink-soft text-sm mt-4">
                         If an account exists for <span className="text-ink">{email}</span>, we've sent a link to reset your password.
                     </p>
@@ -46,7 +46,7 @@ export default function ForgotPasswordPage() {
     return (
         <div className="min-h-screen flex items-center justify-center px-6">
             <div className="w-full max-w-sm">
-                <h1 className="font-serif text-3xl mb-1">Reset password</h1>
+                <h1 className="font-serif font-semibold text-3xl mb-1">Reset password</h1>
                 <p className="text-ink-soft text-sm mb-8">
                     Enter your email and we'll send you a link to reset your password.
                 </p>

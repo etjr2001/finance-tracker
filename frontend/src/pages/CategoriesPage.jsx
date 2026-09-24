@@ -67,11 +67,11 @@ export default function CategoriesPage() {
     // text-base (16px), not text-sm: iOS Safari auto-zooms the viewport on
     // focus for any input under 16px, and doesn't reliably zoom back out.
     const inputClass =
-        'border border-rule bg-white px-3 py-2 rounded-sm text-base focus:outline-none focus:ring-1 focus:ring-ink'
+        'border border-rule-strong bg-white px-3 py-2 rounded-sm text-base focus:outline-none focus:ring-1 focus:ring-ink'
 
     return (
         <div>
-            <h2 className="font-serif text-2xl mb-6">Categories</h2>
+            <h2 className="font-serif font-semibold text-2xl mb-6">Categories</h2>
 
             <form onSubmit={handleCreate} className="flex gap-2 mb-8 max-w-sm">
                 <input

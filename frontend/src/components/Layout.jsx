@@ -39,7 +39,7 @@ export default function Layout() {
                 <aside className="md:w-52 shrink-0 border-b md:border-b-0 md:border-r border-rule flex flex-col md:justify-between">
                     <div className="p-6">
                         <div className="flex items-center justify-between gap-3">
-                            <h1 className="font-serif text-xl">Ledger</h1>
+                            <h1 className="font-serif font-semibold text-xl">Ledger</h1>
                             <button
                                 onClick={handleExit}
                                 className="md:hidden shrink-0 whitespace-nowrap text-sm text-ink-soft hover:text-ink transition-colors border border-rule rounded-sm px-3 py-1.5"
@@ -56,7 +56,7 @@ export default function Layout() {
                                     className={({ isActive }) =>
                                         `px-3 py-1.5 rounded-sm text-sm transition-colors ${
                                             isActive
-                                                ? 'bg-paper-raised text-ink font-medium'
+                                                ? 'text-deposit font-medium'
                                                 : 'text-ink-soft hover:text-ink'
                                         }`
                                     }

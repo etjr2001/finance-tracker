@@ -26,12 +26,12 @@ export default function LoginPage() {
     }
 
     const inputClass =
-        'w-full border border-rule bg-white px-3 py-2 rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-ink'
+        'w-full border border-rule-strong bg-white px-3 py-2 rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-ink'
 
     return (
         <div className="min-h-screen flex items-center justify-center px-6">
             <div className="w-full max-w-sm">
-                <h1 className="font-serif text-3xl mb-1">Ledger</h1>
+                <h1 className="font-serif font-semibold text-3xl mb-1">Ledger</h1>
                 <p className="text-ink-soft text-sm mb-8">Log in to your account.</p>
 
                 <form onSubmit={handleSubmit} className="space-y-4">

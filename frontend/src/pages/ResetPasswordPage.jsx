@@ -12,7 +12,7 @@ export default function ResetPasswordPage() {
     const [done, setDone] = useState(false)
 
     const inputClass =
-        'w-full border border-rule bg-white px-3 py-2 rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-ink'
+        'w-full border border-rule-strong bg-white px-3 py-2 rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-ink'
 
     async function handleSubmit(e) {
         e.preventDefault()
@@ -40,7 +40,7 @@ export default function ResetPasswordPage() {
         return (
             <div className="min-h-screen flex items-center justify-center px-6">
                 <div className="w-full max-w-sm text-center">
-                    <h1 className="font-serif text-3xl mb-1">Password updated</h1>
+                    <h1 className="font-serif font-semibold text-3xl mb-1">Password updated</h1>
                     <p className="text-ink-soft text-sm mt-4">You can now use your new password to log in.</p>
                     <Link to="/" className="inline-block mt-6 text-ink underline underline-offset-2 text-sm">
                         Continue
@@ -54,7 +54,7 @@ export default function ResetPasswordPage() {
         return (
             <div className="min-h-screen flex items-center justify-center px-6">
                 <div className="w-full max-w-sm text-center">
-                    <h1 className="font-serif text-3xl mb-1">Link expired</h1>
+                    <h1 className="font-serif font-semibold text-3xl mb-1">Link expired</h1>
                     <p className="text-ink-soft text-sm mt-4">
                         This password reset link is invalid or has expired.
                     </p>
@@ -69,7 +69,7 @@ export default function ResetPasswordPage() {
     return (
         <div className="min-h-screen flex items-center justify-center px-6">
             <div className="w-full max-w-sm">
-                <h1 className="font-serif text-3xl mb-1">Set a new password</h1>
+                <h1 className="font-serif font-semibold text-3xl mb-1">Set a new password</h1>
                 <p className="text-ink-soft text-sm mb-8">Choose a new password for your account.</p>
 
                 <form onSubmit={handleSubmit} className="space-y-4">

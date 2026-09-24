@@ -3,8 +3,8 @@
   "short_name": "Ledger",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#EDEDE2",
-  "theme_color": "#EDEDE2",
+  "background_color": "#F4F5F1",
+  "theme_color": "#F4F5F1",
   "icons": [
     {
       "src": "/icon-192.png",

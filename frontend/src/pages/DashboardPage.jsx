@@ -16,13 +16,13 @@ export default function DashboardPage() {
     return (
         <div>
             <div className="flex items-center justify-between mb-8">
-                <h2 className="font-serif text-2xl">Dashboard</h2>
+                <h2 className="font-serif font-semibold text-2xl">Dashboard</h2>
                 <input
                     type="month"
                     value={month}
                     onChange={(e) => setMonth(e.target.value)}
                     onClick={(e) => e.target.showPicker?.()}
-                    className="border border-rule bg-white px-3 py-1.5 rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-ink"
+                    className="border border-rule-strong bg-white px-3 py-1.5 rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-ink"
                 />
             </div>
 
@@ -37,11 +37,11 @@ export default function DashboardPage() {
                         <Stat
                             label="Net"
                             value={data.net}
-                            tone={data.net >= 0 ? 'text-brass' : 'text-withdrawal'}
+                            tone={data.net >= 0 ? 'text-brass-ink' : 'text-withdrawal'}
                         />
                     </div>
 
-                    <h3 className="font-serif text-lg mb-4">By category</h3>
+                    <h3 className="font-serif font-semibold text-lg mb-4">By category</h3>
                     {data.byCategory.length === 0 && (
                         <p className="text-ink-soft text-sm">No transactions in this period yet.</p>
                     )}
@@ -52,7 +52,7 @@ export default function DashboardPage() {
                                     <span>{c.categoryName}</span>
                                     <span className="tabular text-ink-soft">{formatMoney(c.total)}</span>
                                 </div>
-                                <div className="h-1.5 bg-paper-raised rounded-full overflow-hidden">
+                                <div className="h-1.5 bg-track rounded-full overflow-hidden">
                                     <div
                                         className="h-full bg-ink"
                                         style={{
@@ -75,7 +75,7 @@ function Stat({ label, value, tone }) {
     return (
         <div>
             <div className="text-sm text-ink-soft mb-1">{label}</div>
-            <div className={`font-serif text-xl tabular ${tone}`}>
+            <div className={`font-serif font-semibold text-xl tabular ${tone}`}>
                 <Money amount={value} />
             </div>
         </div>
