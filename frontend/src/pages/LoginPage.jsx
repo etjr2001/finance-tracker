@@ -4,6 +4,7 @@ import { useAuth } from '../context/useAuth'
 import { apiErrorMessage } from '../api/client'
 import FormField from '../components/FormField'
 import Button from '../components/Button'
+import Card from '../components/Card'
 
 export default function LoginPage() {
     const { login } = useAuth()
@@ -28,8 +29,8 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center px-6">
-            <div className="w-full max-w-sm">
+        <div className="min-h-screen flex items-center justify-center px-6 bg-paper">
+            <Card className="w-full max-w-sm p-8">
                 <h1 className="font-serif font-semibold text-3xl mb-1">Ledger</h1>
                 <p className="text-ink-soft text-sm mb-8">Log in to your account.</p>
 
@@ -74,7 +75,7 @@ export default function LoginPage() {
                         Back to demo
                     </Link>
                 </p>
-            </div>
+            </Card>
         </div>
     )
 }

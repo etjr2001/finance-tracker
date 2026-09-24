@@ -4,6 +4,7 @@ import { useAuth } from '../context/useAuth'
 import { apiErrorMessage } from '../api/client'
 import FormField from '../components/FormField'
 import Button from '../components/Button'
+import Card from '../components/Card'
 
 export default function ForgotPasswordPage() {
     const { requestPasswordReset } = useAuth()
@@ -28,8 +29,8 @@ export default function ForgotPasswordPage() {
 
     if (sent) {
         return (
-            <div className="min-h-screen flex items-center justify-center px-6">
-                <div className="w-full max-w-sm text-center">
+            <div className="min-h-screen flex items-center justify-center px-6 bg-paper">
+                <Card className="w-full max-w-sm p-8 text-center">
                     <h1 className="font-serif font-semibold text-3xl mb-1">Check your email</h1>
                     <p className="text-ink-soft text-sm mt-4">
                         If an account exists for <span className="text-ink">{email}</span>, we've sent a link to reset your password.
@@ -37,14 +38,14 @@ export default function ForgotPasswordPage() {
                     <Link to="/login" className="inline-block mt-6 text-ink underline underline-offset-2 text-sm">
                         Back to log in
                     </Link>
-                </div>
+                </Card>
             </div>
         )
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center px-6">
-            <div className="w-full max-w-sm">
+        <div className="min-h-screen flex items-center justify-center px-6 bg-paper">
+            <Card className="w-full max-w-sm p-8">
                 <h1 className="font-serif font-semibold text-3xl mb-1">Reset password</h1>
                 <p className="text-ink-soft text-sm mb-8">
                     Enter your email and we'll send you a link to reset your password.
@@ -72,7 +73,7 @@ export default function ForgotPasswordPage() {
                         Back to log in
                     </Link>
                 </p>
-            </div>
+            </Card>
         </div>
     )
 }

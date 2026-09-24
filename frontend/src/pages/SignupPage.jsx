@@ -4,6 +4,7 @@ import { useAuth } from '../context/useAuth'
 import { apiErrorMessage } from '../api/client'
 import FormField from '../components/FormField'
 import Button from '../components/Button'
+import Card from '../components/Card'
 
 export default function SignupPage() {
     const { signup } = useAuth()
@@ -34,8 +35,8 @@ export default function SignupPage() {
 
     if (confirmationSent) {
         return (
-            <div className="min-h-screen flex items-center justify-center px-6">
-                <div className="w-full max-w-sm text-center">
+            <div className="min-h-screen flex items-center justify-center px-6 bg-paper">
+                <Card className="w-full max-w-sm p-8 text-center">
                     <h1 className="font-serif font-semibold text-3xl mb-1">Check your email</h1>
                     <p className="text-ink-soft text-sm mt-4">
                         We've sent a confirmation link to <span className="text-ink">{email}</span>.
@@ -44,14 +45,14 @@ export default function SignupPage() {
                     <Link to="/login" className="inline-block mt-6 text-ink underline underline-offset-2 text-sm">
                         Back to log in
                     </Link>
-                </div>
+                </Card>
             </div>
         )
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center px-6">
-            <div className="w-full max-w-sm">
+        <div className="min-h-screen flex items-center justify-center px-6 bg-paper">
+            <Card className="w-full max-w-sm p-8">
                 <h1 className="font-serif font-semibold text-3xl mb-1">Ledger</h1>
                 <p className="text-ink-soft text-sm mb-8">
                     Create an account. We'll set you up with five starter categories.
@@ -89,7 +90,7 @@ export default function SignupPage() {
                         Log in
                     </Link>
                 </p>
-            </div>
+            </Card>
         </div>
     )
 }

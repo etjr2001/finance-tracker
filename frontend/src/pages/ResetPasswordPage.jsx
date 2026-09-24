@@ -4,6 +4,7 @@ import { useAuth } from '../context/useAuth'
 import { apiErrorMessage } from '../api/client'
 import FormField from '../components/FormField'
 import Button from '../components/Button'
+import Card from '../components/Card'
 
 export default function ResetPasswordPage() {
     const { isPasswordRecovery, updatePassword, loading } = useAuth()
@@ -37,22 +38,22 @@ export default function ResetPasswordPage() {
 
     if (done) {
         return (
-            <div className="min-h-screen flex items-center justify-center px-6">
-                <div className="w-full max-w-sm text-center">
+            <div className="min-h-screen flex items-center justify-center px-6 bg-paper">
+                <Card className="w-full max-w-sm p-8 text-center">
                     <h1 className="font-serif font-semibold text-3xl mb-1">Password updated</h1>
                     <p className="text-ink-soft text-sm mt-4">You can now use your new password to log in.</p>
                     <Link to="/" className="inline-block mt-6 text-ink underline underline-offset-2 text-sm">
                         Continue
                     </Link>
-                </div>
+                </Card>
             </div>
         )
     }
 
     if (!isPasswordRecovery) {
         return (
-            <div className="min-h-screen flex items-center justify-center px-6">
-                <div className="w-full max-w-sm text-center">
+            <div className="min-h-screen flex items-center justify-center px-6 bg-paper">
+                <Card className="w-full max-w-sm p-8 text-center">
                     <h1 className="font-serif font-semibold text-3xl mb-1">Link expired</h1>
                     <p className="text-ink-soft text-sm mt-4">
                         This password reset link is invalid or has expired.
@@ -60,14 +61,14 @@ export default function ResetPasswordPage() {
                     <Link to="/forgot-password" className="inline-block mt-6 text-ink underline underline-offset-2 text-sm">
                         Request a new link
                     </Link>
-                </div>
+                </Card>
             </div>
         )
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center px-6">
-            <div className="w-full max-w-sm">
+        <div className="min-h-screen flex items-center justify-center px-6 bg-paper">
+            <Card className="w-full max-w-sm p-8">
                 <h1 className="font-serif font-semibold text-3xl mb-1">Set a new password</h1>
                 <p className="text-ink-soft text-sm mb-8">Choose a new password for your account.</p>
 
@@ -97,7 +98,7 @@ export default function ResetPasswordPage() {
                         {submitting ? 'Updating…' : 'Update password'}
                     </Button>
                 </form>
-            </div>
+            </Card>
         </div>
     )
 }
