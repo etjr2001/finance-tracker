@@ -76,12 +76,12 @@ describe('Layout logout / exit-demo button', () => {
     it('prefixes nav links with /demo in demo mode', () => {
         renderLayout({ isDemo: true, path: '/demo' })
 
-        expect(screen.getByRole('link', { name: 'Transactions' })).toHaveAttribute('href', '/demo/transactions')
+        expect(screen.getAllByRole('link', { name: 'Transactions' })[0]).toHaveAttribute('href', '/demo/transactions')
     })
 
     it('does not prefix nav links outside demo mode', () => {
         renderLayout({ isDemo: false, path: '/' })
 
-        expect(screen.getByRole('link', { name: 'Transactions' })).toHaveAttribute('href', '/transactions')
+        expect(screen.getAllByRole('link', { name: 'Transactions' })[0]).toHaveAttribute('href', '/transactions')
     })
 })
