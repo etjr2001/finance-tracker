@@ -6,6 +6,8 @@ import {
     useDeleteCategory,
 } from '../hooks/useCategories'
 import ConfirmDialog from '../components/ConfirmDialog'
+import Button from '../components/Button'
+import { inputClass } from '../components/FormField'
 import { apiErrorMessage } from '../api/client'
 
 export default function CategoriesPage() {
@@ -64,11 +66,6 @@ export default function CategoriesPage() {
         }
     }
 
-    // text-base (16px), not text-sm: iOS Safari auto-zooms the viewport on
-    // focus for any input under 16px, and doesn't reliably zoom back out.
-    const inputClass =
-        'border border-rule-strong bg-white px-3 py-2 rounded-sm text-base focus:outline-none focus:ring-1 focus:ring-ink'
-
     return (
         <div>
             <h2 className="font-serif font-semibold text-2xl mb-6">Categories</h2>
@@ -82,12 +79,7 @@ export default function CategoriesPage() {
                     onChange={(e) => setNewName(e.target.value)}
                     className={`flex-1 ${inputClass}`}
                 />
-                <button
-                    type="submit"
-                    className="bg-ink text-paper px-4 py-2 rounded-sm text-sm hover:opacity-90 transition-opacity"
-                >
-                    Add
-                </button>
+                <Button type="submit">Add</Button>
             </form>
 
             {error && <p className="text-withdrawal text-sm mb-4">{error}</p>}

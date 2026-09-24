@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
 import { apiErrorMessage } from '../api/client'
+import FormField from '../components/FormField'
+import Button from '../components/Button'
 
 export default function ResetPasswordPage() {
     const { isPasswordRecovery, updatePassword, loading } = useAuth()
@@ -10,9 +12,6 @@ export default function ResetPasswordPage() {
     const [error, setError] = useState(null)
     const [submitting, setSubmitting] = useState(false)
     const [done, setDone] = useState(false)
-
-    const inputClass =
-        'w-full border border-rule-strong bg-white px-3 py-2 rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-ink'
 
     async function handleSubmit(e) {
         e.preventDefault()
@@ -73,40 +72,30 @@ export default function ResetPasswordPage() {
                 <p className="text-ink-soft text-sm mb-8">Choose a new password for your account.</p>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <label className="block text-sm mb-1" htmlFor="password">New password</label>
-                        <input
-                            id="password"
-                            type="password"
-                            required
-                            minLength={8}
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className={inputClass}
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm mb-1" htmlFor="confirm">Confirm password</label>
-                        <input
-                            id="confirm"
-                            type="password"
-                            required
-                            minLength={8}
-                            value={confirm}
-                            onChange={(e) => setConfirm(e.target.value)}
-                            className={inputClass}
-                        />
-                    </div>
+                    <FormField
+                        label="New password"
+                        htmlFor="password"
+                        type="password"
+                        required
+                        minLength={8}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                    />
+                    <FormField
+                        label="Confirm password"
+                        htmlFor="confirm"
+                        type="password"
+                        required
+                        minLength={8}
+                        value={confirm}
+                        onChange={(e) => setConfirm(e.target.value)}
+                    />
 
                     {error && <p className="text-withdrawal text-sm">{error}</p>}
 
-                    <button
-                        type="submit"
-                        disabled={submitting}
-                        className="w-full bg-ink text-paper py-2 rounded-sm text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
-                    >
+                    <Button type="submit" fullWidth disabled={submitting}>
                         {submitting ? 'Updating…' : 'Update password'}
-                    </button>
+                    </Button>
                 </form>
             </div>
         </div>

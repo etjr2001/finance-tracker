@@ -1,4 +1,5 @@
 import Modal from './Modal'
+import Button from './Button'
 
 // A yes/no confirmation, styled consistently with the rest of the app and
 // built on the same Modal shell used for the transaction Add/Edit forms.
@@ -8,15 +9,12 @@ export default function ConfirmDialog({ message, confirmLabel = 'Confirm', onCon
         <Modal onRequestClose={onCancel}>
             <p className="text-sm mb-4">{message}</p>
             <div className="flex gap-4">
-                <button
-                    onClick={onConfirm}
-                    className="bg-withdrawal text-paper px-4 py-2 rounded-sm text-sm hover:opacity-90 transition-opacity"
-                >
+                <Button variant="danger" onClick={onConfirm}>
                     {confirmLabel}
-                </button>
-                <button onClick={onCancel} className="text-sm text-ink-soft hover:text-ink">
+                </Button>
+                <Button variant="ghost" onClick={onCancel}>
                     Cancel
-                </button>
+                </Button>
             </div>
         </Modal>
     )

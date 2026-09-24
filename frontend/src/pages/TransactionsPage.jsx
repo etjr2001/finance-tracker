@@ -10,6 +10,7 @@ import TransactionForm from '../components/TransactionForm'
 import Modal from '../components/Modal'
 import ConfirmDialog from '../components/ConfirmDialog'
 import Money from '../components/Money'
+import Button from '../components/Button'
 import { apiErrorMessage } from '../api/client'
 
 export default function TransactionsPage() {
@@ -114,14 +115,7 @@ export default function TransactionsPage() {
         <div>
             <div className="flex items-center justify-between mb-6">
                 <h2 className="font-serif font-semibold text-2xl">Transactions</h2>
-                {!showForm && !editing && (
-                    <button
-                        onClick={openCreate}
-                        className="bg-ink text-paper px-4 py-2 rounded-sm text-sm hover:opacity-90 transition-opacity"
-                    >
-                        Add transaction
-                    </button>
-                )}
+                {!showForm && !editing && <Button onClick={openCreate}>Add transaction</Button>}
             </div>
 
             {error && !showForm && !editing && <p className="text-withdrawal text-sm mb-4">{error}</p>}
