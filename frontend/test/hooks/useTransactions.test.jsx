@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, afterEach } from 'vitest'
-import { renderHook, waitFor } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { useTransactions } from '../../src/hooks/useTransactions'
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
+import { renderHook, waitFor, act } from '@testing-library/react'
+import { QueryClient, QueryClientProvider, onlineManager } from '@tanstack/react-query'
+import { useTransactions, useCreateTransaction } from '../../src/hooks/useTransactions'
 import { DemoModeContext } from '../../src/demo/DemoModeContext'
 import * as transactionsApi from '../../src/api/transactions'
 import * as demoApi from '../../src/demo/demoApi'
@@ -40,6 +40,42 @@ describe('useTransactions demo branching', () => {
         await waitFor(() => expect(result.current.isSuccess).toBe(true))
 
         expect(demoApi.listTransactions).toHaveBeenCalled()
+        expect(transactionsApi.listTransactions).not.toHaveBeenCalled()
+    })
+})
+
+describe('useTransactions while offline', () => {
+    beforeEach(() => {
+        onlineManager.setOnline(false)
+    })
+
+    afterEach(() => {
+        onlineManager.setOnline(true)
+        vi.restoreAllMocks()
+    })
+
+    it('runs the demo query instead of pausing', async () => {
+        demoApi.listTransactions.mockResolvedValue([{ id: 2 }])
+        const { result } = renderHook(() => useTransactions(), { wrapper: wrapper(true) })
+
+        await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    })
+
+    it('runs a demo create instead of pausing', async () => {
+        demoApi.createTransaction.mockResolvedValue({ id: 3 })
+        const { result } = renderHook(() => useCreateTransaction(), { wrapper: wrapper(true) })
+
+        await act(() => result.current.mutateAsync({ amount: 5 }))
+
+        expect(demoApi.createTransaction).toHaveBeenCalled()
+        await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    })
+
+    it('still pauses the real-API query', async () => {
+        transactionsApi.listTransactions.mockResolvedValue([{ id: 1 }])
+        const { result } = renderHook(() => useTransactions(), { wrapper: wrapper(false) })
+
+        await waitFor(() => expect(result.current.fetchStatus).toBe('paused'))
         expect(transactionsApi.listTransactions).not.toHaveBeenCalled()
     })
 })

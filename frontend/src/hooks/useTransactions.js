@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import * as transactionsApi from '../api/transactions'
 import * as demoApi from '../demo/demoApi'
 import { useDemoMode } from '../demo/DemoModeContext'
+import { demoNetworkMode } from '../demo/demoNetworkMode'
 
 // Transactions and the dashboard are both derived from the same data, so
 // any write needs to invalidate both — otherwise the dashboard silently
@@ -17,6 +18,7 @@ export function useTransactions() {
     return useQuery({
         queryKey: ['transactions', isDemo],
         queryFn: api.listTransactions,
+        ...demoNetworkMode(isDemo),
     })
 }
 
@@ -26,6 +28,7 @@ export function useCreateTransaction() {
     const queryClient = useQueryClient()
     return useMutation({
         mutationFn: api.createTransaction,
+        ...demoNetworkMode(isDemo),
         onSuccess: () => invalidateAfterMutation(queryClient, isDemo),
     })
 }
@@ -36,6 +39,7 @@ export function useUpdateTransaction() {
     const queryClient = useQueryClient()
     return useMutation({
         mutationFn: ({ id, ...payload }) => api.updateTransaction(id, payload),
+        ...demoNetworkMode(isDemo),
         onSuccess: () => invalidateAfterMutation(queryClient, isDemo),
     })
 }
@@ -46,6 +50,7 @@ export function useDeleteTransaction() {
     const queryClient = useQueryClient()
     return useMutation({
         mutationFn: api.deleteTransaction,
+        ...demoNetworkMode(isDemo),
         onSuccess: () => invalidateAfterMutation(queryClient, isDemo),
     })
 }
