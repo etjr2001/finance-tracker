@@ -4,6 +4,7 @@ import { apiErrorMessage } from '../api/client'
 import Modal from './Modal'
 import Button from './Button'
 import FormField, { inputClass } from './FormField'
+import { ChevronDown } from 'lucide-react'
 
 const NEW_CATEGORY_VALUE = '__new__'
 const MAX_AMOUNT = 9999999999.99
@@ -221,15 +222,11 @@ export default function TransactionForm({ categories, initial, onSubmit, onCance
                             ))}
                             <option value={NEW_CATEGORY_VALUE}>+ Add new category…</option>
                         </select>
-                        <svg
+                        <ChevronDown
+                            aria-hidden="true"
+                            strokeWidth={1.7}
                             className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-soft"
-                            viewBox="0 0 20 20"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                        >
-                            <path d="M5 7.5L10 12.5L15 7.5" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
+                        />
                     </div>
                 </div>
 
