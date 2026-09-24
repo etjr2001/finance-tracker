@@ -47,7 +47,7 @@ Living document. Not an ADR: this tracks *what's outstanding*, not *decisions ma
   8. `style/transactions-page` — cards and day grouping. Category tiles use a deterministic colour and a default icon until Category colour/icon exists.
   9. `feat/mobile-transaction-row` — the amended spec above.
   10. `feat/global-month-picker` — per ADR0011: `useSelectedMonth()` with `?month=YYYY-MM`, month bar, month-grid sheet/popover, client-side month filtering of the Transactions list, empty state, switch-to-month after save, Drafts-in-other-months notice.
-  11. `style/dashboard-page` — summary cards and the Expense-by-Category bar list built from the existing `byCategory` response.
+  11. `style/dashboard-page` — summary cards and the Expense-by-Category bar list built from the existing `byCategory` response. Layout reference (mockups shared 2026-09-24, not yet in ADR0010): a single hero card — "Net this month" as the headline figure, a two-colour Income/Expense bar directly under it, then Income and Expenses as sub-stats inside the same card — replacing the current three-tile grid. Category rows get a percentage-of-total figure alongside the amount, and coloured bars (per-category swatch, not uniform ink). Capture this precisely in ADR0010 (or a follow-up ADR) once built, rather than improvising off the screenshot at build time.
 
 ## Sprint history
 
