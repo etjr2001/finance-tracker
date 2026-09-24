@@ -1,13 +1,13 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { LogOut } from 'lucide-react'
+import { LogOut, LayoutDashboard, ArrowLeftRight, Tags } from 'lucide-react'
 import { useAuth } from '../context/useAuth'
 import { useDemoMode } from '../demo/DemoModeContext'
 import DemoBanner from '../demo/DemoBanner'
 
 const navItems = [
-    { to: '/', label: 'Dashboard', end: true },
-    { to: '/transactions', label: 'Transactions' },
-    { to: '/categories', label: 'Categories' },
+    { to: '/', label: 'Dashboard', end: true, icon: LayoutDashboard },
+    { to: '/transactions', label: 'Transactions', icon: ArrowLeftRight },
+    { to: '/categories', label: 'Categories', icon: Tags },
 ]
 
 export default function Layout() {
@@ -25,6 +25,8 @@ export default function Layout() {
         ? navItems.map((item) => ({ ...item, to: `/demo${item.to === '/' ? '' : item.to}` }))
         : navItems
 
+    const exitLabel = isDemo ? 'Exit demo' : 'Log out'
+
     function handleExit() {
         if (isDemo) {
             navigate('/login')
@@ -36,53 +38,87 @@ export default function Layout() {
     return (
         <div className="min-h-screen flex flex-col">
             {isDemo && <DemoBanner />}
+
+            {/* Compact mobile header: below md:, nav lives in the bottom tab
+                bar instead, so this is just the title and an icon-only
+                Log out/Exit demo button (ADR0010). */}
+            <div className="md:hidden flex items-center justify-between px-4 py-3 border-b border-rule bg-paper-raised">
+                <h1 className="font-serif font-semibold text-xl">Ledger</h1>
+                <button
+                    onClick={handleExit}
+                    aria-label={exitLabel}
+                    className="inline-flex items-center justify-center h-11 w-11 -mr-2 rounded-sm text-ink-soft hover:text-ink transition-colors"
+                >
+                    <LogOut aria-hidden="true" strokeWidth={1.7} className="h-5 w-5" />
+                </button>
+            </div>
+
             <div className="flex flex-1 flex-col md:flex-row">
-                <aside className="md:w-52 shrink-0 border-b md:border-b-0 md:border-r border-rule flex flex-col md:justify-between">
+                {/* md: and up: sidebar with icon nav and Log out at its foot. */}
+                <aside className="hidden md:flex md:w-52 shrink-0 md:border-r border-rule flex-col md:justify-between">
                     <div className="p-6">
-                        <div className="flex items-center justify-between gap-3">
-                            <h1 className="font-serif font-semibold text-xl">Ledger</h1>
-                            <button
-                                onClick={handleExit}
-                                className="md:hidden shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink transition-colors border border-rule rounded-sm px-3 py-1.5"
-                            >
-                                <LogOut aria-hidden="true" strokeWidth={1.7} className="h-4 w-4" />
-                                {isDemo ? 'Exit demo' : 'Log out'}
-                            </button>
-                        </div>
-                        <nav className="mt-8 flex md:flex-col flex-wrap gap-1 -ml-3">
+                        <h1 className="font-serif font-semibold text-xl mb-8">Ledger</h1>
+                        <nav className="flex flex-col gap-1 -ml-3">
                             {items.map((item) => (
                                 <NavLink
                                     key={item.to}
                                     to={item.to}
                                     end={item.end}
                                     className={({ isActive }) =>
-                                        `px-3 py-1.5 rounded-sm text-sm transition-colors ${
+                                        `flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm transition-colors ${
                                             isActive
                                                 ? 'text-deposit font-medium'
                                                 : 'text-ink-soft hover:text-ink'
                                         }`
                                     }
                                 >
+                                    <item.icon aria-hidden="true" strokeWidth={1.7} className="h-4 w-4" />
                                     {item.label}
                                 </NavLink>
                             ))}
                         </nav>
                     </div>
-                    <div className="hidden md:block p-6">
+                    <div className="p-6">
                         <button
                             onClick={handleExit}
                             className="inline-flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink transition-colors"
                         >
                             <LogOut aria-hidden="true" strokeWidth={1.7} className="h-4 w-4" />
-                            {isDemo ? 'Exit demo' : 'Log out'}
+                            {exitLabel}
                         </button>
                     </div>
                 </aside>
 
-                <main className="flex-1 p-6 md:p-10 max-w-3xl">
-                    <Outlet />
+                {/* Content fills the main area up to 1100px, centred, rather
+                    than a narrow left-aligned column (ADR0010). Bottom
+                    padding on mobile clears the fixed tab bar. */}
+                <main className="flex-1 min-w-0 p-6 pb-24 md:p-10">
+                    <div className="max-w-[1100px] mx-auto">
+                        <Outlet />
+                    </div>
                 </main>
             </div>
+
+            {/* Below md:, a fixed bottom tab bar replaces the top nav
+                (ADR0010). pb-[env(...)] clears the home-indicator area on
+                iPhones without a physical home button. */}
+            <nav className="md:hidden fixed inset-x-0 bottom-0 z-40 flex bg-paper-raised border-t border-rule pb-[env(safe-area-inset-bottom)]">
+                {items.map((item) => (
+                    <NavLink
+                        key={item.to}
+                        to={item.to}
+                        end={item.end}
+                        className={({ isActive }) =>
+                            `flex-1 flex flex-col items-center justify-center gap-0.5 min-h-11 py-1.5 text-xs transition-colors ${
+                                isActive ? 'text-deposit font-medium' : 'text-ink-soft'
+                            }`
+                        }
+                    >
+                        <item.icon aria-hidden="true" strokeWidth={1.7} className="h-5 w-5" />
+                        {item.label}
+                    </NavLink>
+                ))}
+            </nav>
         </div>
     )
 }
