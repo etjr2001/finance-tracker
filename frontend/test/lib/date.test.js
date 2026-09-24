@@ -67,7 +67,14 @@ describe('currentDate', () => {
     it('reads the date from local date parts, not a UTC conversion', () => {
         const oneAmLocal = new Date(2026, 8, 24, 1, 0) // Sep 24, 01:00 local
         expect(currentDate(oneAmLocal)).toBe('2026-09-24')
-        expect(oneAmLocal.toISOString().slice(0, 10)).toBe('2026-09-23') // the bug
+
+        const oldBuggyImplementation = (date) => date.toISOString().slice(0, 10)
+        // Only actually differs from the fix when the test runner's local
+        // timezone is ahead of UTC (e.g. run with TZ=Asia/Singapore) — left
+        // here as documentation of the exact bug this replaces, not
+        // asserted against, since CI defaults to UTC where the two
+        // coincide (same reasoning as the currentMonth test above).
+        void oldBuggyImplementation
     })
 })
 
