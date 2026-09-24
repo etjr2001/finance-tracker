@@ -1,12 +1,15 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { NavLink, Outlet, useNavigate, useSearchParams } from 'react-router-dom'
 import { LogOut, LayoutDashboard, Receipt, Tags } from 'lucide-react'
 import { useAuth } from '../context/useAuth'
 import { useDemoMode } from '../demo/DemoModeContext'
 import DemoBanner from '../demo/DemoBanner'
 
+// monthScoped: Dashboard and Transactions show the selected month;
+// Categories doesn't and never carries ?month= (ADR0011).
 const navItems = [
-    { to: '/', label: 'Dashboard', end: true, icon: LayoutDashboard },
-    { to: '/transactions', label: 'Transactions', icon: Receipt },
+    { to: '/', label: 'Dashboard', end: true, icon: LayoutDashboard, monthScoped: true },
+    { to: '/transactions', label: 'Transactions', icon: Receipt, monthScoped: true },
     { to: '/categories', label: 'Categories', icon: Tags },
 ]
 
@@ -17,13 +20,43 @@ export default function Layout() {
     const { logout } = useAuth()
     const isDemo = useDemoMode()
     const navigate = useNavigate()
+    const [searchParams] = useSearchParams()
+    const monthParam = searchParams.get('month')
+
+    // Categories legitimately has no ?month= (ADR0011), so monthParam is
+    // null while there — but Layout itself doesn't unmount between routes
+    // (every page renders through the same <Outlet/>), so remembering the
+    // last real value here survives that detour. Without this, Dashboard
+    // -> Categories -> Transactions would drop the selected month, since
+    // Categories has nothing of its own to pass forward.
+    //
+    // Updated during render (React's documented pattern for "adjust state
+    // when a prop changes"), not in a useEffect — an effect here would
+    // commit once without the new value, then re-render, for no benefit
+    // since nothing needs to run outside React itself.
+    const [lastMonth, setLastMonth] = useState(monthParam)
+    const [prevMonthParam, setPrevMonthParam] = useState(monthParam)
+    if (monthParam !== prevMonthParam) {
+        setPrevMonthParam(monthParam)
+        if (monthParam) setLastMonth(monthParam)
+    }
+    const monthToCarry = monthParam ?? lastMonth
 
     // Demo routes live under /demo, so nav links need that prefix there —
     // otherwise "Transactions" would hit the real protected /transactions
     // route and get bounced back to /demo by ProtectedRoute.
-    const items = isDemo
+    const items = (isDemo
         ? navItems.map((item) => ({ ...item, to: `/demo${item.to === '/' ? '' : item.to}` }))
         : navItems
+    ).map((item) =>
+        // Carries the current month across pages (ADR0011: "Navigation
+        // links preserve the parameter") — only while one is known;
+        // otherwise the destination just falls back to its own default
+        // (the current month) via useSelectedMonth.
+        item.monthScoped && monthToCarry
+            ? { ...item, to: { pathname: item.to, search: `?month=${monthToCarry}` } }
+            : item
+    )
 
     const exitLabel = isDemo ? 'Exit demo' : 'Log out'
 
@@ -58,13 +91,19 @@ export default function Layout() {
                 wide monitor piles all the empty space on the right. */}
             <div className="flex flex-1 flex-col md:flex-row md:max-w-[1400px] md:mx-auto md:w-full">
                 {/* md: and up: sidebar with icon nav and Log out at its foot. */}
-                <aside className="hidden md:flex md:w-52 shrink-0 md:border-r border-rule flex-col md:justify-between">
+                {/* sticky + h-screen: pins the sidebar to the viewport so
+                    only <main> scrolls. Without this it just flows with
+                    the page, so on a page short enough to fit one screen
+                    (Dashboard, Categories) it looks "fixed" by accident,
+                    then visibly scrolls away on a page tall enough to
+                    actually need scrolling (Transactions). */}
+                <aside className="hidden md:flex md:w-52 shrink-0 md:border-r border-rule flex-col md:justify-between md:sticky md:top-0 md:h-screen md:overflow-y-auto">
                     <div className="p-6">
                         <h1 className="font-serif font-semibold text-xl mb-8">Ledger</h1>
                         <nav className="flex flex-col gap-1 -ml-3">
                             {items.map((item) => (
                                 <NavLink
-                                    key={item.to}
+                                    key={item.label}
                                     to={item.to}
                                     end={item.end}
                                     className={({ isActive }) =>
@@ -108,7 +147,7 @@ export default function Layout() {
             <nav className="md:hidden fixed inset-x-0 bottom-0 z-40 flex bg-paper-raised border-t border-rule pb-[env(safe-area-inset-bottom)]">
                 {items.map((item) => (
                     <NavLink
-                        key={item.to}
+                        key={item.label}
                         to={item.to}
                         end={item.end}
                         className={({ isActive }) =>

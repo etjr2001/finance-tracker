@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, within, waitFor } from '@testing-library/react'
+import { render, screen, within, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { MemoryRouter } from 'react-router-dom'
 import TransactionsPage from '../../src/pages/TransactionsPage'
 import * as transactionsApi from '../../src/api/transactions'
 import * as categoriesApi from '../../src/api/categories'
@@ -29,14 +30,18 @@ function mockMobileViewport() {
     }))
 }
 
-function renderPage() {
+// Fixtures below are dated in September 2026, so tests view that month
+// explicitly rather than relying on whatever "today" happens to be.
+function renderPage(initialEntry = '/transactions?month=2026-09') {
     const queryClient = new QueryClient({
         defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
     })
     return render(
-        <QueryClientProvider client={queryClient}>
-            <TransactionsPage />
-        </QueryClientProvider>
+        <MemoryRouter initialEntries={[initialEntry]}>
+            <QueryClientProvider client={queryClient}>
+                <TransactionsPage />
+            </QueryClientProvider>
+        </MemoryRouter>
     )
 }
 
@@ -327,5 +332,59 @@ describe('TransactionsPage mobile row', () => {
         await user.click(screen.getByRole('button', { name: 'Delete' }))
 
         await waitFor(() => expect(transactionsApi.deleteTransaction).toHaveBeenCalledWith(42, expect.anything()))
+    })
+})
+
+describe('TransactionsPage month scope', () => {
+    afterEach(() => {
+        vi.restoreAllMocks()
+    })
+
+    it('only shows transactions dated in the viewed month', async () => {
+        transactionsApi.listTransactions.mockResolvedValue([
+            sampleTransaction, // 2026-09-01
+            { ...sampleTransaction, id: 43, date: '2026-08-15', note: 'August thing' },
+        ])
+        categoriesApi.listCategories.mockResolvedValue([{ id: 1, name: 'Groceries' }])
+
+        renderPage('/transactions?month=2026-09')
+
+        await screen.findByText('Weekly shop')
+        expect(screen.queryByText('August thing')).not.toBeInTheDocument()
+    })
+
+    it('shows an empty state with an Add action when the month has no transactions', async () => {
+        transactionsApi.listTransactions.mockResolvedValue([sampleTransaction]) // 2026-09-01
+        categoriesApi.listCategories.mockResolvedValue([{ id: 1, name: 'Groceries' }])
+
+        renderPage('/transactions?month=2026-03')
+
+        expect(await screen.findByText('No transactions in March 2026.')).toBeInTheDocument()
+        // Just the header's Add button — no second one in the empty state,
+        // which would just be a visible duplicate of it.
+        expect(screen.getAllByRole('button', { name: 'Add' })).toHaveLength(1)
+    })
+
+    it('switches to the saved transaction\'s month when it falls outside the viewed month', async () => {
+        transactionsApi.listTransactions.mockResolvedValue([])
+        transactionsApi.createTransaction.mockResolvedValue({ ...sampleTransaction, date: '2026-11-05' })
+        categoriesApi.listCategories.mockResolvedValue([
+            { id: 1, name: 'Groceries' },
+            { id: 2, name: 'Salary' },
+        ])
+
+        const user = userEvent.setup()
+        renderPage('/transactions?month=2026-09')
+
+        await user.click(screen.getByRole('button', { name: 'Add' }))
+        const amountInput = screen.getByLabelText('Amount')
+        await user.clear(amountInput)
+        await user.type(amountInput, '15')
+        fireEvent.change(screen.getByLabelText('Date'), { target: { value: '2026-11-05' } })
+        await user.selectOptions(screen.getByRole('combobox'), '2')
+        await user.click(screen.getByRole('button', { name: 'Add transaction' }))
+
+        await waitFor(() => expect(transactionsApi.createTransaction).toHaveBeenCalled())
+        await screen.findByText('November 2026')
     })
 })
