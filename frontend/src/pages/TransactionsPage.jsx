@@ -10,12 +10,14 @@ import { useCategories } from '../hooks/useCategories'
 import TransactionForm from '../components/TransactionForm'
 import Modal from '../components/Modal'
 import ConfirmDialog from '../components/ConfirmDialog'
+import TransactionDetail from '../components/TransactionDetail'
 import Money from '../components/Money'
 import AddButton from '../components/AddButton'
 import Card from '../components/Card'
 import { categoryTileClasses } from '../lib/categorySwatch'
 import { categoryIcon } from '../lib/categoryIcon'
 import { groupByDay } from '../lib/dayGroups'
+import { useIsMobile } from '../hooks/useIsMobile'
 import { apiErrorMessage } from '../api/client'
 
 export default function TransactionsPage() {
@@ -30,7 +32,9 @@ export default function TransactionsPage() {
     const [isDirty, setIsDirty] = useState(false)
     const [pendingCloseConfirm, setPendingCloseConfirm] = useState(false)
     const [deleteTarget, setDeleteTarget] = useState(null)
+    const [viewingDetail, setViewingDetail] = useState(null)
     const [error, setError] = useState(null)
+    const isMobile = useIsMobile()
 
     const sorted = useMemo(
         () => [...(transactions ?? [])].sort((a, b) => b.date.localeCompare(a.date)),
@@ -184,8 +188,12 @@ export default function TransactionsPage() {
                         <Card className="divide-y divide-rule-soft">
                             {group.transactions.map((t) => {
                                 const Icon = categoryIcon(t.category?.name)
-                                return (
-                                    <div key={t.id} className="flex items-center gap-3 px-4 py-3">
+                                // Below md: no inline Edit/Delete \u2014 the row itself opens a
+                                // read-only detail card instead (amended mobile-row spec,
+                                // docs/backlog.md). At md: and up, Edit/Delete stay on the
+                                // row and the note isn't truncated.
+                                const rowContent = (
+                                    <>
                                         <div
                                             className={`h-9 w-9 shrink-0 rounded-xl flex items-center justify-center ${categoryTileClasses(t.category?.id ?? 0)}`}
                                         >
@@ -200,13 +208,17 @@ export default function TransactionsPage() {
                                                     </span>
                                                 )}
                                             </div>
-                                            {t.note && <div className="text-sm text-ink-soft truncate">{t.note}</div>}
+                                            {t.note && (
+                                                <div className="text-sm text-ink-soft truncate md:whitespace-normal md:overflow-visible">
+                                                    {t.note}
+                                                </div>
+                                            )}
                                         </div>
-                                        <div className="flex items-center gap-4 shrink-0">
-                                            <span className={t.type === 'INCOME' ? 'text-deposit' : 'text-ink'}>
-                                                {t.type === 'INCOME' ? '+' : '\u2212'}
-                                                <Money amount={t.amount} />
-                                            </span>
+                                        <span className={`shrink-0 ${t.type === 'INCOME' ? 'text-deposit' : 'text-ink'}`}>
+                                            {t.type === 'INCOME' ? '+' : '\u2212'}
+                                            <Money amount={t.amount} />
+                                        </span>
+                                        {!isMobile && (
                                             <div className="flex items-center gap-1">
                                                 <button
                                                     onClick={() => openEdit(t)}
@@ -224,7 +236,21 @@ export default function TransactionsPage() {
                                                     <Trash2 aria-hidden="true" strokeWidth={1.7} className="h-4 w-4" />
                                                 </button>
                                             </div>
-                                        </div>
+                                        )}
+                                    </>
+                                )
+
+                                return isMobile ? (
+                                    <button
+                                        key={t.id}
+                                        onClick={() => setViewingDetail(t)}
+                                        className="w-full flex items-center gap-3 px-4 py-3 text-left"
+                                    >
+                                        {rowContent}
+                                    </button>
+                                ) : (
+                                    <div key={t.id} className="flex items-center gap-3 px-4 py-3">
+                                        {rowContent}
                                     </div>
                                 )
                             })}
@@ -248,6 +274,21 @@ export default function TransactionsPage() {
                     confirmLabel="Delete"
                     onConfirm={confirmDelete}
                     onCancel={() => setDeleteTarget(null)}
+                />
+            )}
+
+            {viewingDetail && (
+                <TransactionDetail
+                    transaction={viewingDetail}
+                    onClose={() => setViewingDetail(null)}
+                    onEdit={() => {
+                        setViewingDetail(null)
+                        openEdit(viewingDetail)
+                    }}
+                    onDelete={() => {
+                        setViewingDetail(null)
+                        requestDelete(viewingDetail)
+                    }}
                 />
             )}
         </div>
