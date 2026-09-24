@@ -16,3 +16,4 @@ One line per ADR: read the file only when the task touches its area. When an ADR
 | [0010](0010-passbook-visual-design-system.md) "Passbook" visual design system | Accepted | Touching styling, theme tokens in `index.css`, icons, layout/nav, or the Dashboard chart |
 | [0011](0011-global-month-scope-for-dashboard-and-transactions.md) Global month scope for the Dashboard and Transactions | Accepted | Touching the month picker, month filtering, `useSelectedMonth`, the Transactions list query, or pagination |
 | [0012](0012-integration-branch-for-large-revamps.md) Temporary integration branch for large revamps | Accepted | Working on the frontend revamp, or planning any other change spanning many branches |
+| [0013](0013-dashboard-summary-as-a-single-net-card.md) Dashboard summary as a single Net card | Accepted | Touching the Dashboard's summary/Net display or the category breakdown bars |
