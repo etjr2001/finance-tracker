@@ -10,11 +10,6 @@ import * as categoriesApi from '../../src/api/categories'
 // tests that never touch category creation.
 vi.mock('../../src/api/categories')
 
-// NOTE: the form's <label> elements aren't associated with their inputs via
-// htmlFor/id, so most of these tests fall back to role-based or container
-// queries instead of getByLabelText. Worth fixing at some point — it's both
-// a testability gap and an accessibility one.
-
 const categories = [
     { id: 1, name: 'Groceries' },
     { id: 2, name: 'Salary' },
@@ -83,11 +78,11 @@ describe('TransactionForm draft hint', () => {
 
     it('hides the Draft hint once a non-zero amount is entered', async () => {
         const user = userEvent.setup()
-        const { container } = renderForm()
+        renderForm()
 
         expect(screen.getByText('Will show as a Draft (0 amount)')).toBeInTheDocument()
 
-        const amountInput = container.querySelector('input[type="number"]')
+        const amountInput = screen.getByLabelText('Amount')
         await user.type(amountInput, '.01')
 
         expect(screen.queryByText(/Will show as a Draft/)).not.toBeInTheDocument()
@@ -95,9 +90,9 @@ describe('TransactionForm draft hint', () => {
 
     it('shows the Draft hint again if the amount is cleared back to 0', async () => {
         const user = userEvent.setup()
-        const { container } = renderForm()
+        renderForm()
 
-        const amountInput = container.querySelector('input[type="number"]')
+        const amountInput = screen.getByLabelText('Amount')
         await user.type(amountInput, '.01')
         expect(screen.queryByText(/Will show as a Draft/)).not.toBeInTheDocument()
 
@@ -119,7 +114,7 @@ describe('TransactionForm dirty tracking', () => {
         const onDirtyChange = vi.fn()
         renderForm({ onDirtyChange })
 
-        fireEvent.change(screen.getByRole('textbox'), { target: { value: 'coffee' } })
+        fireEvent.change(screen.getByLabelText('Note (optional)'), { target: { value: 'coffee' } })
 
         expect(onDirtyChange).toHaveBeenLastCalledWith(true)
     })
@@ -128,7 +123,7 @@ describe('TransactionForm dirty tracking', () => {
         const onDirtyChange = vi.fn()
         renderForm({ onDirtyChange })
 
-        const note = screen.getByRole('textbox')
+        const note = screen.getByLabelText('Note (optional)')
         fireEvent.change(note, { target: { value: 'coffee' } })
         fireEvent.change(note, { target: { value: '' } })
 
@@ -162,7 +157,7 @@ describe('TransactionForm dirty tracking', () => {
         }
         renderForm({ initial, onDirtyChange })
 
-        fireEvent.change(screen.getByRole('textbox'), { target: { value: 'dinner' } })
+        fireEvent.change(screen.getByLabelText('Note (optional)'), { target: { value: 'dinner' } })
 
         expect(onDirtyChange).toHaveBeenLastCalledWith(true)
     })
@@ -173,9 +168,9 @@ describe('TransactionForm submission', () => {
         const onSubmit = vi.fn()
         renderForm({ onSubmit })
 
-        fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '42.5' } })
+        fireEvent.change(screen.getByLabelText('Amount'), { target: { value: '42.5' } })
         fireEvent.change(screen.getByRole('combobox'), { target: { value: '2' } })
-        fireEvent.change(screen.getByRole('textbox'), { target: { value: 'bonus' } })
+        fireEvent.change(screen.getByLabelText('Note (optional)'), { target: { value: 'bonus' } })
         fireEvent.click(screen.getByRole('button', { name: 'Add transaction' }))
 
         expect(onSubmit).toHaveBeenCalledWith(
@@ -229,23 +224,52 @@ describe('TransactionForm amount input', () => {
         const select = vi.spyOn(HTMLInputElement.prototype, 'select')
         renderForm()
 
-        fireEvent.focus(screen.getByRole('spinbutton'))
+        fireEvent.focus(screen.getByLabelText('Amount'))
 
         expect(select).toHaveBeenCalledTimes(1)
     })
 
     it('greys out the amount text while it is 0', () => {
         renderForm()
-        expect(screen.getByRole('spinbutton')).toHaveClass('text-ink-soft')
+        expect(screen.getByLabelText('Amount')).toHaveClass('text-ink-soft')
     })
 
     it('uses normal text color once a non-zero amount is entered', async () => {
-        const { container } = renderForm()
-        const amountInput = container.querySelector('input[type="number"]')
+        renderForm()
+        const amountInput = screen.getByLabelText('Amount')
 
         await userEvent.setup().type(amountInput, '.01')
 
         expect(amountInput).not.toHaveClass('text-ink-soft')
+    })
+})
+
+describe('TransactionForm amount character filtering', () => {
+    // type="number" used to have the browser filter keystrokes for us; now
+    // that the field is type="text" (for a better mobile keyboard, see the
+    // "field limits" tests below), handleAmountChange has to reject
+    // anything that isn't a digit or a single decimal point itself.
+    it.each([
+        ['letters', '12a'],
+        ['a leading minus sign', '-5'],
+        ['scientific notation', '1e5'],
+        ['a second decimal point', '1.2.3'],
+    ])('rejects %s', (_label, value) => {
+        renderForm()
+        const amountInput = screen.getByLabelText('Amount')
+
+        fireEvent.change(amountInput, { target: { value } })
+
+        expect(amountInput).toHaveValue('0')
+    })
+
+    it('still allows a plain decimal amount', () => {
+        renderForm()
+        const amountInput = screen.getByLabelText('Amount')
+
+        fireEvent.change(amountInput, { target: { value: '12.34' } })
+
+        expect(amountInput).toHaveValue('12.34')
     })
 })
 
@@ -259,27 +283,27 @@ describe('TransactionForm amount max cue', () => {
 
     it('blocks an amount that would exceed the numeric(12,2) column and shows a hint', () => {
         renderForm()
-        const amountInput = screen.getByRole('spinbutton')
+        const amountInput = screen.getByLabelText('Amount')
 
         fireEvent.change(amountInput, { target: { value: '99999999999.99' } })
 
-        expect(amountInput).toHaveValue(0)
+        expect(amountInput).toHaveValue('0')
         expect(screen.getByText(hintText)).toBeInTheDocument()
     })
 
     it('allows an amount exactly at the max', () => {
         renderForm()
-        const amountInput = screen.getByRole('spinbutton')
+        const amountInput = screen.getByLabelText('Amount')
 
         fireEvent.change(amountInput, { target: { value: '9999999999.99' } })
 
-        expect(amountInput).toHaveValue(9999999999.99)
+        expect(amountInput).toHaveValue('9999999999.99')
         expect(screen.queryByText(hintText)).not.toBeInTheDocument()
     })
 
     it('clears the hint once a valid amount is entered', () => {
         renderForm()
-        const amountInput = screen.getByRole('spinbutton')
+        const amountInput = screen.getByLabelText('Amount')
 
         fireEvent.change(amountInput, { target: { value: '99999999999.99' } })
         expect(screen.getByText(hintText)).toBeInTheDocument()
@@ -287,7 +311,7 @@ describe('TransactionForm amount max cue', () => {
         fireEvent.change(amountInput, { target: { value: '42.5' } })
 
         expect(screen.queryByText(hintText)).not.toBeInTheDocument()
-        expect(amountInput).toHaveValue(42.5)
+        expect(amountInput).toHaveValue('42.5')
     })
 })
 
@@ -301,27 +325,27 @@ describe('TransactionForm amount decimal-place cue', () => {
 
     it('blocks a 3rd decimal digit and shows a hint', () => {
         renderForm()
-        const amountInput = screen.getByRole('spinbutton')
+        const amountInput = screen.getByLabelText('Amount')
 
         fireEvent.change(amountInput, { target: { value: '12.345' } })
 
-        expect(amountInput).toHaveValue(0)
+        expect(amountInput).toHaveValue('0')
         expect(screen.getByText(hintText)).toBeInTheDocument()
     })
 
     it('allows exactly 2 decimal digits', () => {
         renderForm()
-        const amountInput = screen.getByRole('spinbutton')
+        const amountInput = screen.getByLabelText('Amount')
 
         fireEvent.change(amountInput, { target: { value: '12.34' } })
 
-        expect(amountInput).toHaveValue(12.34)
+        expect(amountInput).toHaveValue('12.34')
         expect(screen.queryByText(hintText)).not.toBeInTheDocument()
     })
 
     it('clears the hint once corrected to a valid amount', () => {
         renderForm()
-        const amountInput = screen.getByRole('spinbutton')
+        const amountInput = screen.getByLabelText('Amount')
 
         fireEvent.change(amountInput, { target: { value: '12.345' } })
         expect(screen.getByText(hintText)).toBeInTheDocument()
@@ -329,19 +353,26 @@ describe('TransactionForm amount decimal-place cue', () => {
         fireEvent.change(amountInput, { target: { value: '12.34' } })
 
         expect(screen.queryByText(hintText)).not.toBeInTheDocument()
-        expect(amountInput).toHaveValue(12.34)
+        expect(amountInput).toHaveValue('12.34')
     })
 })
 
 describe('TransactionForm field limits', () => {
-    it('caps the amount field to fit the numeric(12,2) column', () => {
+    // type="text" + inputMode="decimal", not type="number": on iOS Safari,
+    // type="number" brings up the "numbers and punctuation" keyboard page
+    // (includes -, comma), not the clean 0-9 + decimal keypad inputMode
+    // gives on both iOS and Android.
+    it('uses a decimal-friendly mobile keyboard instead of type="number"', () => {
         renderForm()
-        expect(screen.getByRole('spinbutton')).toHaveAttribute('max', '9999999999.99')
+        const amountInput = screen.getByLabelText('Amount')
+
+        expect(amountInput).toHaveAttribute('type', 'text')
+        expect(amountInput).toHaveAttribute('inputMode', 'decimal')
     })
 
     it('caps the note field length', () => {
         renderForm()
-        expect(screen.getByRole('textbox')).toHaveAttribute('maxLength', '256')
+        expect(screen.getByLabelText('Note (optional)')).toHaveAttribute('maxLength', '256')
     })
 
     it('caps the new-category name field length', () => {

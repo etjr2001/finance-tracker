@@ -4,6 +4,7 @@ import { apiErrorMessage } from '../api/client'
 import Modal from './Modal'
 import Button from './Button'
 import FormField, { inputClass } from './FormField'
+import { ChevronDown } from 'lucide-react'
 
 const NEW_CATEGORY_VALUE = '__new__'
 const MAX_AMOUNT = 9999999999.99
@@ -74,13 +75,27 @@ export default function TransactionForm({ categories, initial, onSubmit, onCance
         setForm((f) => ({ ...f, [field]: value }))
     }
 
-    // Blocks keystrokes that would push the amount past what numeric(12,2)
-    // can hold, or past its 2-decimal-place scale, rather than only warning
-    // on submit — but silently blocking input with no feedback reads as
-    // broken, especially on mobile where the field may be scrolled
-    // off-screen behind the keyboard, so these drive a visible hint instead.
+    // The field is type="text" + inputMode="decimal", not type="number":
+    // iOS Safari's number keyboard is the "numbers and punctuation" page
+    // (includes -, comma), not the clean 0-9 + decimal keypad that decimal
+    // inputMode gives on both iOS and Android. That means the browser no
+    // longer filters keystrokes for us, so this rejects anything that isn't
+    // a digit or a single decimal point outright (silently — there was
+    // never visible feedback for a stray letter/minus with type="number"
+    // either, since the browser just refused the keystroke).
+    //
+    // On top of that, blocks keystrokes that would push the amount past
+    // what numeric(12,2) can hold, or past its 2-decimal-place scale,
+    // rather than only warning on submit — but silently blocking input
+    // with no feedback there reads as broken, especially on mobile where
+    // the field may be scrolled off-screen behind the keyboard, so those
+    // two drive a visible hint instead.
     function handleAmountChange(e) {
         const value = e.target.value
+        if (!/^\d*\.?\d*$/.test(value)) {
+            return
+        }
+
         const decimalDigits = value.match(/\.(\d+)$/)?.[1]?.length ?? 0
         if (decimalDigits > 2) {
             setAmountTooManyDecimals(true)
@@ -170,10 +185,8 @@ export default function TransactionForm({ categories, initial, onSubmit, onCance
                     <label className="block text-sm text-ink-soft mb-1" htmlFor="amount">Amount</label>
                     <input
                         id="amount"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        max={MAX_AMOUNT}
+                        type="text"
+                        inputMode="decimal"
                         required
                         value={form.amount}
                         onChange={handleAmountChange}
@@ -221,15 +234,11 @@ export default function TransactionForm({ categories, initial, onSubmit, onCance
                             ))}
                             <option value={NEW_CATEGORY_VALUE}>+ Add new category…</option>
                         </select>
-                        <svg
+                        <ChevronDown
+                            aria-hidden="true"
+                            strokeWidth={1.7}
                             className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-soft"
-                            viewBox="0 0 20 20"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                        >
-                            <path d="M5 7.5L10 12.5L15 7.5" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
+                        />
                     </div>
                 </div>
 

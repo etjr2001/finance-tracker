@@ -1,4 +1,5 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { LogOut } from 'lucide-react'
 import { useAuth } from '../context/useAuth'
 import { useDemoMode } from '../demo/DemoModeContext'
 import DemoBanner from '../demo/DemoBanner'
@@ -42,8 +43,9 @@ export default function Layout() {
                             <h1 className="font-serif font-semibold text-xl">Ledger</h1>
                             <button
                                 onClick={handleExit}
-                                className="md:hidden shrink-0 whitespace-nowrap text-sm text-ink-soft hover:text-ink transition-colors border border-rule rounded-sm px-3 py-1.5"
+                                className="md:hidden shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink transition-colors border border-rule rounded-sm px-3 py-1.5"
                             >
+                                <LogOut aria-hidden="true" strokeWidth={1.7} className="h-4 w-4" />
                                 {isDemo ? 'Exit demo' : 'Log out'}
                             </button>
                         </div>
@@ -69,8 +71,9 @@ export default function Layout() {
                     <div className="hidden md:block p-6">
                         <button
                             onClick={handleExit}
-                            className="text-sm text-ink-soft hover:text-ink transition-colors"
+                            className="inline-flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink transition-colors"
                         >
+                            <LogOut aria-hidden="true" strokeWidth={1.7} className="h-4 w-4" />
                             {isDemo ? 'Exit demo' : 'Log out'}
                         </button>
                     </div>

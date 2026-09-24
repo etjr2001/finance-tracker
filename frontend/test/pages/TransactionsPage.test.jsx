@@ -163,7 +163,7 @@ describe('TransactionsPage add/edit modal', () => {
         await screen.findByText('Weekly shop')
         await user.click(screen.getByRole('button', { name: 'Add transaction' }))
 
-        expect(screen.getByRole('spinbutton')).toBeInTheDocument()
+        expect(screen.getByLabelText('Amount')).toBeInTheDocument()
     })
 
     it('closes silently on outside click when the form is untouched', async () => {
@@ -176,7 +176,7 @@ describe('TransactionsPage add/edit modal', () => {
         await user.click(getBackdrop(container))
 
         expect(screen.queryByText('Discard unsaved changes?')).not.toBeInTheDocument()
-        expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument()
+        expect(screen.queryByLabelText('Amount')).not.toBeInTheDocument()
     })
 
     it('shows a discard-confirmation on outside click when dirty, and keeps the form open on Cancel', async () => {
@@ -185,7 +185,7 @@ describe('TransactionsPage add/edit modal', () => {
 
         await screen.findByText('Weekly shop')
         await user.click(screen.getByRole('button', { name: 'Add transaction' }))
-        await user.type(screen.getByRole('textbox'), 'concert tickets')
+        await user.type(screen.getByLabelText('Note (optional)'), 'concert tickets')
 
         await user.click(getBackdrop(container))
         expect(screen.getByText('Discard unsaved changes?')).toBeInTheDocument()
@@ -194,7 +194,7 @@ describe('TransactionsPage add/edit modal', () => {
         await user.click(within(dialog).getByRole('button', { name: 'Cancel' }))
 
         expect(screen.queryByText('Discard unsaved changes?')).not.toBeInTheDocument()
-        expect(screen.getByRole('textbox')).toHaveValue('concert tickets')
+        expect(screen.getByLabelText('Note (optional)')).toHaveValue('concert tickets')
     })
 
     it('closes the form and discards the value when discard is confirmed', async () => {
@@ -203,14 +203,14 @@ describe('TransactionsPage add/edit modal', () => {
 
         await screen.findByText('Weekly shop')
         await user.click(screen.getByRole('button', { name: 'Add transaction' }))
-        await user.type(screen.getByRole('textbox'), 'concert tickets')
+        await user.type(screen.getByLabelText('Note (optional)'), 'concert tickets')
 
         await user.click(getBackdrop(container))
         const dialog = screen.getByText('Discard unsaved changes?').closest('div')
         await user.click(within(dialog).getByRole('button', { name: 'Discard' }))
 
         expect(screen.queryByText('Discard unsaved changes?')).not.toBeInTheDocument()
-        expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument()
+        expect(screen.queryByLabelText('Amount')).not.toBeInTheDocument()
     })
 
     it('submits a new transaction and closes the modal on success', async () => {
@@ -220,7 +220,7 @@ describe('TransactionsPage add/edit modal', () => {
         await screen.findByText('Weekly shop')
         await user.click(screen.getByRole('button', { name: 'Add transaction' }))
 
-        const amountInput = screen.getByRole('spinbutton')
+        const amountInput = screen.getByLabelText('Amount')
         await user.clear(amountInput)
         await user.type(amountInput, '15')
         await user.selectOptions(screen.getByRole('combobox'), '2')
@@ -230,7 +230,7 @@ describe('TransactionsPage add/edit modal', () => {
         expect(transactionsApi.createTransaction.mock.calls[0][0]).toEqual(
             expect.objectContaining({ amount: 15, categoryId: 2 })
         )
-        expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument()
+        expect(screen.queryByLabelText('Amount')).not.toBeInTheDocument()
     })
 
     it('stacks the add-category modal over the transaction modal, and an outside click closes only the inner one', async () => {
@@ -252,6 +252,6 @@ describe('TransactionsPage add/edit modal', () => {
 
         // The category modal closed, but the transaction form is still open.
         expect(screen.queryByText('New category name')).not.toBeInTheDocument()
-        expect(screen.getByRole('spinbutton')).toBeInTheDocument()
+        expect(screen.getByLabelText('Amount')).toBeInTheDocument()
     })
 })
