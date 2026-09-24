@@ -1,12 +1,12 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { LogOut, LayoutDashboard, ArrowLeftRight, Tags } from 'lucide-react'
+import { LogOut, LayoutDashboard, Receipt, Tags } from 'lucide-react'
 import { useAuth } from '../context/useAuth'
 import { useDemoMode } from '../demo/DemoModeContext'
 import DemoBanner from '../demo/DemoBanner'
 
 const navItems = [
     { to: '/', label: 'Dashboard', end: true, icon: LayoutDashboard },
-    { to: '/transactions', label: 'Transactions', icon: ArrowLeftRight },
+    { to: '/transactions', label: 'Transactions', icon: Receipt },
     { to: '/categories', label: 'Categories', icon: Tags },
 ]
 
@@ -53,7 +53,10 @@ export default function Layout() {
                 </button>
             </div>
 
-            <div className="flex flex-1 flex-col md:flex-row">
+            {/* Sidebar + content centred as one shell on wide screens, not
+                just the content beside a left-pinned sidebar — otherwise a
+                wide monitor piles all the empty space on the right. */}
+            <div className="flex flex-1 flex-col md:flex-row md:max-w-[1400px] md:mx-auto md:w-full">
                 {/* md: and up: sidebar with icon nav and Log out at its foot. */}
                 <aside className="hidden md:flex md:w-52 shrink-0 md:border-r border-rule flex-col md:justify-between">
                     <div className="p-6">

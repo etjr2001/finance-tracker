@@ -22,7 +22,7 @@ export default function DashboardPage() {
                     value={month}
                     onChange={(e) => setMonth(e.target.value)}
                     onClick={(e) => e.target.showPicker?.()}
-                    className="border border-rule-strong bg-white px-3 py-1.5 rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-ink"
+                    className="border border-rule-strong bg-white px-3 py-1.5 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-ink"
                 />
             </div>
 
