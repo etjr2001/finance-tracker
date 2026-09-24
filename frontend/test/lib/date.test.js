@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { currentMonth, isValidMonth, formatMonth, shiftMonth } from '../../src/lib/date'
+import { currentMonth, currentDate, isValidMonth, formatMonth, shiftMonth } from '../../src/lib/date'
 
 describe('currentMonth', () => {
     afterEach(() => {
@@ -35,6 +35,39 @@ describe('currentMonth', () => {
         // here as documentation of the exact bug this replaces, not asserted
         // against, since CI commonly defaults to UTC where the two coincide.
         void oldBuggyImplementation
+    })
+})
+
+describe('currentDate', () => {
+    afterEach(() => {
+        vi.useRealTimers()
+    })
+
+    it('returns the local YYYY-MM-DD for a given date', () => {
+        expect(currentDate(new Date(2026, 8, 5))).toBe('2026-09-05') // Sep 5
+    })
+
+    it('pads single-digit days with a leading zero', () => {
+        expect(currentDate(new Date(2026, 8, 1))).toBe('2026-09-01') // Sep 1
+    })
+
+    it('defaults to the current system date when called with no argument', () => {
+        vi.useFakeTimers()
+        vi.setSystemTime(new Date(2026, 2, 3)) // Mar 3
+        expect(currentDate()).toBe('2026-03-03')
+    })
+
+    // Regression guard for the exact bug TransactionForm.jsx's own `today()`
+    // had: date.toISOString().slice(0, 10) converts to UTC first, so at
+    // 1am in a timezone ahead of UTC (this suite runs in Asia/Singapore,
+    // UTC+8) it still reports the previous UTC day — "yesterday" appearing
+    // as today's date on a new transaction. getFullYear()/getMonth()/
+    // getDate() read local wall-clock time directly and don't have this
+    // failure mode.
+    it('reads the date from local date parts, not a UTC conversion', () => {
+        const oneAmLocal = new Date(2026, 8, 24, 1, 0) // Sep 24, 01:00 local
+        expect(currentDate(oneAmLocal)).toBe('2026-09-24')
+        expect(oneAmLocal.toISOString().slice(0, 10)).toBe('2026-09-23') // the bug
     })
 })
 

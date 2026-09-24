@@ -40,6 +40,14 @@ export function formatMonth(value) {
     return `${MONTH_NAMES[month - 1]} ${year}`
 }
 
+// Returns the local "YYYY-MM-DD" for the given date (defaults to now). Same
+// UTC-conversion pitfall and fix as currentMonth above — reuses it for the
+// year/month, so there's one place this logic lives, not two.
+export function currentDate(date = new Date()) {
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${currentMonth(date)}-${day}`
+}
+
 // "YYYY-MM" -> "YYYY-MM" one month earlier/later, wrapping the year.
 export function shiftMonth(value, delta) {
     const [year, month] = value.split('-').map(Number)
