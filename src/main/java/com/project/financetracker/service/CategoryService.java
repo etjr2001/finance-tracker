@@ -29,7 +29,7 @@ public class CategoryService {
     }
 
     public Category createCategory(String name, UUID userId) {
-        if (categoryRepository.existsByUserIdAndName(userId, name)) {
+        if (categoryRepository.existsByUserIdAndNameIgnoreCase(userId, name)) {
             throw new CategoryAlreadyExistsException("A category named '" + name + "' already exists.");
         }
         Category category = new Category();
@@ -40,8 +40,10 @@ public class CategoryService {
 
     public Category renameCategory(Long id, String newName, UUID userId) {
         Category category = requireOwnedCategory(id, userId);
-        if (!category.getName().equals(newName)
-                && categoryRepository.existsByUserIdAndName(userId, newName)) {
+        // AndIdNot excludes this same Category, so renaming "Groceries" to
+        // "groceries" (a casing-only change to itself) isn't rejected as a
+        // collision with itself — only a *different* Category's name blocks.
+        if (categoryRepository.existsByUserIdAndNameIgnoreCaseAndIdNot(userId, newName, id)) {
             throw new CategoryAlreadyExistsException("A category named '" + newName + "' already exists.");
         }
         category.setName(newName);
