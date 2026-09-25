@@ -9,14 +9,14 @@ import { categoryNameOf, isDraft } from '@features/transactions/utils/transactio
 export function TransactionSummary({ transaction }) {
     return (
         <>
-            <CategoryTile categoryId={transaction.category?.id} categoryName={transaction.category?.name} />
+            <CategoryTile colorKey={transaction.category?.colorKey} iconKey={transaction.category?.iconKey} />
             <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 min-w-0">
                     <span className="truncate min-w-0">{categoryNameOf(transaction)}</span>
                     {isDraft(transaction) && <DraftBadge />}
                 </div>
                 {transaction.note && (
-                    <div className="text-sm text-ink-soft truncate md:whitespace-normal md:overflow-visible">
+                    <div className="text-sm text-ink-soft truncate md:whitespace-normal md:overflow-visible md:break-words">
                         {transaction.note}
                     </div>
                 )}

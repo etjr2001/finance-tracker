@@ -4,6 +4,7 @@ import { userEvent } from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { CategoriesPage } from '@features/categories/pages/CategoriesPage'
 import * as categoriesApi from '@features/categories/api/categoriesApi'
+import { MAX_CATEGORY_NAME_LENGTH } from '@features/categories/utils/categoryName'
 
 vi.mock('@features/categories/api/categoriesApi')
 
@@ -106,7 +107,10 @@ describe('CategoriesPage field limits', () => {
 
     it('caps the new-category name field length', () => {
         renderPage()
-        expect(screen.getByPlaceholderText('New category name')).toHaveAttribute('maxLength', '50')
+        expect(screen.getByPlaceholderText('New category name')).toHaveAttribute(
+            'maxLength',
+            String(MAX_CATEGORY_NAME_LENGTH)
+        )
     })
 
     it('caps the rename field length', async () => {
@@ -116,7 +120,59 @@ describe('CategoriesPage field limits', () => {
         await screen.findByText('Groceries')
         await user.click(screen.getByRole('button', { name: 'Edit' }))
 
-        expect(screen.getByDisplayValue('Groceries')).toHaveAttribute('maxLength', '50')
+        expect(screen.getByDisplayValue('Groceries')).toHaveAttribute('maxLength', String(MAX_CATEGORY_NAME_LENGTH))
+    })
+})
+
+describe('CategoriesPage create/edit colour and icon', () => {
+    afterEach(() => {
+        vi.restoreAllMocks()
+    })
+
+    it('auto-assigns a colour and guesses an icon from the name on create', async () => {
+        categoriesApi.listCategories.mockResolvedValue([])
+        categoriesApi.createCategory.mockResolvedValue({ id: 2, name: 'Dining Out', colorKey: 'ochre', iconKey: 'utensils-crossed' })
+        const user = userEvent.setup()
+        renderPage()
+
+        await user.type(screen.getByPlaceholderText('New category name'), 'Dining Out')
+        await user.click(screen.getByRole('button', { name: 'Add' }))
+
+        await waitFor(() => expect(categoriesApi.createCategory).toHaveBeenCalled())
+        const payload = categoriesApi.createCategory.mock.calls[0][0]
+        expect(payload).toEqual({ name: 'Dining Out', colorKey: expect.any(String), iconKey: 'utensils-crossed' })
+    })
+
+    it('creates with a null icon when the name matches no keyword', async () => {
+        categoriesApi.listCategories.mockResolvedValue([])
+        categoriesApi.createCategory.mockResolvedValue({ id: 2, name: 'Miscellaneous', colorKey: 'ochre', iconKey: null })
+        const user = userEvent.setup()
+        renderPage()
+
+        await user.type(screen.getByPlaceholderText('New category name'), 'Miscellaneous')
+        await user.click(screen.getByRole('button', { name: 'Add' }))
+
+        await waitFor(() => expect(categoriesApi.createCategory).toHaveBeenCalled())
+        const payload = categoriesApi.createCategory.mock.calls[0][0]
+        expect(payload).toEqual({ name: 'Miscellaneous', colorKey: expect.any(String), iconKey: null })
+    })
+
+    it('lets an edit change the colour and icon, and saves both', async () => {
+        categoriesApi.listCategories.mockResolvedValue([{ id: 1, name: 'Groceries', colorKey: 'slate', iconKey: 'tag' }])
+        const user = userEvent.setup()
+        renderPage()
+
+        await screen.findByText('Groceries')
+        await user.click(screen.getByRole('button', { name: 'Edit' }))
+
+        await user.click(screen.getByRole('button', { name: 'Colour teal' }))
+        await user.click(screen.getByRole('button', { name: 'Icon bus' }))
+        await user.click(screen.getByRole('button', { name: 'Save' }))
+
+        await waitFor(() => expect(categoriesApi.updateCategory).toHaveBeenCalled())
+        const [id, payload] = categoriesApi.updateCategory.mock.calls[0]
+        expect(id).toBe(1)
+        expect(payload).toEqual({ name: 'Groceries', colorKey: 'teal', iconKey: 'bus' })
     })
 })
 
