@@ -1,5 +1,5 @@
 import { useSearchParams } from 'react-router-dom'
-import { currentMonth, isValidMonth } from '../lib/date'
+import { currentMonth, isValidMonth } from '@utils/date'
 
 // The selected month, held in the URL as ?month=YYYY-MM (ADR0011), so
 // refresh, the back button, and bookmarks all keep it. Falls back to the

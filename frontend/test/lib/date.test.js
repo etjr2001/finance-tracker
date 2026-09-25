@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { currentMonth, currentDate, isValidMonth, formatMonth, shiftMonth } from '../../src/lib/date'
+import { currentMonth, currentDate, isValidMonth, formatMonth, shiftMonth } from '@utils/date'
 
 describe('currentMonth', () => {
     afterEach(() => {
@@ -138,5 +138,23 @@ describe('shiftMonth', () => {
 
     it('supports jumping by a year (delta of 12)', () => {
         expect(shiftMonth('2026-09', 12)).toBe('2027-09')
+    })
+})
+
+describe('monthBounds / monthOf / toMonthValue', async () => {
+    const { monthBounds, monthOf, toMonthValue } = await import('@utils/date')
+
+    it('gives the first and last day of a month, including leap Februaries', () => {
+        expect(monthBounds('2026-09')).toEqual({ startDate: '2026-09-01', endDate: '2026-09-30' })
+        expect(monthBounds('2024-02')).toEqual({ startDate: '2024-02-01', endDate: '2024-02-29' })
+    })
+
+    it('extracts the month of a date string', () => {
+        expect(monthOf('2026-11-05')).toBe('2026-11')
+    })
+
+    it('builds a zero-padded month value from a 0-based index', () => {
+        expect(toMonthValue(2026, 0)).toBe('2026-01')
+        expect(toMonthValue(2026, 11)).toBe('2026-12')
     })
 })

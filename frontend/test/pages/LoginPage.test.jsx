@@ -1,10 +1,10 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import LoginPage from '../../src/pages/LoginPage'
-import { useAuth } from '../../src/context/useAuth'
+import { LoginPage } from '@features/auth/pages/LoginPage'
+import { useAuth } from '@features/auth/hooks/useAuth'
 
-vi.mock('../../src/context/useAuth')
+vi.mock('@features/auth/hooks/useAuth')
 
 describe('LoginPage', () => {
     it('links back to the demo', () => {

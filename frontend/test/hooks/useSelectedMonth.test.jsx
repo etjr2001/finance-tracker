@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { MemoryRouter, useSearchParams } from 'react-router-dom'
-import { useSelectedMonth } from '../../src/hooks/useSelectedMonth'
+import { useSelectedMonth } from '@hooks/useSelectedMonth'
 
 function wrapper(initialEntry) {
     return ({ children }) => <MemoryRouter initialEntries={[initialEntry]}>{children}</MemoryRouter>

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { UtensilsCrossed, ShoppingCart, Bus, Tag } from 'lucide-react'
-import { categoryIcon } from '../../src/lib/categoryIcon'
+import { categoryIcon } from '@features/categories/utils/categoryIcon'
 
 describe('categoryIcon', () => {
     it('matches a known keyword', () => {

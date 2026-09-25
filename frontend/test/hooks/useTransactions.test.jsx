@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import { renderHook, waitFor, act } from '@testing-library/react'
 import { QueryClient, QueryClientProvider, onlineManager } from '@tanstack/react-query'
-import { useTransactions, useCreateTransaction } from '../../src/hooks/useTransactions'
-import { DemoModeContext } from '../../src/demo/DemoModeContext'
-import * as transactionsApi from '../../src/api/transactions'
-import * as demoApi from '../../src/demo/demoApi'
+import { useTransactions, useCreateTransaction } from '@features/transactions/hooks/useTransactions'
+import { DemoModeContext } from '@features/demo/context/DemoModeContext'
+import * as transactionsApi from '@features/transactions/api/transactionsApi'
+import * as demoApi from '@features/demo/api/demoApi'
 
-vi.mock('../../src/api/transactions')
-vi.mock('../../src/demo/demoApi')
+vi.mock('@features/transactions/api/transactionsApi')
+vi.mock('@features/demo/api/demoApi')
 
 function wrapper(isDemo) {
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })

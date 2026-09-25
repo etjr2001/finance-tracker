@@ -1,16 +1,27 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-import ProtectedRoute from './components/ProtectedRoute'
-import Layout from './components/Layout'
-import LoginPage from './pages/LoginPage'
-import SignupPage from './pages/SignupPage'
-import ForgotPasswordPage from './pages/ForgotPasswordPage'
-import ResetPasswordPage from './pages/ResetPasswordPage'
-import DashboardPage from './pages/DashboardPage'
-import TransactionsPage from './pages/TransactionsPage'
-import CategoriesPage from './pages/CategoriesPage'
-import DemoProvider from './demo/DemoProvider'
+import { ProtectedRoute } from '@features/auth/components/ProtectedRoute'
+import { LoginPage } from '@features/auth/pages/LoginPage'
+import { SignupPage } from '@features/auth/pages/SignupPage'
+import { ForgotPasswordPage } from '@features/auth/pages/ForgotPasswordPage'
+import { ResetPasswordPage } from '@features/auth/pages/ResetPasswordPage'
+import { AppLayout } from '@features/layout/components/AppLayout'
+import { DashboardPage } from '@features/dashboard/pages/DashboardPage'
+import { TransactionsPage } from '@features/transactions/pages/TransactionsPage'
+import { CategoriesPage } from '@features/categories/pages/CategoriesPage'
+import { DemoProvider } from '@features/demo/components/DemoProvider'
 
-function App() {
+// The same three app pages, mounted under both /demo and the protected
+// root. A function (not a component) because <Routes> only accepts
+// <Route> elements as children.
+function appPageRoutes() {
+    return [
+        <Route key="dashboard" index element={<DashboardPage />} />,
+        <Route key="transactions" path="transactions" element={<TransactionsPage />} />,
+        <Route key="categories" path="categories" element={<CategoriesPage />} />,
+    ]
+}
+
+export function App() {
     return (
         <Routes>
             <Route path="/login" element={<LoginPage />} />
@@ -22,20 +33,16 @@ function App() {
                 path="/demo"
                 element={
                     <DemoProvider>
-                        <Layout />
+                        <AppLayout />
                     </DemoProvider>
                 }
             >
-                <Route index element={<DashboardPage />} />
-                <Route path="transactions" element={<TransactionsPage />} />
-                <Route path="categories" element={<CategoriesPage />} />
+                {appPageRoutes()}
             </Route>
 
             <Route element={<ProtectedRoute />}>
-                <Route element={<Layout />}>
-                    <Route path="/" element={<DashboardPage />} />
-                    <Route path="/transactions" element={<TransactionsPage />} />
-                    <Route path="/categories" element={<CategoriesPage />} />
+                <Route path="/" element={<AppLayout />}>
+                    {appPageRoutes()}
                 </Route>
             </Route>
 
@@ -43,5 +50,3 @@ function App() {
         </Routes>
     )
 }
-
-export default App

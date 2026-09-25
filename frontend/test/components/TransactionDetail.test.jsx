@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
-import TransactionDetail from '../../src/components/TransactionDetail'
+import { TransactionDetail } from '@features/transactions/components/TransactionDetail'
 
 const transaction = {
     id: 1,

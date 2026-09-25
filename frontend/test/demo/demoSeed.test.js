@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildSeedCategories, buildSeedTransactions } from '../../src/demo/demoSeed'
+import { buildSeedCategories, buildSeedTransactions } from '@features/demo/utils/demoSeed'
 
 describe('demoSeed', () => {
     const categories = buildSeedCategories()

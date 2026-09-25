@@ -1,5 +1,5 @@
-import { formatMoney } from '../lib/money'
+import { formatMoney } from '@utils/money'
 
-export default function Money({ amount, className = '' }) {
+export function Money({ amount, className = '' }) {
     return <span className={`tabular ${className}`}>{formatMoney(amount)}</span>
 }

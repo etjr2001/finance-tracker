@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { categoryTileClasses, categoryBarClass } from '../../src/lib/categorySwatch'
+import { categoryTileClasses, categoryBarClass } from '@features/categories/utils/categorySwatch'
 
 describe('categoryTileClasses', () => {
     it('is deterministic: the same id always gets the same classes', () => {

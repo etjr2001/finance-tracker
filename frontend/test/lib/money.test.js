@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatMoney } from '../../src/lib/money'
+import { formatMoney } from '@utils/money'
 
 describe('formatMoney', () => {
     it('formats SGD with a plain dollar sign regardless of browser locale', () => {

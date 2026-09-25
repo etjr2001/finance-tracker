@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { dayGroupLabel, groupByDay } from '../../src/lib/dayGroups'
+import { dayGroupLabel, groupByDay } from '@features/transactions/utils/dayGroups'
 
 const today = new Date(2026, 8, 23) // Wed 23 Sep 2026
 
