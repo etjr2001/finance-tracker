@@ -27,20 +27,34 @@ const BAR_CLASSES = {
     rose: 'bg-swatch-rose',
 }
 
-const SWATCH_NAMES = Object.keys(TILE_CLASSES)
+// The 9 keys a User picks from (docs/backlog.md, "Category color/icon"),
+// in swatch-picker display order.
+export const COLOR_KEYS = Object.keys(TILE_CLASSES)
 
-// Deterministic by Category id, per ADR0010: stable across sessions/reloads
-// (the same Category always gets the same colour) and doesn't shift around
-// when the category list changes elsewhere. Not a real user-chosen colour
-// — that's Sprint 3 (docs/backlog.md, "Category color/icon").
-function swatchName(id) {
-    return SWATCH_NAMES[Math.abs(Number(id)) % SWATCH_NAMES.length]
+const DEFAULT_COLOR_KEY = 'slate'
+
+// A real per-Category colour_key, once chosen, always wins. A category
+// with none yet (colour_key is null — never persisted, or created before
+// this existed) falls back to one fixed default rather than the old
+// deterministic-by-id guess: once colour is a real, user-owned choice,
+// guessing one is more misleading than a plain, honest default.
+export function categoryTileClasses(colorKey) {
+    return TILE_CLASSES[colorKey] ?? TILE_CLASSES[DEFAULT_COLOR_KEY]
 }
 
-export function categoryTileClasses(id) {
-    return TILE_CLASSES[swatchName(id)]
+export function categoryBarClass(colorKey) {
+    return BAR_CLASSES[colorKey] ?? BAR_CLASSES[DEFAULT_COLOR_KEY]
 }
 
-export function categoryBarClass(id) {
-    return BAR_CLASSES[swatchName(id)]
+// Deterministic by name (not id — a new Category has no id yet at the
+// point NewCategoryForm needs to assign one), for the "fewest click"
+// auto-assign on create. Two different names can collide once there are
+// more Categories than swatches; that's fine, same as the old by-id
+// scheme — it's a starting point, not an identity, and stays editable.
+export function assignColorKey(name) {
+    let hash = 0
+    for (const char of name ?? '') {
+        hash = (hash * 31 + char.charCodeAt(0)) | 0
+    }
+    return COLOR_KEYS[Math.abs(hash) % COLOR_KEYS.length]
 }

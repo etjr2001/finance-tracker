@@ -1,6 +1,9 @@
 package com.project.financetracker.service;
 
 import com.project.financetracker.exception.CategoryAlreadyExistsException;
+import com.project.financetracker.exception.CategoryInUseException;
+import com.project.financetracker.exception.ForbiddenException;
+import com.project.financetracker.exception.ResourceNotFoundException;
 import com.project.financetracker.model.Category;
 import com.project.financetracker.repository.CategoryRepository;
 import com.project.financetracker.repository.TransactionRepository;
@@ -13,6 +16,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class CategoryServiceTest {
@@ -23,11 +28,13 @@ class CategoryServiceTest {
 
     private static final UUID USER_ID = UUID.randomUUID();
 
-    private static Category category(long id, UUID userId, String name) {
+    private static Category category(long id, UUID userId, String name, String colorKey, String iconKey) {
         Category category = new Category();
         category.setId(id);
         category.setUserId(userId);
         category.setName(name);
+        category.setColorKey(colorKey);
+        category.setIconKey(iconKey);
         return category;
     }
 
@@ -36,55 +43,128 @@ class CategoryServiceTest {
     }
 
     @Test
-    void createCategoryRejectsACaseDifferentDuplicate() {
-        when(categoryRepository.existsByUserIdAndNameIgnoreCase(USER_ID, "groceries")).thenReturn(true);
+    void createCategorySetsColorKeyAndIconKey() {
+        stubSaveReturnsItsArgument();
 
-        assertThatThrownBy(() -> service.createCategory("groceries", USER_ID))
+        Category created = service.createCategory("Groceries", "ochre", "shopping-cart", USER_ID);
+
+        assertThat(created.getColorKey()).isEqualTo("ochre");
+        assertThat(created.getIconKey()).isEqualTo("shopping-cart");
+    }
+
+    @Test
+    void createCategoryAllowsNullColorKeyAndIconKey() {
+        stubSaveReturnsItsArgument();
+
+        Category created = service.createCategory("Groceries", null, null, USER_ID);
+
+        assertThat(created.getColorKey()).isNull();
+        assertThat(created.getIconKey()).isNull();
+    }
+
+    @Test
+    void createCategoryRejectsAnExactDuplicateName() {
+        when(categoryRepository.existsByUserIdAndNameIgnoreCase(USER_ID, "Groceries")).thenReturn(true);
+
+        assertThatThrownBy(() -> service.createCategory("Groceries", null, null, USER_ID))
                 .isInstanceOf(CategoryAlreadyExistsException.class);
     }
 
     @Test
-    void createCategoryAllowsAGenuinelyNewName() {
-        stubSaveReturnsItsArgument();
+    void createCategoryRejectsACaseDifferentDuplicate() {
+        // Names are unique per User ignoring case (CONTEXT.md): "groceries"
+        // collides with an existing "Groceries".
+        when(categoryRepository.existsByUserIdAndNameIgnoreCase(USER_ID, "groceries")).thenReturn(true);
 
-        Category created = service.createCategory("Groceries", USER_ID);
-
-        assertThat(created.getName()).isEqualTo("Groceries");
+        assertThatThrownBy(() -> service.createCategory("groceries", null, null, USER_ID))
+                .isInstanceOf(CategoryAlreadyExistsException.class);
     }
 
     @Test
-    void renameCategoryRejectsCollidingWithAnotherCategorysNameIgnoringCase() {
-        Category existing = category(1L, USER_ID, "Groceries");
+    void updateCategoryChangesNameColorKeyAndIconKey() {
+        Category existing = category(1L, USER_ID, "Groceries", "slate", "tag");
+        when(categoryRepository.findById(1L)).thenReturn(Optional.of(existing));
+        stubSaveReturnsItsArgument();
+
+        Category updated = service.updateCategory(1L, "Food", "teal", "utensils-crossed", USER_ID);
+
+        assertThat(updated.getName()).isEqualTo("Food");
+        assertThat(updated.getColorKey()).isEqualTo("teal");
+        assertThat(updated.getIconKey()).isEqualTo("utensils-crossed");
+    }
+
+    @Test
+    void updateCategoryCanClearColorKeyAndIconKeyBackToNull() {
+        Category existing = category(1L, USER_ID, "Groceries", "slate", "tag");
+        when(categoryRepository.findById(1L)).thenReturn(Optional.of(existing));
+        stubSaveReturnsItsArgument();
+
+        Category updated = service.updateCategory(1L, "Groceries", null, null, USER_ID);
+
+        assertThat(updated.getColorKey()).isNull();
+        assertThat(updated.getIconKey()).isNull();
+    }
+
+    @Test
+    void updateCategoryRejectsCollidingWithAnotherCategorysNameIgnoringCase() {
+        Category existing = category(1L, USER_ID, "Groceries", null, null);
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(categoryRepository.existsByUserIdAndNameIgnoreCaseAndIdNot(USER_ID, "rent", 1L)).thenReturn(true);
 
-        assertThatThrownBy(() -> service.renameCategory(1L, "rent", USER_ID))
+        assertThatThrownBy(() -> service.updateCategory(1L, "rent", null, null, USER_ID))
                 .isInstanceOf(CategoryAlreadyExistsException.class);
     }
 
     @Test
-    void renameCategoryAllowsChangingOnlyItsOwnCasing() {
-        Category existing = category(1L, USER_ID, "Groceries");
+    void updateCategoryAllowsChangingOnlyItsOwnCasing() {
+        Category existing = category(1L, USER_ID, "Groceries", null, null);
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(existing));
         // AndIdNot(id=1) excludes this same Category, so it never collides
         // with its own pre-rename name regardless of casing.
         when(categoryRepository.existsByUserIdAndNameIgnoreCaseAndIdNot(USER_ID, "groceries", 1L)).thenReturn(false);
         stubSaveReturnsItsArgument();
 
-        Category renamed = service.renameCategory(1L, "groceries", USER_ID);
+        Category renamed = service.updateCategory(1L, "groceries", null, null, USER_ID);
 
         assertThat(renamed.getName()).isEqualTo("groceries");
     }
 
     @Test
-    void renameCategoryAllowsARealNewName() {
-        Category existing = category(1L, USER_ID, "Groceries");
+    void updateCategoryRefusesACategoryOwnedByAnotherUser() {
+        Category existing = category(1L, UUID.randomUUID(), "Groceries", null, null);
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(categoryRepository.existsByUserIdAndNameIgnoreCaseAndIdNot(USER_ID, "Food", 1L)).thenReturn(false);
-        stubSaveReturnsItsArgument();
 
-        Category renamed = service.renameCategory(1L, "Food", USER_ID);
+        assertThatThrownBy(() -> service.updateCategory(1L, "Food", null, null, USER_ID))
+                .isInstanceOf(ForbiddenException.class);
+    }
 
-        assertThat(renamed.getName()).isEqualTo("Food");
+    @Test
+    void updateCategoryThrowsWhenNotFound() {
+        when(categoryRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.updateCategory(1L, "Food", null, null, USER_ID))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void deleteCategoryRefusesWhenInUse() {
+        Category existing = category(1L, USER_ID, "Groceries", null, null);
+        when(categoryRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(transactionRepository.existsByCategoryId(1L)).thenReturn(true);
+
+        assertThatThrownBy(() -> service.deleteCategory(1L, USER_ID))
+                .isInstanceOf(CategoryInUseException.class);
+        verify(categoryRepository, never()).delete(any());
+    }
+
+    @Test
+    void deleteCategoryDeletesWhenNotInUse() {
+        Category existing = category(1L, USER_ID, "Groceries", null, null);
+        when(categoryRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(transactionRepository.existsByCategoryId(1L)).thenReturn(false);
+
+        service.deleteCategory(1L, USER_ID);
+
+        verify(categoryRepository).delete(existing);
     }
 }

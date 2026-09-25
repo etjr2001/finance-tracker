@@ -5,7 +5,7 @@ import { CategoryTile } from '@features/categories/components/CategoryTile'
 export function CategoryRow({ category, isDeleting, onEdit, onDelete }) {
     return (
         <>
-            <CategoryTile categoryId={category.id} categoryName={category.name} />
+            <CategoryTile colorKey={category.colorKey} iconKey={category.iconKey} />
             <span className="flex-1 min-w-0 truncate">{category.name}</span>
             <IconButton icon={Pencil} label="Edit" onClick={() => onEdit(category)} />
             <IconButton

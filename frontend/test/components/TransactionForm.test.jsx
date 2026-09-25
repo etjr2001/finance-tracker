@@ -4,6 +4,7 @@ import { userEvent } from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { TransactionForm } from '@features/transactions/components/TransactionForm'
 import * as categoriesApi from '@features/categories/api/categoriesApi'
+import { MAX_CATEGORY_NAME_LENGTH } from '@features/categories/utils/categoryName'
 
 // TransactionForm calls useCreateCategory() internally (a real React Query
 // hook), so every render needs a QueryClientProvider ancestor now, even
@@ -378,7 +379,10 @@ describe('TransactionForm field limits', () => {
     it('caps the new-category name field length', () => {
         renderForm()
         fireEvent.change(screen.getByRole('combobox'), { target: { value: '__new__' } })
-        expect(screen.getByPlaceholderText('Category name')).toHaveAttribute('maxLength', '50')
+        expect(screen.getByPlaceholderText('Category name')).toHaveAttribute(
+            'maxLength',
+            String(MAX_CATEGORY_NAME_LENGTH)
+        )
     })
 })
 

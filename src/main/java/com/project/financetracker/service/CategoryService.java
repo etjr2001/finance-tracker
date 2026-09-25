@@ -28,17 +28,19 @@ public class CategoryService {
         return category;
     }
 
-    public Category createCategory(String name, UUID userId) {
+    public Category createCategory(String name, String colorKey, String iconKey, UUID userId) {
         if (categoryRepository.existsByUserIdAndNameIgnoreCase(userId, name)) {
             throw new CategoryAlreadyExistsException("A category named '" + name + "' already exists.");
         }
         Category category = new Category();
         category.setUserId(userId);
         category.setName(name);
+        category.setColorKey(colorKey);
+        category.setIconKey(iconKey);
         return categoryRepository.save(category);
     }
 
-    public Category renameCategory(Long id, String newName, UUID userId) {
+    public Category updateCategory(Long id, String newName, String colorKey, String iconKey, UUID userId) {
         Category category = requireOwnedCategory(id, userId);
         // AndIdNot excludes this same Category, so renaming "Groceries" to
         // "groceries" (a casing-only change to itself) isn't rejected as a
@@ -47,6 +49,8 @@ public class CategoryService {
             throw new CategoryAlreadyExistsException("A category named '" + newName + "' already exists.");
         }
         category.setName(newName);
+        category.setColorKey(colorKey);
+        category.setIconKey(iconKey);
         return categoryRepository.save(category);
     }
 
