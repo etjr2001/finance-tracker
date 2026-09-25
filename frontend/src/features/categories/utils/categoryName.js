@@ -1,4 +1,4 @@
-export const MAX_CATEGORY_NAME_LENGTH = 50
+export const MAX_CATEGORY_NAME_LENGTH = 30
 
 export const UNKNOWN_CATEGORY_NAME = 'Unknown category'
 

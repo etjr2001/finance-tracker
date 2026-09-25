@@ -8,7 +8,7 @@ beforeEach(() => {
 describe('demoApi categories', () => {
     it('creates, lists, updates, and deletes a category', async () => {
         const created = await demoApi.createCategory({ name: 'Hobbies' })
-        expect(created).toEqual({ id: expect.any(Number), name: 'Hobbies' })
+        expect(created).toEqual({ id: expect.any(Number), name: 'Hobbies', colorKey: null, iconKey: null })
 
         expect(await demoApi.listCategories()).toEqual([created])
 
@@ -59,7 +59,7 @@ describe('demoApi transactions', () => {
             note: 'Weekly shop',
             categoryId: category.id,
         })
-        expect(created.category).toEqual({ id: category.id, name: 'Groceries' })
+        expect(created.category).toEqual({ id: category.id, name: 'Groceries', colorKey: null, iconKey: null })
 
         expect(await demoApi.listTransactions()).toEqual([created])
 

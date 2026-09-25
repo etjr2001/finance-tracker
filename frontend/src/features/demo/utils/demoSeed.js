@@ -3,6 +3,8 @@
 // rather than hardcoded, so the demo always looks current no matter when
 // someone visits. No zero-amount (Draft) transactions are seeded — Drafts
 // are meant to be demonstrated interactively, not baked into the baseline.
+import { assignColorKey } from '@features/categories/utils/categorySwatch'
+import { guessIconKey } from '@features/categories/utils/categoryIcon'
 
 const CATEGORY_NAMES = [
     'Groceries',
@@ -15,8 +17,16 @@ const CATEGORY_NAMES = [
     'Freelance',
 ]
 
+// Same auto-assign/auto-guess a real Category gets when created on the
+// Categories page (docs/backlog.md, "Category color/icon"), so the demo
+// looks like a real, lived-in account rather than a set of default tiles.
 export function buildSeedCategories() {
-    return CATEGORY_NAMES.map((name, i) => ({ id: i + 1, name }))
+    return CATEGORY_NAMES.map((name, i) => ({
+        id: i + 1,
+        name,
+        colorKey: assignColorKey(name),
+        iconKey: guessIconKey(name),
+    }))
 }
 
 function pad(n) {
@@ -47,7 +57,12 @@ function lastMonthDate(today, day) {
 
 export function buildSeedTransactions(categories, today = new Date()) {
     const byName = Object.fromEntries(categories.map((c) => [c.name, c]))
-    const cat = (name) => ({ id: byName[name].id, name: byName[name].name })
+    const cat = (name) => ({
+        id: byName[name].id,
+        name: byName[name].name,
+        colorKey: byName[name].colorKey,
+        iconKey: byName[name].iconKey,
+    })
 
     const rows = [
         // this month

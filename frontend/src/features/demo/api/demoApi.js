@@ -31,26 +31,28 @@ export async function listCategories() {
     return readJSON(KEYS.categories, [])
 }
 
-export async function createCategory({ name }) {
+export async function createCategory({ name, colorKey = null, iconKey = null }) {
     const categories = readJSON(KEYS.categories, [])
     const id = readJSON(KEYS.nextCategoryId, 1)
-    const created = { id, name }
+    const created = { id, name, colorKey, iconKey }
     writeJSON(KEYS.categories, [...categories, created])
     writeJSON(KEYS.nextCategoryId, id + 1)
     return created
 }
 
-export async function updateCategory(id, { name }) {
+export async function updateCategory(id, { name, colorKey = null, iconKey = null }) {
     const categories = readJSON(KEYS.categories, [])
-    const updated = categories.map((c) => (c.id === id ? { ...c, name } : c))
+    const updated = categories.map((c) => (c.id === id ? { ...c, name, colorKey, iconKey } : c))
     writeJSON(KEYS.categories, updated)
 
-    // The real API stores the category name on each Transaction too, so
-    // renaming must be reflected on every Transaction referencing it.
+    // The real API embeds the full Category on each Transaction too, so a
+    // rename/recolour must be reflected on every Transaction referencing it.
     const transactions = readJSON(KEYS.transactions, [])
     writeJSON(
         KEYS.transactions,
-        transactions.map((t) => (t.category?.id === id ? { ...t, category: { ...t.category, name } } : t))
+        transactions.map((t) =>
+            t.category?.id === id ? { ...t, category: { ...t.category, name, colorKey, iconKey } } : t
+        )
     )
 
     return updated.find((c) => c.id === id)
@@ -76,7 +78,7 @@ export async function listTransactions() {
 function resolveCategory(categoryId) {
     const categories = readJSON(KEYS.categories, [])
     const category = categories.find((c) => c.id === categoryId)
-    return category ? { id: category.id, name: category.name } : null
+    return category ? { id: category.id, name: category.name, colorKey: category.colorKey, iconKey: category.iconKey } : null
 }
 
 // Same shape the real API returns for a Transaction.

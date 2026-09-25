@@ -17,7 +17,11 @@ export function TransactionDetail({ transaction, onClose, onEdit, onDelete }) {
         <Modal onRequestClose={onClose}>
             <div className="flex items-start justify-between gap-3 mb-5">
                 <div className="flex items-center gap-3 min-w-0">
-                    <CategoryTile categoryId={transaction.category?.id} categoryName={transaction.category?.name} size="lg" />
+                    <CategoryTile
+                        colorKey={transaction.category?.colorKey}
+                        iconKey={transaction.category?.iconKey}
+                        size="lg"
+                    />
                     <div className="min-w-0">
                         <div className="flex items-center gap-2 min-w-0">
                             <span className="font-medium truncate">{categoryNameOf(transaction)}</span>

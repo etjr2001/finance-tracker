@@ -1,13 +1,19 @@
+import { useMemo } from 'react'
 import { PageTitle } from '@components/PageTitle'
 import { StatusMessage } from '@components/StatusMessage'
 import { ConfirmDialog } from '@components/ConfirmDialog'
 import { useCategories } from '@features/categories/hooks/useCategories'
 import { useCategoryManager } from '@features/categories/hooks/useCategoryManager'
+import { sortCategoriesByName } from '@features/categories/utils/categoryName'
 import { NewCategoryForm } from '@features/categories/components/NewCategoryForm'
 import { CategoryGrid } from '@features/categories/components/CategoryGrid'
 
 export function CategoriesPage() {
     const { data: categories, isLoading, isError } = useCategories()
+    const sortedCategories = useMemo(
+        () => (categories ? sortCategoriesByName(categories) : categories),
+        [categories]
+    )
     const manager = useCategoryManager()
 
     return (
@@ -22,14 +28,19 @@ export function CategoriesPage() {
             )}
 
             <CategoryGrid
-                categories={categories}
+                categories={sortedCategories}
                 isLoading={isLoading}
                 hasError={isError}
                 editingId={manager.editingId}
                 editingName={manager.editingName}
                 onEditingNameChange={manager.setEditingName}
+                editingColorKey={manager.editingColorKey}
+                onEditingColorKeyChange={manager.setEditingColorKey}
+                editingIconKey={manager.editingIconKey}
+                onEditingIconKeyChange={manager.setEditingIconKey}
                 onStartEdit={manager.startEdit}
                 onSaveEdit={manager.saveEdit}
+                isSaving={manager.isSaving}
                 onCancelEdit={manager.cancelEdit}
                 onDelete={manager.requestDelete}
                 isDeleting={manager.isDeleting}

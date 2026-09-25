@@ -30,13 +30,13 @@ class CategoryRequestValidationTest {
 
     @Test
     void validNameHasNoViolations() {
-        assertThat(validator.validate(new CategoryController.CategoryRequest("Groceries"))).isEmpty();
+        assertThat(validator.validate(new CategoryController.CategoryRequest("Groceries", null, null))).isEmpty();
     }
 
     @Test
     void rejectsBlankName() {
         Set<ConstraintViolation<CategoryController.CategoryRequest>> violations =
-                validator.validate(new CategoryController.CategoryRequest("   "));
+                validator.validate(new CategoryController.CategoryRequest("   ", null, null));
 
         assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("name"));
     }
@@ -46,7 +46,7 @@ class CategoryRequestValidationTest {
         String tooLong = "n".repeat(CategoryController.MAX_NAME_LENGTH + 1);
 
         Set<ConstraintViolation<CategoryController.CategoryRequest>> violations =
-                validator.validate(new CategoryController.CategoryRequest(tooLong));
+                validator.validate(new CategoryController.CategoryRequest(tooLong, null, null));
 
         assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("name"));
     }
@@ -55,6 +55,40 @@ class CategoryRequestValidationTest {
     void acceptsNameAtMaxLength() {
         String atLimit = "n".repeat(CategoryController.MAX_NAME_LENGTH);
 
-        assertThat(validator.validate(new CategoryController.CategoryRequest(atLimit))).isEmpty();
+        assertThat(validator.validate(new CategoryController.CategoryRequest(atLimit, null, null))).isEmpty();
+    }
+
+    @Test
+    void acceptsNullColorKeyAndIconKey() {
+        assertThat(validator.validate(new CategoryController.CategoryRequest("Groceries", null, null))).isEmpty();
+    }
+
+    @Test
+    void acceptsAValidSlugColorKeyAndIconKey() {
+        assertThat(validator.validate(new CategoryController.CategoryRequest("Groceries", "ochre", "shopping-cart"))).isEmpty();
+    }
+
+    @Test
+    void rejectsAnUppercaseColorKey() {
+        Set<ConstraintViolation<CategoryController.CategoryRequest>> violations =
+                validator.validate(new CategoryController.CategoryRequest("Groceries", "OCHRE", null));
+
+        assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("colorKey"));
+    }
+
+    @Test
+    void rejectsAnIconKeyStartingWithADigitOrHyphen() {
+        Set<ConstraintViolation<CategoryController.CategoryRequest>> violations =
+                validator.validate(new CategoryController.CategoryRequest("Groceries", null, "1-tag"));
+
+        assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("iconKey"));
+    }
+
+    @Test
+    void rejectsAColorKeyWithSpacesOrSymbols() {
+        Set<ConstraintViolation<CategoryController.CategoryRequest>> violations =
+                validator.validate(new CategoryController.CategoryRequest("Groceries", "not valid!", null));
+
+        assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("colorKey"));
     }
 }

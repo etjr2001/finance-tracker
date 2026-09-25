@@ -17,6 +17,8 @@ A saved shortcut for creating a Transaction: a reusable template capturing a Cat
 ## Category
 A user-defined label for a Transaction (e.g. "Groceries", "Salary"). Flat — no subcategories. Each User has their own set, seeded with a starter list on signup, editable after that. Category names are unique per User, ignoring case: "groceries" and "Groceries" are the same Category, and the name keeps the casing the User typed.
 
+A Category also has a colour and an icon, picked from a fixed set (not freeform hex values or uploaded images). A new Category gets one auto-assigned so it never looks blank, and the User can change either afterwards on the Categories page. A Category created inline from the Transaction form gets no colour/icon yet (both unset) to keep that flow to one step; it can be customised later like any other Category.
+
 ## Payment Method
 A second, independent label on a Transaction (e.g. "Cash", "Credit Card", "Bank Transfer"), distinct from Category — used to slice the Dashboard by how money moved, not what it was for. **Deferred to v2**; captured here because its meaning is settled even though it isn't built yet.
 

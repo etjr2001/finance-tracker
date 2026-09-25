@@ -1,10 +1,13 @@
 import { useState } from 'react'
 import { useCreateCategory, useUpdateCategory, useDeleteCategory } from '@features/categories/hooks/useCategories'
+import { assignColorKey } from '@features/categories/utils/categorySwatch'
+import { guessIconKey } from '@features/categories/utils/categoryIcon'
 import { apiErrorMessage } from '@api/httpClient'
 
-// All Categories-page business state: the add form, which row is being
-// renamed, the pending delete confirmation, and the shared error line.
-// The page and its components stay purely presentational.
+// All Categories-page business state: the add form, which category is being
+// edited (and its in-progress name/colour/icon), the pending delete
+// confirmation, and the shared error line. The page and its components stay
+// purely presentational.
 export function useCategoryManager() {
     const createCategory = useCreateCategory()
     const updateCategory = useUpdateCategory()
@@ -13,6 +16,8 @@ export function useCategoryManager() {
     const [newName, setNewName] = useState('')
     const [editingId, setEditingId] = useState(null)
     const [editingName, setEditingName] = useState('')
+    const [editingColorKey, setEditingColorKey] = useState(null)
+    const [editingIconKey, setEditingIconKey] = useState(null)
     const [deleteTarget, setDeleteTarget] = useState(null)
     const [error, setError] = useState(null)
 
@@ -27,10 +32,16 @@ export function useCategoryManager() {
         }
     }
 
+    // Fewest-click creation (docs/backlog.md): no colour/icon step here —
+    // colour is auto-assigned from the name and icon is guessed from a
+    // keyword match (null if none), both customisable afterwards via edit.
     async function createFromInput() {
         const name = newName.trim()
         if (!name) return
-        const isCreated = await runWithError(() => createCategory.mutateAsync({ name }), 'Could not create category.')
+        const isCreated = await runWithError(
+            () => createCategory.mutateAsync({ name, colorKey: assignColorKey(name), iconKey: guessIconKey(name) }),
+            'Could not create category.'
+        )
         if (isCreated) setNewName('')
     }
 
@@ -38,6 +49,8 @@ export function useCategoryManager() {
         setError(null)
         setEditingId(category.id)
         setEditingName(category.name)
+        setEditingColorKey(category.colorKey)
+        setEditingIconKey(category.iconKey)
     }
 
     function cancelEdit() {
@@ -48,7 +61,13 @@ export function useCategoryManager() {
         const name = editingName.trim()
         if (!name) return
         const isSaved = await runWithError(
-            () => updateCategory.mutateAsync({ id: editingId, name }),
+            () =>
+                updateCategory.mutateAsync({
+                    id: editingId,
+                    name,
+                    colorKey: editingColorKey,
+                    iconKey: editingIconKey,
+                }),
             'Could not update category.'
         )
         if (isSaved) setEditingId(null)
@@ -72,9 +91,14 @@ export function useCategoryManager() {
         editingId,
         editingName,
         setEditingName,
+        editingColorKey,
+        setEditingColorKey,
+        editingIconKey,
+        setEditingIconKey,
         startEdit,
         cancelEdit,
         saveEdit,
+        isSaving: updateCategory.isPending,
         deleteTarget,
         requestDelete: setDeleteTarget,
         cancelDelete: () => setDeleteTarget(null),

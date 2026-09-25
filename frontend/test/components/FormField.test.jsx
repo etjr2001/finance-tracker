@@ -30,4 +30,22 @@ describe('FormField', () => {
 
         expect(screen.getByLabelText('Category').tagName).toBe('SELECT')
     })
+
+    it('shows a live character counter when maxLength is set', () => {
+        render(<FormField label="Note" htmlFor="note" maxLength={10} value="Hi" onChange={() => {}} />)
+
+        expect(screen.getByText('2/10')).toBeInTheDocument()
+    })
+
+    it('treats a missing value as empty for the counter', () => {
+        render(<FormField label="Note" htmlFor="note" maxLength={10} onChange={() => {}} />)
+
+        expect(screen.getByText('0/10')).toBeInTheDocument()
+    })
+
+    it('shows no counter when maxLength is not set', () => {
+        render(<FormField label="Email" htmlFor="email" value="" onChange={() => {}} />)
+
+        expect(screen.queryByText(/\/\d/)).not.toBeInTheDocument()
+    })
 })
