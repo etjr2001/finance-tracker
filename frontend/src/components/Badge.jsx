@@ -9,7 +9,7 @@ const TONES = {
     withdrawal: 'text-withdrawal bg-withdrawal/10 border-withdrawal/30',
 }
 
-export default function Badge({ tone = 'brass', className = '', children }) {
+export function Badge({ tone = 'brass', className = '', children }) {
     return (
         <span
             className={`text-xs font-medium rounded-full border px-2 py-0.5 shrink-0 ${TONES[tone]} ${className}`}

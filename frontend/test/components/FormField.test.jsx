@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
-import FormField from '../../src/components/FormField'
+import { FormField } from '@components/FormField'
 
 describe('FormField', () => {
     it('associates the label with the input via htmlFor/id', () => {

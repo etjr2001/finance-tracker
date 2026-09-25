@@ -1,14 +1,14 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { userEvent } from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import TransactionForm from '../../src/components/TransactionForm'
-import * as categoriesApi from '../../src/api/categories'
+import { TransactionForm } from '@features/transactions/components/TransactionForm'
+import * as categoriesApi from '@features/categories/api/categoriesApi'
 
 // TransactionForm calls useCreateCategory() internally (a real React Query
 // hook), so every render needs a QueryClientProvider ancestor now, even
 // tests that never touch category creation.
-vi.mock('../../src/api/categories')
+vi.mock('@features/categories/api/categoriesApi')
 
 const categories = [
     { id: 1, name: 'Groceries' },

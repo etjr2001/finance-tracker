@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, within, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { userEvent } from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import CategoriesPage from '../../src/pages/CategoriesPage'
-import * as categoriesApi from '../../src/api/categories'
+import { CategoriesPage } from '@features/categories/pages/CategoriesPage'
+import * as categoriesApi from '@features/categories/api/categoriesApi'
 
-vi.mock('../../src/api/categories')
+vi.mock('@features/categories/api/categoriesApi')
 
 function renderPage() {
     const queryClient = new QueryClient({

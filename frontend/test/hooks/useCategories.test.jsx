@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import { renderHook, waitFor, act } from '@testing-library/react'
 import { QueryClient, QueryClientProvider, onlineManager } from '@tanstack/react-query'
-import { useCategories, useCreateCategory } from '../../src/hooks/useCategories'
-import { DemoModeContext } from '../../src/demo/DemoModeContext'
-import * as categoriesApi from '../../src/api/categories'
-import * as demoApi from '../../src/demo/demoApi'
+import { useCategories, useCreateCategory } from '@features/categories/hooks/useCategories'
+import { DemoModeContext } from '@features/demo/context/DemoModeContext'
+import * as categoriesApi from '@features/categories/api/categoriesApi'
+import * as demoApi from '@features/demo/api/demoApi'
 
-vi.mock('../../src/api/categories')
-vi.mock('../../src/demo/demoApi')
+vi.mock('@features/categories/api/categoriesApi')
+vi.mock('@features/demo/api/demoApi')
 
 function wrapper(isDemo) {
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })

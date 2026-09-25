@@ -14,7 +14,6 @@ Living document. Not an ADR: this tracks *what's outstanding*, not *decisions ma
   - *Considered and rejected:* storing only uppercase names. It gives the same speed but throws away the casing the User typed.
 - **Inconsistent DTO usage.** Some endpoints serialize entities directly; others use `Response` DTOs. This was never unified. Scoped into sprint 3, Bundle A.
 - **No pagination on `GET /api/transactions`.** Much less urgent since ADR0011: the Transactions page now shows one month at a time. Scoped into sprint 3, Bundle A, as optional and deferrable.
-- **Inconsistent money formatting.** The Dashboard's Net renders a hyphen-minus (`-$957.50`) while the Transaction list uses U+2212 (`−$5.67`); demo shows `SGD 4,200.00` while a real account shows `$908.37`. ADR0010 standardises on U+2212 via `Money.jsx`. Fix in the revamp's `style/design-tokens` branch, and find out why the currency display differs between demo and real accounts.
 - **No custom domain/DNS.** The app is live on the default Railway URL. Explicitly non-blocking, parked indefinitely.
 - ~~**Bottom tab bar feels too narrow to tap comfortably on phone.**~~ Fixed (`fix/nav-bar-tap-targets-and-new-transaction-date`): grew the `NavLink`s from `min-h-11`/`py-1.5` to `min-h-14`/`py-2`, so the tap targets themselves sit clear of the iPhone home-indicator gesture area — the existing `pb-[env(safe-area-inset-bottom)]` only cleared the bar's *background* there, not the tappable zone. Awaiting on-device confirmation this was the whole story.
 
@@ -22,13 +21,6 @@ Living document. Not an ADR: this tracks *what's outstanding*, not *decisions ma
 
 - **Payment Method.** Explicitly deferred to v2 per `CONTEXT.md`. Not a candidate for any near-term sprint; it's a genuinely separate domain concept, not a bug or polish item.
 - **Installable PWA (manifest + service worker, offline support).** Out of scope for the pre-Sprint-3 hardening batch below, which only adds a minimal manifest to fix iOS storage persistence. A real installable PWA is a separate feature, not a bug fix.
-- **Transaction row: collapsed mobile row + detail view card.** On narrow viewports, `TransactionsPage.jsx`'s row crams date, category, Draft badge, note, amount, and inline Edit/Delete into one line with no responsive variant — the note truncates to near-illegible. Settled design (grilled, then amended during revamp planning — not yet built):
-  - Gate on viewport width (same `md:` breakpoint `TransactionForm.jsx` already uses for `grid-cols-1 md:grid-cols-2`), not platform/PWA detection — `manifest.json` already sets `display: standalone` for the home-screen launch, but it's the same responsive CSS either way.
-  - Transactions are grouped into day sections ("Today", "Yesterday", then e.g. "Tue 22 Sep"), each with its day total (ADR0010). This applies at every width.
-  - Below `md`: each row shows the Category icon tile, Category, a one-line truncated note preview (when there is a note), the amount, and the Draft badge. The date lives in the day header, not the row. Tapping the row opens a read-only detail card (`Modal.jsx`-based, mirroring `ConfirmDialog.jsx`'s shape) showing the full transaction — date, category, amount, type, untruncated note — with Edit and Delete buttons that close the card and hand off to the page's existing `openEdit`/`requestDelete` flows. No new mutation logic.
-  - At `md` and up (including desktop web): inline Edit/Delete stay on the row, restyled as icon buttons, with the full note shown.
-  - *Amended from the grilled spec:* the original listed "date + category + Draft badge only". The missing amount was an oversight, since a list without amounts isn't usable. The note preview was dropped only to avoid crowding; once the date moves to day headers and Edit/Delete leave the row, that crowding is gone, and without notes a list reads "Food, Food, Food…" with nothing to tell rows apart.
-  - Built as `feat/mobile-transaction-row` within the frontend revamp below, not as a standalone branch first.
 - **Duplicate transaction (clone action).** Pick an existing transaction, get a prefilled form to create a new one from it. Settled scope (grilled) — not yet scoped into a branch.
 - **Duplicate transaction detection.** Distinct from the clone action above — the app flagging likely-accidental double-entries (e.g. same amount/category/date entered twice). Parked as an idea to explore later; no definition yet of what counts as a match.
 - **Favourite transactions.** Settled domain concept (`CONTEXT.md`): a reusable Transaction template (Category + amount + note) created from an existing Transaction, picked again later to prefill a new one — manual trigger only, no scheduling. Ship before Recurring below; needs no new infrastructure.
@@ -38,18 +30,6 @@ Living document. Not an ADR: this tracks *what's outstanding*, not *decisions ma
   - Demo mode: generated in the browser from `demoApi.js`'s data. Both go through a hook, per ADR0009.
   - The Supabase token is attached by the axios interceptor, so a plain `<a href>` download would be unauthenticated. Fetch through axios as a blob, then save it.
 - **Dashboard chart type toggle.** Let the User switch the "Spending by category" breakdown between the current bar-list view and a pie chart. Not yet scoped: needs a decision on whether a pie chart can stay CSS-only (e.g. `conic-gradient`) or requires revisiting ADR0010's "no charting library" call, which was explicitly left open to revisiting "if a chart CSS handles badly is scoped, such as a trend over time" — a pie chart wasn't the case in mind there, so this needs its own look before building. Also needs: where the toggle lives in the UI, and whether the toggle choice persists per-User or resets each visit.
-- **Frontend revamp.** Full visual makeover — the "Passbook" design system (ADR0010) plus the global month picker (ADR0011). Interaction flow stays the same, except that mobile nav moves to a bottom tab bar. Frontend-only: no backend or API changes, and all data goes through `hooks/` so `/demo` keeps working (ADR0009). No feature flag. Built on the `feat/frontend-revamp` integration branch (ADR0012): each sub-branch below is cut from it and merged back into it after local tests, lint, and build, and the integration branch merges into `main` once, as a merge commit, when the whole revamp is done. Sub-branches may leave temporary inconsistencies; the integration branch as a whole must be fully in one style before it merges. Branches, in order:
-  1. `docs/adr-0010-0011` — ADR0010, ADR0011, and this backlog update. Merged to `main` before ADR0012.
-  2. `style/design-tokens` — retuned and new tokens in `index.css`, tabular numerals, U+2212 in `Money.jsx`, and the money-formatting debt above.
-  3. `refactor/ui-primitives` — `Button`, `Badge`, `Card`, `FormField`; `Modal`/`ConfirmDialog` moved onto them.
-  4. `feat/icons` — `lucide-react` and the icon conventions.
-  5. `style/layout-shell` — sidebar at `md:` and up, bottom tab bar below, compact mobile header, demo banner.
-  6. `style/auth-pages`.
-  7. `style/categories-page` — grid layout; category tiles get a deterministic colour (`lib/categorySwatch.js`) and an icon guessed from the category's name via a small keyword lookup (`lib/categoryIcon.js`, falls back to a shared default), both frontend-only stopgaps until real Category colour/icon exists (Sprint 3). Edit stays rename-only — no colour/icon picker, since there's nothing to persist a choice to yet.
-  8. `style/transactions-page` — cards and day grouping, reusing `categoryTileClasses`/`categoryIcon` from the branch above for the row's icon tile.
-  9. `feat/mobile-transaction-row` — the amended spec above.
-  10. `feat/global-month-picker` — per ADR0011: `useSelectedMonth()` with `?month=YYYY-MM`, month bar, month-grid sheet/popover, client-side month filtering of the Transactions list, empty state, switch-to-month after save. **Deviates from ADR0011:** the Drafts-in-other-months notice was skipped, deliberately — it would need computing from the full unfiltered `useTransactions()` result (still fetched in full at this point per ADR0011's phased plan), and that computation becomes dead code the moment `GET /api/transactions` is scoped server-side by month (ADR0011's own next step, also planned to land with pagination). Not worth building twice. A Draft in the *currently viewed* month is unaffected — it shows in the list like any Transaction, same as before.
-  11. `style/dashboard-page` — done. Single Net-card hero summary and coloured, percentage-labelled category bars, per ADR0013 (which also captures the mockup layout referenced here previously).
 
 ## Sprint history
 
@@ -72,6 +52,13 @@ Not a numbered sprint — a batch of bug fixes and tech debt cleanup found ahead
 - **Dashboard breakdown included Drafts (#13).** `DashboardService.buildCategoryBreakdown` didn't actually exclude zero-amount Transactions, despite ADR0008 documenting that as the decision — surfaced because `/demo` mode's client-side dashboard implemented the correct behavior, so the real app started visibly disagreeing with its own demo. Fixed, with `DashboardServiceTest`, the first backend service-layer test in the repo.
 
 See `docs/sprints/pre-sprint-3-hardening-review.md`.
+
+### Frontend revamp: complete
+The "Passbook" design system (ADR0010) and the global month picker (ADR0011), across the whole frontend. Interaction flow stayed the same, except mobile nav moved to a bottom tab bar. Frontend-only throughout: no backend/API changes, `/demo` kept working (ADR0009). Built on a temporary `feat/frontend-revamp` integration branch (ADR0012, new for this revamp) — eleven sub-branches merged into it, then one real merge commit into `main` (#27) when the whole thing was done, so `main` never saw a half-revamped app. Also shipped in the same working session: `fix/demo-offline-network-mode` (#16) and `fix/nav-bar-tap-targets-and-new-transaction-date` (#28), neither part of the revamp itself.
+
+New ADRs: 0012 (the integration-branch workflow) and 0013 (the Dashboard's single-Net-card layout, settled mid-revamp and formalised after).
+
+See `docs/sprints/frontend-revamp-review.md` for what shipped branch-by-branch, what went well, and the bugs found along the way (worth reading before touching `features/layout/components/AppLayout.jsx`, `features/month/components/MonthBar.jsx`, or any date-handling code — several of them are exactly the kind of subtle regression that's easy to reintroduce).
 
 ### Sprint 3: planned, not started
 Follows the frontend revamp above, so its UI is built directly in the new design system. The rough order was chosen for dependency reasons (Category color feeds the chart) and to bundle work that touches the same files. Every item that touches the API keeps `demoApi.js` returning the same shapes, in the same branch (ADR0009).

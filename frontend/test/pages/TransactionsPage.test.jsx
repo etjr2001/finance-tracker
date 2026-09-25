@@ -1,14 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, within, waitFor, fireEvent } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { userEvent } from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
-import TransactionsPage from '../../src/pages/TransactionsPage'
-import * as transactionsApi from '../../src/api/transactions'
-import * as categoriesApi from '../../src/api/categories'
+import { TransactionsPage } from '@features/transactions/pages/TransactionsPage'
+import * as transactionsApi from '@features/transactions/api/transactionsApi'
+import * as categoriesApi from '@features/categories/api/categoriesApi'
 
-vi.mock('../../src/api/transactions')
-vi.mock('../../src/api/categories')
+vi.mock('@features/transactions/api/transactionsApi')
+vi.mock('@features/categories/api/categoriesApi')
 
 const sampleTransaction = {
     id: 42,

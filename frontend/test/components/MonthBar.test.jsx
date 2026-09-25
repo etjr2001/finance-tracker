@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
-import MonthBar from '../../src/components/MonthBar'
+import { MonthBar } from '@features/month/components/MonthBar'
 
 describe('MonthBar', () => {
     afterEach(() => {

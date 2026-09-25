@@ -1,11 +1,10 @@
-// Label + control wrapper, standardizing the <label>/margin pattern
-// repeated across every form. Renders its own <input> when `as` is left
-// at the default; pass a different element (e.g. a <select>) as children
-// instead when the field needs one, via the `children` escape hatch.
-export const inputClass =
-    'w-full border border-rule-strong bg-white px-3 py-2 rounded-xl text-base focus:outline-none focus:ring-1 focus:ring-ink'
+import { inputClass } from '@components/formStyles'
 
-export default function FormField({ label, htmlFor, className = '', children, ...inputProps }) {
+// Label + control wrapper. Renders its own <input> by default; pass
+// `children` to supply a different control (e.g. a <select>). Remaining
+// props are forwarded to the <input> — this is a thin native-element
+// wrapper, so forwarding (type, value, onChange, required…) is the point.
+export function FormField({ label, htmlFor, className = '', children, ...inputProps }) {
     return (
         <div className={className}>
             <label className="block text-sm mb-1" htmlFor={htmlFor}>

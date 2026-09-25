@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { userEvent } from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import DemoBanner from '../../src/demo/DemoBanner'
-import * as demoApi from '../../src/demo/demoApi'
+import { DemoBanner } from '@features/demo/components/DemoBanner'
+import * as demoApi from '@features/demo/api/demoApi'
 
-vi.mock('../../src/demo/demoApi')
+vi.mock('@features/demo/api/demoApi')
 
 function renderBanner() {
     const queryClient = new QueryClient()

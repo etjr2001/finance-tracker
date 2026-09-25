@@ -6,7 +6,7 @@
 // a reliable way to override one — Tailwind doesn't order generated
 // utilities by where they appear in a class string, so callers always pass
 // their own (e.g. `<Card className="p-5">`).
-export default function Card({ className = '', children }) {
+export function Card({ className = '', children }) {
     return (
         <div className={`bg-paper-raised border border-rule rounded-[14px] ${className}`}>
             {children}

@@ -1,10 +1,9 @@
-import Modal from './Modal'
-import Button from './Button'
+import { Modal } from '@components/Modal'
+import { Button } from '@components/Button'
 
-// A yes/no confirmation, styled consistently with the rest of the app and
-// built on the same Modal shell used for the transaction Add/Edit forms.
-// Clicking outside or Escape behaves the same as Cancel.
-export default function ConfirmDialog({ message, confirmLabel = 'Confirm', onConfirm, onCancel }) {
+// Yes/no confirmation on the shared Modal shell. Outside click or Escape
+// behaves the same as Cancel.
+export function ConfirmDialog({ message, confirmLabel = 'Confirm', onConfirm, onCancel }) {
     return (
         <Modal onRequestClose={onCancel}>
             <p className="text-sm mb-4">{message}</p>

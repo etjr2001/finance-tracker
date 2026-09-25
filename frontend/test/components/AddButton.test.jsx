@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
-import AddButton from '../../src/components/AddButton'
+import { AddButton } from '@components/AddButton'
 
 describe('AddButton', () => {
     it('defaults to the label "Add"', () => {

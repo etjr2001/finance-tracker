@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import * as demoApi from '../../src/demo/demoApi'
+import * as demoApi from '@features/demo/api/demoApi'
 
 beforeEach(() => {
     window.localStorage.clear()

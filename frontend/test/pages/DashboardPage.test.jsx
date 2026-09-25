@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { userEvent } from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import DashboardPage from '../../src/pages/DashboardPage'
-import * as dashboardApi from '../../src/api/dashboard'
+import { DashboardPage } from '@features/dashboard/pages/DashboardPage'
+import * as dashboardApi from '@features/dashboard/api/dashboardApi'
 
-vi.mock('../../src/api/dashboard')
+vi.mock('@features/dashboard/api/dashboardApi')
 
 function renderPage(initialEntry = '/?month=2026-09') {
     const queryClient = new QueryClient({

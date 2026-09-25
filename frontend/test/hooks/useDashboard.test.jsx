@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import { renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider, onlineManager } from '@tanstack/react-query'
-import { useDashboard } from '../../src/hooks/useDashboard'
-import { DemoModeContext } from '../../src/demo/DemoModeContext'
-import * as dashboardApi from '../../src/api/dashboard'
-import * as demoApi from '../../src/demo/demoApi'
+import { useDashboard } from '@features/dashboard/hooks/useDashboard'
+import { DemoModeContext } from '@features/demo/context/DemoModeContext'
+import * as dashboardApi from '@features/dashboard/api/dashboardApi'
+import * as demoApi from '@features/demo/api/demoApi'
 
-vi.mock('../../src/api/dashboard')
-vi.mock('../../src/demo/demoApi')
+vi.mock('@features/dashboard/api/dashboardApi')
+vi.mock('@features/demo/api/demoApi')
 
 function wrapper(isDemo) {
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })

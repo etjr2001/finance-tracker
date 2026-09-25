@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { roundHalfEven } from '../../src/demo/demoMoney'
+import { roundHalfEven } from '@features/demo/utils/demoMoney'
 
 describe('roundHalfEven', () => {
     it('rounds an exact tie down to the nearest even cent', () => {

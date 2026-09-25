@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
-import { useIsMobile } from '../../src/hooks/useIsMobile'
+import { useIsMobile } from '@hooks/useIsMobile'
 
 // A minimal fake matchMedia that actually supports the addEventListener
 // change-event path, so the hook's reactivity can be tested — the global

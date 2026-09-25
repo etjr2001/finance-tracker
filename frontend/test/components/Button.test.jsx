@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
-import Button from '../../src/components/Button'
+import { Button } from '@components/Button'
 
 describe('Button', () => {
     it('defaults to type="button" so it never submits a form by accident', () => {
