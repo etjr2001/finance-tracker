@@ -8,5 +8,11 @@ import java.util.UUID;
 
 public interface CategoryRepository extends JpaRepository<Category, Long> {
     List<Category> findByUserId(UUID userId);
-    boolean existsByUserIdAndName(UUID userId, String name);
+
+    // Names are unique per User ignoring case (CONTEXT.md): "groceries" and
+    // "Groceries" are the same Category. The *AndIdNot variant excludes the
+    // Category being renamed itself, so changing only its casing (e.g.
+    // "Groceries" -> "groceries") isn't rejected as a collision with itself.
+    boolean existsByUserIdAndNameIgnoreCase(UUID userId, String name);
+    boolean existsByUserIdAndNameIgnoreCaseAndIdNot(UUID userId, String name, Long id);
 }

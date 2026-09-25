@@ -8,8 +8,12 @@ import lombok.Setter;
 
 import java.util.UUID;
 
+// Uniqueness is enforced in the DB as a case-insensitive functional index
+// (uq_categories_user_name_ci on (user_id, upper(name)), V4 migration), not
+// expressible as a plain JPA @UniqueConstraint (column list only, no
+// upper()) -- and ddl-auto is `validate`, so Flyway owns the real schema.
 @Entity
-@Table(name = "categories", uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "name"}))
+@Table(name = "categories")
 @Getter
 @Setter
 @NoArgsConstructor

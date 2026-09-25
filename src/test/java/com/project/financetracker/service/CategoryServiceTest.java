@@ -63,10 +63,20 @@ class CategoryServiceTest {
     }
 
     @Test
-    void createCategoryRejectsADuplicateName() {
-        when(categoryRepository.existsByUserIdAndName(USER_ID, "Groceries")).thenReturn(true);
+    void createCategoryRejectsAnExactDuplicateName() {
+        when(categoryRepository.existsByUserIdAndNameIgnoreCase(USER_ID, "Groceries")).thenReturn(true);
 
         assertThatThrownBy(() -> service.createCategory("Groceries", null, null, USER_ID))
+                .isInstanceOf(CategoryAlreadyExistsException.class);
+    }
+
+    @Test
+    void createCategoryRejectsACaseDifferentDuplicate() {
+        // Names are unique per User ignoring case (CONTEXT.md): "groceries"
+        // collides with an existing "Groceries".
+        when(categoryRepository.existsByUserIdAndNameIgnoreCase(USER_ID, "groceries")).thenReturn(true);
+
+        assertThatThrownBy(() -> service.createCategory("groceries", null, null, USER_ID))
                 .isInstanceOf(CategoryAlreadyExistsException.class);
     }
 
@@ -96,13 +106,27 @@ class CategoryServiceTest {
     }
 
     @Test
-    void updateCategoryRejectsRenamingToAnotherExistingName() {
+    void updateCategoryRejectsCollidingWithAnotherCategorysNameIgnoringCase() {
         Category existing = category(1L, USER_ID, "Groceries", null, null);
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(categoryRepository.existsByUserIdAndName(USER_ID, "Rent")).thenReturn(true);
+        when(categoryRepository.existsByUserIdAndNameIgnoreCaseAndIdNot(USER_ID, "rent", 1L)).thenReturn(true);
 
-        assertThatThrownBy(() -> service.updateCategory(1L, "Rent", null, null, USER_ID))
+        assertThatThrownBy(() -> service.updateCategory(1L, "rent", null, null, USER_ID))
                 .isInstanceOf(CategoryAlreadyExistsException.class);
+    }
+
+    @Test
+    void updateCategoryAllowsChangingOnlyItsOwnCasing() {
+        Category existing = category(1L, USER_ID, "Groceries", null, null);
+        when(categoryRepository.findById(1L)).thenReturn(Optional.of(existing));
+        // AndIdNot(id=1) excludes this same Category, so it never collides
+        // with its own pre-rename name regardless of casing.
+        when(categoryRepository.existsByUserIdAndNameIgnoreCaseAndIdNot(USER_ID, "groceries", 1L)).thenReturn(false);
+        stubSaveReturnsItsArgument();
+
+        Category renamed = service.updateCategory(1L, "groceries", null, null, USER_ID);
+
+        assertThat(renamed.getName()).isEqualTo("groceries");
     }
 
     @Test
