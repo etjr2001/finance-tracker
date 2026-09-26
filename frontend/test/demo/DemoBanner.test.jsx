@@ -26,16 +26,38 @@ describe('DemoBanner reset', () => {
         vi.restoreAllMocks()
     })
 
-    it('resets demo data and invalidates the demo query caches', async () => {
+    it('asks for confirmation before resetting', async () => {
+        const user = userEvent.setup()
+        renderBanner()
+
+        await user.click(screen.getByRole('button', { name: 'Reset demo data' }))
+
+        expect(demoApi.resetDemoData).not.toHaveBeenCalled()
+        expect(screen.getByRole('button', { name: 'Reset' })).toBeInTheDocument()
+    })
+
+    it('resets demo data and invalidates the demo query caches once confirmed', async () => {
         const user = userEvent.setup()
         const queryClient = renderBanner()
 
         await user.click(screen.getByRole('button', { name: 'Reset demo data' }))
+        await user.click(screen.getByRole('button', { name: 'Reset' }))
 
         expect(demoApi.resetDemoData).toHaveBeenCalled()
         expect(queryClient.invalidateQueries).toHaveBeenCalledWith({ queryKey: ['transactions', true] })
         expect(queryClient.invalidateQueries).toHaveBeenCalledWith({ queryKey: ['categories', true] })
         expect(queryClient.invalidateQueries).toHaveBeenCalledWith({ queryKey: ['dashboard', true] })
+    })
+
+    it('does not reset when cancelled', async () => {
+        const user = userEvent.setup()
+        renderBanner()
+
+        await user.click(screen.getByRole('button', { name: 'Reset demo data' }))
+        await user.click(screen.getByRole('button', { name: 'Cancel' }))
+
+        expect(demoApi.resetDemoData).not.toHaveBeenCalled()
+        expect(screen.queryByRole('button', { name: 'Reset' })).not.toBeInTheDocument()
     })
 
     it('links to /login and /signup', () => {
