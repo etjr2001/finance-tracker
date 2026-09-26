@@ -37,7 +37,10 @@ export function MonthBar({ month, onChange }) {
     // would stretch full-width and push the popover's right-0 off-screen.
     return (
         <div className="relative inline-flex items-center gap-2">
-            <div className="flex items-center border border-rule-strong bg-white rounded-xl overflow-hidden">
+            {/* ring, not border: a border adds to this wrapper's auto height on
+                top of its 44px children, rendering 2px taller than Button
+                elsewhere; a ring is a box-shadow and doesn't affect layout size. */}
+            <div className="flex items-center ring-1 ring-inset ring-rule-strong bg-white rounded-xl overflow-hidden">
                 <IconButton icon={ChevronLeft} label="Previous month" onClick={() => onChange(shiftMonth(month, -1))} />
                 <button onClick={() => setIsPickerOpen(true)} className="h-11 px-2 min-w-36 text-sm font-medium text-center">
                     {formatMonth(month)}
