@@ -9,7 +9,7 @@ Living document. Not an ADR: this tracks *what's outstanding*, not *decisions ma
   - **Merge order:** numbered `V4` because `V3` belongs to `feat/category-color-icon` (Sprint 3 item 1). `V3` merged to `main` first (#30), so this one is clear to follow it.
   - *Considered and rejected:* storing only uppercase names. It gives the same speed but throws away the casing the User typed.
 - **Inconsistent DTO usage.** Some endpoints serialize entities directly; others use `Response` DTOs. This was never unified. Scoped into sprint 3, Bundle A.
-- **No pagination on `GET /api/transactions`.** Much less urgent since ADR0011: the Transactions page now shows one month at a time. Scoped into sprint 3, Bundle A, as optional and deferrable.
+- ~~**No pagination on `GET /api/transactions`.**~~ Dropped, not deferred (grilled 2026-09-26). Every list query is bounded to one month (ADR0011), search included, and one month's Transactions is a small list, so there's nothing to paginate. No safety cap on the month query either. Only comes back if search is ever widened beyond the selected month.
 - **No custom domain/DNS.** The app is live on the default Railway URL. Explicitly non-blocking, parked indefinitely.
 - ~~**Bottom tab bar feels too narrow to tap comfortably on phone.**~~ Fixed (`fix/nav-bar-tap-targets-and-new-transaction-date`): grew the `NavLink`s from `min-h-11`/`py-1.5` to `min-h-14`/`py-2`, so the tap targets themselves sit clear of the iPhone home-indicator gesture area — the existing `pb-[env(safe-area-inset-bottom)]` only cleared the bar's *background* there, not the tappable zone. Awaiting on-device confirmation this was the whole story.
 
@@ -25,7 +25,8 @@ Living document. Not an ADR: this tracks *what's outstanding*, not *decisions ma
   - Real accounts: a backend endpoint (e.g. `GET /api/transactions/export`) returning every Transaction as CSV, rather than paging through the list endpoint client-side.
   - Demo mode: generated in the browser from `demoApi.js`'s data. Both go through a hook, per ADR0009.
   - The Supabase token is attached by the axios interceptor, so a plain `<a href>` download would be unauthenticated. Fetch through axios as a blob, then save it.
-- **Dashboard chart type toggle.** Let the User switch the "Spending by category" breakdown between the current bar-list view and a pie chart. Not yet scoped: needs a decision on whether a pie chart can stay CSS-only (e.g. `conic-gradient`) or requires revisiting ADR0010's "no charting library" call, which was explicitly left open to revisiting "if a chart CSS handles badly is scoped, such as a trend over time" — a pie chart wasn't the case in mind there, so this needs its own look before building. Also needs: where the toggle lives in the UI, and whether the toggle choice persists per-User or resets each visit.
+- ~~**Dashboard chart type toggle.**~~ Settled and scheduled into Sprint 4 (ADR0014): a bar/pie switch per breakdown card, inline SVG pie, no charting library.
+- **Search/filter on Transactions.** Moved out of Sprint 3's Bundle A. Next in line after Sprint 4. One constraint is already settled: search only covers the selected month (this is what lets pagination go). What it searches (note, Category, amount) and the UI are not yet designed; grill it when it's picked up.
 
 ## Sprint history
 
@@ -57,7 +58,7 @@ New ADRs: 0012 (the integration-branch workflow) and 0013 (the Dashboard's singl
 See `docs/sprints/frontend-revamp-review.md` for what shipped branch-by-branch, what went well, and the bugs found along the way (worth reading before touching `features/layout/components/AppLayout.jsx`, `features/month/components/MonthBar.jsx`, or any date-handling code — several of them are exactly the kind of subtle regression that's easy to reintroduce).
 
 ### Sprint 3: in progress
-Follows the frontend revamp above, so its UI is built directly in the new design system. The rough order was chosen for dependency reasons (Category color feeds the chart) and to bundle work that touches the same files. Every item that touches the API keeps `demoApi.js` returning the same shapes, in the same branch (ADR0009). Item 1 (Category color/icon) is done; Bundles A and B below are not started.
+Follows the frontend revamp above, so its UI is built directly in the new design system. Every item that touches the API keeps `demoApi.js` returning the same shapes, in the same branch (ADR0009). Re-scoped 2026-09-26 (grilled): the Dashboard work (old Bundle B) moved to Sprint 4 with the new previous-month comparison, since both change the Dashboard response; search moved out to the backlog; pagination dropped. Item 1 is done; the rest are not started. In order:
 
 1. ~~**Category color/icon.**~~ Done (`feat/category-color-icon`). Built as designed (grilled — a DB-backed lookup table with FK-validated keys was considered and rejected: it would need a synced-but-duplicate frontend registry anyway, since ADR0010 requires code-based colour tokens and explicitly-imported icons for tree-shaking, for no real integrity benefit in a single-developer, low-write table), with a few deviations found along the way:
    - Two nullable columns on Category: `color_key varchar(20)` and `icon_key varchar(30)` (e.g. `"ochre"`, `"food"`). Store keys, not hex values or icon names, so the palette can be retuned (ADR0010) and icon-library renames never touch stored data. Both format-checked (a short lowercase slug) at the DTO and the DB (`V3__category_color_icon.sql`), sharing one regex constant (`Category.KEY_FORMAT`) between the entity and the request DTO so they can't drift apart.
@@ -69,16 +70,20 @@ Follows the frontend revamp above, so its UI is built directly in the new design
    - Seeded colours and icons on the demo Categories, reusing the same auto-assign/guess functions as a real Category (`demoSeed.js`).
    - `CONTEXT.md`'s Category entry gains colour and icon.
    - *Considered and rejected:* emoji (inconsistent rendering across platforms, clash with ADR0010), stored SVG markup (XSS risk), user uploads (needs storage infrastructure).
-2. **Bundle A: transaction querying.** Grouped because they all touch `TransactionController`, `TransactionRepository`, and the response shape. In order:
-   - Server-side month filter on `GET /api/transactions`, replacing the revamp's client-side filtering (ADR0011). Must land before or with pagination.
+2. **`fix/date-field-ios`.** The Transaction form's Date input renders a different size from the other fields and buttons on iPhone Safari (the Categories page's inputs and buttons are fine). Same WebKit date-input family as #8/#9. Planned fix: an explicit shared height on inputs rather than padding-derived height. Needs on-device confirmation, since Chrome's device emulation doesn't reproduce WebKit form controls.
+3. **`feat/transaction-type-toggle`.** Replace the Transaction form's Expense/Income radio buttons with a segmented control: a filled pill with a white thumb that slides to the selected option. The pill is `ink` when Expense is selected and `deposit` when Income is (matching ADR0010's amount colours); the thumb slides, or jumps when reduce-motion is on. Built as a shared `SegmentedControl` in `components/`, looking the same everywhere but taking its accessibility role (radio group or tabs) as a prop, since Sprint 4's Dashboard switches reuse it.
+4. **Bundle A: transaction querying.** Grouped because they touch `TransactionController`, `TransactionRepository`, and the response shape. In order:
+   - Server-side month filter: `GET /api/transactions?month=YYYY-MM`, replacing the revamp's client-side filtering (ADR0011). The server works out the month's start and end dates. No pagination and no safety cap (see Tech debt).
+   - New endpoint returning every Draft, across all months.
+   - Drafts notice and sheet on the Transactions page. **Deviates from ADR0011**, which described a notice for "Drafts in other months": the notice reads "N Drafts to finish" and shows whenever any Draft exists, including in the viewed month. Tapping it opens a sheet listing every Draft (even ones already on screen), grouped by month, oldest month first and oldest date first within each; tapping a Draft opens its edit form. Must ship in the same branch as the month filter, since that filter is what stops other months' Drafts being in memory.
    - DTO consistency cleanup.
-   - Search/filter.
-   - Pagination: optional and deferrable since ADR0011. If built, "Load more" with a stable sort (date descending, then id descending), and no day total on the last day group until it is fully loaded.
-3. **Bundle B: dashboard visuals.** Grouped because they share the Dashboard, and benefit from Category color existing first.
-   - ~~Date range picker~~ — superseded by the global month picker (ADR0011), built in the revamp.
-   - Per-Category Income breakdown. Backend change: `DashboardService.buildCategoryBreakdown` only includes Expense Transactions today, and total income is a single figure. Return `{ income, expense }` per Category rather than a precomputed net, so the frontend can derive net and still show both parts.
-   - Dashboard tabs: Expense / Income / Overall. The Expense tab's bars are built in the revamp from the existing response; the Income tab mirrors it. Settled (grilled):
-     - Overall shows net per Category (Income − Expense, so a Groceries refund reduces Groceries spend) as a diverging CSS bar, with tap or hover revealing both parts.
-     - Categories stay untyped — rejected typing them at all, not just deferred it. `Transaction` already has `type` (Expense/Income, `CONTEXT.md`), which is sufficient for the tabs to filter by; there's no need for `Category` to carry a type too, not even as a non-blocking hint. No schema change, no `CONTEXT.md` change, no ADR.
 
-All sprint 3 work follows ADR0007: tests land with each bundle, not as a separate pass.
+All Sprint 3 work follows ADR0007: tests land with each item, not as a separate pass.
+
+### Sprint 4: planned
+One bundle, **the Dashboard rework**, since everything in it changes the Dashboard response and `demoApi.js`'s copy of it, which should happen once. Reuses Sprint 3's `SegmentedControl`.
+
+- **Two-card Dashboard with bar/pie switches (ADR0014).** Net card unchanged (ADR0013). Below it, a Spending by category card and an Income by category card, each with its own bar/pie switch in the header: bar by default, top 5 plus "Show all N"; pie in inline SVG with top 5 plus "Other" and the same rows as its legend. Each switch holds its choice while on the Dashboard (including across month changes) and resets on leaving. Income card shows "No income this month" when empty. Replaces the old Bundle B tabs plan: the Overall / net-per-Category view is dropped, so the response carries two per-Category lists (spending, income) instead of an `{ income, expense }` pair per Category.
+- **Compare with the previous month (ADR0015).** The Net card's Income, Expenses and Net each show their change against the whole of the month before the viewed one (whole month against whole month, even for the current month), in `ink-soft`, always shown, no switch. The response adds the previous month's totals.
+
+Follows ADR0007: tests land with the bundle.
