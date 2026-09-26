@@ -1,7 +1,7 @@
 # 0013. Dashboard summary as a single Net card, not three equal tiles
 
 ## Status
-Accepted
+Accepted — category breakdown section superseded by 0014
 
 ## Context
 ADR0010's Decision section describes the Dashboard only loosely — "summary cards" and

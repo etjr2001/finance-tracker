@@ -23,4 +23,4 @@ A Category also has a colour and an icon, picked from a fixed set (not freeform 
 A second, independent label on a Transaction (e.g. "Cash", "Credit Card", "Bank Transfer"), distinct from Category — used to slice the Dashboard by how money moved, not what it was for. **Deferred to v2**; captured here because its meaning is settled even though it isn't built yet.
 
 ## Dashboard
-An aggregated, read-only view over a User's Transactions for a period (default: current month) — total income, total expenses, and a breakdown of Expenses by Category, excluding Drafts.
+An aggregated, read-only view over a User's Transactions for one month: total income, total expenses, and a breakdown of each by Category, excluding Drafts. Each total is shown alongside the same figure for the whole of the previous month. See ADR0014 and ADR0015.

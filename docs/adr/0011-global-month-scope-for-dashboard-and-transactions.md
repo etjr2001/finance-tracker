@@ -1,7 +1,7 @@
 # 0011. Global month scope for the Dashboard and Transactions
 
 ## Status
-Accepted
+Accepted — partly superseded by 0015 (month-to-month comparison)
 
 ## Context
 Today the Dashboard is scoped to one month, picked with a native `<input type="month">`,
