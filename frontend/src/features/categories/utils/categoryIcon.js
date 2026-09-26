@@ -20,6 +20,8 @@ import {
     Zap,
     Film,
     Tag,
+    Dices,
+    TrendingUp,
 } from 'lucide-react'
 
 // The curated icon_key registry (docs/backlog.md, "Category color/icon").
@@ -49,6 +51,8 @@ const ICONS = {
     zap: Zap,
     film: Film,
     tag: Tag,
+    dices: Dices,
+    'trending-up': TrendingUp,
 }
 
 // Display order for the icon picker grid.
@@ -76,6 +80,7 @@ const KEYWORD_ICON_KEYS = [
     { keywords: ['salary', 'income', 'wage', 'pay'], key: 'wallet' },
     { keywords: ['utilities', 'utility', 'bill'], key: 'zap' },
     { keywords: ['entertainment', 'movie', 'fun'], key: 'film' },
+    { keywords: ['investment', 'invest', 'stocks', 'stock', 'portfolio'], key: 'trending-up' },
 ]
 
 export function guessIconKey(name) {

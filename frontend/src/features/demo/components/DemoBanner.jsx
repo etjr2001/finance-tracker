@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { resetDemoData } from '@features/demo/api/demoApi'
 import { queryKeys } from '@api/queryKeys'
+import { ConfirmDialog } from '@components/ConfirmDialog'
 
 const DEMO_QUERY_KEYS = [queryKeys.transactions(true), queryKeys.categories(true), queryKeys.dashboard(true)]
 
@@ -15,10 +17,12 @@ function InlineLink({ to, children }) {
 
 export function DemoBanner() {
     const queryClient = useQueryClient()
+    const [isConfirmingReset, setIsConfirmingReset] = useState(false)
 
     function handleReset() {
         resetDemoData()
         DEMO_QUERY_KEYS.forEach((queryKey) => queryClient.invalidateQueries({ queryKey }))
+        setIsConfirmingReset(false)
     }
 
     return (
@@ -28,9 +32,21 @@ export function DemoBanner() {
                 <InlineLink to="/login">Log in</InlineLink> or <InlineLink to="/signup">sign up</InlineLink> to keep
                 your data.
             </span>
-            <button onClick={handleReset} className="text-ink underline underline-offset-2 hover:no-underline shrink-0">
+            <button
+                onClick={() => setIsConfirmingReset(true)}
+                className="text-ink underline underline-offset-2 hover:no-underline shrink-0"
+            >
                 Reset demo data
             </button>
+
+            {isConfirmingReset && (
+                <ConfirmDialog
+                    message="Reset demo data? This clears every demo Transaction and Category you've added and restores the starter set."
+                    confirmLabel="Reset"
+                    onConfirm={handleReset}
+                    onCancel={() => setIsConfirmingReset(false)}
+                />
+            )}
         </div>
     )
 }
