@@ -164,6 +164,26 @@ describe('TransactionForm dirty tracking', () => {
     })
 })
 
+describe('TransactionForm type toggle', () => {
+    it('defaults to Expense selected', () => {
+        renderForm()
+        expect(screen.getByRole('radio', { name: 'Expense' })).toHaveAttribute('aria-checked', 'true')
+        expect(screen.getByRole('radio', { name: 'Income' })).toHaveAttribute('aria-checked', 'false')
+    })
+
+    it('switches the submitted type to Income when clicked', () => {
+        const onSubmit = vi.fn()
+        renderForm({ onSubmit })
+
+        fireEvent.click(screen.getByRole('radio', { name: 'Income' }))
+        fireEvent.change(screen.getByRole('combobox'), { target: { value: '2' } })
+        fireEvent.click(screen.getByRole('button', { name: 'Add transaction' }))
+
+        expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ type: 'INCOME' }))
+        expect(screen.getByRole('radio', { name: 'Income' })).toHaveAttribute('aria-checked', 'true')
+    })
+})
+
 describe('TransactionForm submission', () => {
     it('submits the entered values with the right shape', () => {
         const onSubmit = vi.fn()

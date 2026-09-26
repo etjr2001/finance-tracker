@@ -4,7 +4,7 @@ import { FormField } from '@components/FormField'
 import { useTransactionFormState } from '@features/transactions/hooks/useTransactionFormState'
 import { useInlineCategoryCreate } from '@features/transactions/hooks/useInlineCategoryCreate'
 import { MAX_NOTE_LENGTH } from '@features/transactions/utils/transactionForm'
-import { TransactionTypeRadios } from '@features/transactions/components/TransactionTypeRadios'
+import { TransactionTypeToggle } from '@features/transactions/components/TransactionTypeToggle'
 import { AmountField } from '@features/transactions/components/AmountField'
 import { DateField } from '@features/transactions/components/DateField'
 import { CategorySelect } from '@features/transactions/components/CategorySelect'
@@ -32,7 +32,7 @@ export function TransactionForm({ categories, initial, onSubmit, onCancel, isSub
     return (
         <>
             <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <TransactionTypeRadios value={form.type} onChange={(type) => updateField('type', type)} />
+                <TransactionTypeToggle value={form.type} onChange={(type) => updateField('type', type)} />
                 <AmountField value={form.amount} onChange={changeAmount} hint={amountHint} />
                 <DateField value={form.date} onChange={(date) => updateField('date', date)} />
 
