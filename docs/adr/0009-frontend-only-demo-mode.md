@@ -10,6 +10,11 @@ so a cold visitor — a recruiter clicking a resume link, or an interviewer open
 repo's live URL — hits a signup wall before seeing anything work. There is no README,
 screenshot, or video either, so the wall is currently the entire first impression.
 
+**Update (2026-09-28):** A top-level README now exists (with a demo link and
+screenshots), so "no README, screenshot, or video" no longer describes the repo. It
+doesn't change this ADR's Decision — `/demo` is still what a cold visitor lands on and
+clicks through, which a static README can't substitute for.
+
 Two ways to give a visitor a working, clickable app without an account were
 considered:
 
@@ -57,7 +62,7 @@ solved by this ADR alone.
 - If "prove the backend is real" ever becomes a goal in its own right, that's a new
   decision superseding this one, not an extension of it — see `docs/backlog.md`.
 - The demo's client-side dashboard aggregation is a from-scratch reimplementation of
-  `DashboardService`'s math in JavaScript (see `frontend/src/demo/demoApi.js`), since
+  `DashboardService`'s math in JavaScript (see `frontend/src/features/demo/api/demoApi.js`), since
   there is no backend call to reuse. It approximates `BigDecimal`'s
   `RoundingMode.HALF_EVEN` rather than replicating it exactly; acceptable because demo
   amounts are seed data or user input already bounded to two decimal places, but it is

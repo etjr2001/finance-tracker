@@ -1,7 +1,7 @@
 # 0010. "Passbook" visual design system for the frontend revamp
 
 ## Status
-Accepted
+Accepted — Charts section partly revisited by 0014 (adds an inline SVG pie)
 
 ## Context
 The frontend works but looks unfinished. A review of desktop and mobile screenshots
@@ -137,3 +137,10 @@ Colour semantics:
   these tokens, as its own ADR.
 - The contrast figures above are calculated from hex values. The tokens branch should
   confirm them, and that icon tiles reach at least 3:1, with a real checker.
+
+**Update (2026-09-28):** Category colour is no longer assigned deterministically by
+Category id. Sprint 3 (ADR0010's own item, #30) built real per-Category colour/icon:
+a new Category's colour is hashed from its *name* (`assignColorKey` in
+`features/categories/utils/categorySwatch.js`), and a Category with no colour set falls
+back to a fixed default (`slate`), not a guess. See ADR0013's and ADR0014's Consequences
+for where this matters.
