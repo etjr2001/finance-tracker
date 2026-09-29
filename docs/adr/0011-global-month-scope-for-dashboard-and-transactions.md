@@ -30,7 +30,7 @@ The selected month is global and month-only. There are no date ranges.
 - **Storage.** The month is held in the URL as `?month=YYYY-MM` and read and written
   through a `useSelectedMonth()` hook.
   - When the parameter is absent or invalid, it defaults to the current month, computed
-    in local time via `lib/date.js` (never `toISOString()`).
+    in local time via `utils/date.js` (never `toISOString()`).
   - Navigation links preserve the parameter, so switching pages keeps the month.
 - **Which pages.** The Dashboard and Transactions show only the selected month. The
   Categories page is not month-scoped and does not show the control.
@@ -68,3 +68,13 @@ The selected month is global and month-only. There are no date ranges.
 - Once filtering is server-side, the Drafts-in-other-months notice needs a count from
   the API rather than from the full list in memory.
 - This supersedes the "date range picker" item in Sprint 3 Bundle B.
+
+**Update (2026-09-28):** Two of the above are now out of date:
+- Pagination is no longer just deferrable — the backlog dropped it outright (grilled
+  2026-09-26): every list query is bounded to one month, so there's nothing to paginate
+  unless search is ever widened beyond the selected month.
+- The Drafts-in-other-months notice described above was never built. Sprint 3 Bundle A
+  plans a different one instead ("N Drafts to finish", shown whenever any Draft exists,
+  including in the viewed month) — a deviation from this ADR's Decision, flagged in
+  `docs/backlog.md`. That deviation isn't formalised here yet; it likely deserves its own
+  ADR once Bundle A ships, per CLAUDE.md's rule on contradicting a past decision.

@@ -56,7 +56,7 @@ horizontal bars, per ADR0010 — gains two things at the same time, reusing what
 - A **percentage-of-total** figure next to each row's amount (percentage of the sum of
   all category totals shown, i.e. total Expenses for the current Dashboard).
 - The **bar's fill colour** matches that Category's deterministic swatch
-  (`lib/categorySwatch.js`'s `categoryBarClass`, new alongside the existing
+  (`features/categories/utils/categorySwatch.js`'s `categoryBarClass`, new alongside the existing
   `categoryTileClasses`) instead of a uniform `bg-ink`, and each row gets the same
   icon tile (`categoryTileClasses` + `categoryIcon`) the other two pages use.
 
@@ -65,9 +65,14 @@ horizontal bars, per ADR0010 — gains two things at the same time, reusing what
   loose.
 - The three-tile `Stat` component this replaces is gone; nothing else used it.
 - `categoryBarClass` and `categoryTileClasses` now share one swatch-selection function
-  internally (`lib/categorySwatch.js`), so the Dashboard, Transactions, and Categories
+  internally (`features/categories/utils/categorySwatch.js`), so the Dashboard, Transactions, and Categories
   pages are guaranteed to agree on which colour a given Category gets — no separate
   logic to drift out of sync.
 - Still a stopgap pending Sprint 3's real per-Category colour/icon (`docs/backlog.md`):
   once that lands, the Dashboard's bars and tiles pick it up automatically through the
   same shared functions, no separate change needed here.
+
+**Update (2026-09-28):** Sprint 3 landed real per-Category colour/icon (#30), so the
+above is no longer a stopgap — it's the shared swatch-selection function real colours
+flow through. The "deterministic swatch" this ADR describes is now hash-by-name with a
+`slate` fallback for an unset colour, not deterministic-by-id; see ADR0010's Update note.

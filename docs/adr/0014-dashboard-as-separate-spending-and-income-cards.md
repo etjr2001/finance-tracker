@@ -1,7 +1,8 @@
 # 0014. Dashboard as separate Spending and Income cards, each with a bar/pie switch
 
 ## Status
-Accepted — supersedes the category breakdown section of 0013
+Accepted — supersedes the category breakdown section of 0013 and partly revisits 0010's
+Charts section (adds an inline SVG pie). Not yet built (Sprint 4).
 
 ## Context
 ADR0013 settled the Dashboard as one Net card followed by a single "Spending by category"
@@ -60,3 +61,8 @@ The Dashboard is, top to bottom: the month bar, the Net card (unchanged from ADR
 - The bar/pie choice is lost on every navigation away, a deliberate trade for having no
   stored preference. Reversing it means adding storage, not reworking the cards.
 - Scheduled for Sprint 4 together with ADR0015, since both change the Dashboard response.
+
+**Update (2026-09-28):** The Decision's "neutral grey slice" line is a Sprint 4 spec, not
+yet built — the pie doesn't exist yet. Worth noting now: the bars it says a colourless
+Category matches ("as their bars do") currently fall back to `slate` (ADR0010's Update
+note), not grey, so the pie's fallback should match `slate` too when this is built.

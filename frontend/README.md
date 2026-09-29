@@ -1,16 +1,22 @@
-# React + Vite
+# Finance Tracker — frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React + Vite SPA. See the [top-level README](../README.md) for the full stack and how to
+run the app, and [CONTEXT.md](../CONTEXT.md) for domain terms.
 
-Currently, two official plugins are available:
+## Layout
+`src/features/<feature>/` holds each feature's own `api/`, `components/`, `hooks/`,
+`pages/` and `utils/` (e.g. `features/categories/utils/categorySwatch.js`,
+`features/transactions/components/TransactionForm.jsx`). Code shared across features
+lives in top-level `components/`, `hooks/` and `utils/` (e.g. `utils/date.js`).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Commands
+```
+npm run dev      # Vite dev server, proxies /api to localhost:8080
+npm run build
+npm run lint      # oxlint
+npx vitest run    # tests once
+npm test          # tests in watch mode
+```
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+`VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` must be set (dummy values are fine for
+tests — see `.github/workflows/ci.yml`).
