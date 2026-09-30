@@ -1,5 +1,6 @@
 package com.project.financetracker.controller;
 
+import com.project.financetracker.dto.CategoryResponse;
 import com.project.financetracker.model.Category;
 import com.project.financetracker.repository.CategoryRepository;
 import com.project.financetracker.security.CurrentUserService;
@@ -27,21 +28,25 @@ public class CategoryController {
     public static final int MAX_NAME_LENGTH = 30;
 
     @GetMapping
-    public List<Category> list() {
+    public List<CategoryResponse> list() {
         UUID userId = currentUserService.getCurrentUserId();
-        return categoryRepository.findByUserId(userId);
+        return categoryRepository.findByUserId(userId).stream()
+                .map(CategoryResponse::from)
+                .toList();
     }
 
     @PostMapping
-    public Category create(@Valid @RequestBody CategoryRequest request) {
+    public CategoryResponse create(@Valid @RequestBody CategoryRequest request) {
         UUID userId = currentUserService.getCurrentUserId();
-        return categoryService.createCategory(request.name(), request.colorKey(), request.iconKey(), userId);
+        return CategoryResponse.from(
+                categoryService.createCategory(request.name(), request.colorKey(), request.iconKey(), userId));
     }
 
     @PutMapping("/{id}")
-    public Category update(@PathVariable Long id, @Valid @RequestBody CategoryRequest request) {
+    public CategoryResponse update(@PathVariable Long id, @Valid @RequestBody CategoryRequest request) {
         UUID userId = currentUserService.getCurrentUserId();
-        return categoryService.updateCategory(id, request.name(), request.colorKey(), request.iconKey(), userId);
+        return CategoryResponse.from(
+                categoryService.updateCategory(id, request.name(), request.colorKey(), request.iconKey(), userId));
     }
 
     @DeleteMapping("/{id}")
