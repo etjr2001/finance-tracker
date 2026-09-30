@@ -24,6 +24,10 @@ export function TransactionsPage() {
     const [isDraftsSheetOpen, setIsDraftsSheetOpen] = useState(false)
     const { error, form, discard, remove, detail } = useTransactionEditor({ month, onMonthChange: setMonth })
 
+    // Nothing left to show once the last Draft is finished or deleted. Also
+    // resets the flag, so a later Draft doesn't reopen the sheet by itself.
+    if (isDraftsSheetOpen && drafts.length === 0) setIsDraftsSheetOpen(false)
+
     function editDraft(draft) {
         setIsDraftsSheetOpen(false)
         form.openEdit(draft)
@@ -42,7 +46,14 @@ export function TransactionsPage() {
             <DraftsNotice count={drafts.length} onOpen={() => setIsDraftsSheetOpen(true)} />
 
             {isDraftsSheetOpen && (
-                <DraftsSheet drafts={drafts} onSelect={editDraft} onClose={() => setIsDraftsSheetOpen(false)} />
+                <DraftsSheet
+                    drafts={drafts}
+                    isDeleting={remove.isDeleting}
+                    onSelect={editDraft}
+                    onDelete={remove.request}
+                    // Escape belongs to the delete confirmation while it's open.
+                    onClose={() => !remove.target && setIsDraftsSheetOpen(false)}
+                />
             )}
 
             {/* While a form is open, its modal shows the error instead. */}
