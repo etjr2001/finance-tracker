@@ -1,4 +1,3 @@
-import { monthOf } from '@utils/date'
 import { UNKNOWN_CATEGORY_NAME } from '@features/categories/utils/categoryName'
 
 export const TRANSACTION_TYPES = {
@@ -30,13 +29,4 @@ export function describeTransaction(transaction) {
     const categoryName = transaction.category?.name
     if (transaction.note) return `${categoryName ?? 'transaction'} — ${transaction.note}`
     return categoryName ?? 'this transaction'
-}
-
-// Client-side month scoping (ADR0011): GET /api/transactions is still
-// unpaginated, so this narrows the full history to one month, newest
-// first. Moves server-side once that endpoint is paginated.
-export function transactionsInMonth(transactions, month) {
-    return transactions
-        .filter((transaction) => monthOf(transaction.date) === month)
-        .sort((a, b) => b.date.localeCompare(a.date))
 }

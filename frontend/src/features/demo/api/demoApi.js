@@ -71,8 +71,20 @@ export async function deleteCategory(id) {
 
 // --- transactions ---
 
-export async function listTransactions() {
+// Mirrors the real API: one month (ADR0011), newest first.
+export async function listTransactions(month) {
+    const { startDate, endDate } = monthBounds(month ?? currentMonth())
     return readJSON(KEYS.transactions, [])
+        .filter((t) => t.date >= startDate && t.date <= endDate)
+        .sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id)
+}
+
+// Mirrors GET /api/transactions/drafts: every zero-amount Transaction
+// (ADR0008), oldest first.
+export async function listDrafts() {
+    return readJSON(KEYS.transactions, [])
+        .filter((t) => t.amount === 0)
+        .sort((a, b) => a.date.localeCompare(b.date) || a.id - b.id)
 }
 
 function resolveCategory(categoryId) {

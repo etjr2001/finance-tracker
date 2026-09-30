@@ -1,7 +1,13 @@
 import { api, unwrap } from '@api/httpClient'
 
-export function listTransactions() {
-    return unwrap(api.get('/transactions'))
+// month: "YYYY-MM" (ADR0011), or undefined for the server's current month.
+export function listTransactions(month) {
+    return unwrap(api.get('/transactions', { params: month ? { month } : {} }))
+}
+
+// Every Draft (ADR0008) across all months, oldest first.
+export function listDrafts() {
+    return unwrap(api.get('/transactions/drafts'))
 }
 
 // payload: { type: "EXPENSE" | "INCOME", amount, date, note, categoryId }

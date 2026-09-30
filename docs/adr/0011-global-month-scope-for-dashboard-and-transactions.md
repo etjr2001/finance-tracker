@@ -1,7 +1,7 @@
 # 0011. Global month scope for the Dashboard and Transactions
 
 ## Status
-Accepted — partly superseded by 0015 (month-to-month comparison)
+Accepted — partly superseded by 0015 (month-to-month comparison); client-side filtering and the Drafts notice amended by 0016
 
 ## Context
 Today the Dashboard is scoped to one month, picked with a native `<input type="month">`,
@@ -76,5 +76,5 @@ The selected month is global and month-only. There are no date ranges.
 - The Drafts-in-other-months notice described above was never built. Sprint 3 Bundle A
   plans a different one instead ("N Drafts to finish", shown whenever any Draft exists,
   including in the viewed month) — a deviation from this ADR's Decision, flagged in
-  `docs/backlog.md`. That deviation isn't formalised here yet; it likely deserves its own
-  ADR once Bundle A ships, per CLAUDE.md's rule on contradicting a past decision.
+  `docs/backlog.md`. That deviation is formalised in ADR0016, which also records the move
+  of the month filter to the server.

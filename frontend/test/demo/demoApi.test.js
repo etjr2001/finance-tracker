@@ -44,7 +44,7 @@ describe('demoApi categories', () => {
 
         await demoApi.updateCategory(category.id, { name: 'New Name' })
 
-        const transactions = await demoApi.listTransactions()
+        const transactions = await demoApi.listTransactions('2026-01')
         expect(transactions.find((t) => t.id === transaction.id).category.name).toBe('New Name')
     })
 })
@@ -61,7 +61,7 @@ describe('demoApi transactions', () => {
         })
         expect(created.category).toEqual({ id: category.id, name: 'Groceries', colorKey: null, iconKey: null })
 
-        expect(await demoApi.listTransactions()).toEqual([created])
+        expect(await demoApi.listTransactions('2026-01')).toEqual([created])
 
         const updated = await demoApi.updateTransaction(created.id, {
             type: 'EXPENSE',
@@ -73,7 +73,49 @@ describe('demoApi transactions', () => {
         expect(updated.amount).toBe(50)
 
         await demoApi.deleteTransaction(created.id)
-        expect(await demoApi.listTransactions()).toEqual([])
+        expect(await demoApi.listTransactions('2026-01')).toEqual([])
+    })
+
+    it('lists only the requested month, newest first', async () => {
+        const category = await demoApi.createCategory({ name: 'Groceries' })
+        const add = (date) =>
+            demoApi.createTransaction({ type: 'EXPENSE', amount: 5, date, note: null, categoryId: category.id })
+        const first = await add('2026-03-01')
+        const last = await add('2026-03-31')
+        const sameDay = await add('2026-03-31')
+        await add('2026-02-28')
+        await add('2026-04-01')
+
+        const listed = await demoApi.listTransactions('2026-03')
+
+        expect(listed.map((t) => t.id)).toEqual([sameDay.id, last.id, first.id])
+    })
+})
+
+describe('demoApi drafts', () => {
+    it('lists every zero-amount transaction across months, oldest first', async () => {
+        const category = await demoApi.createCategory({ name: 'Bills' })
+        const add = (amount, date) =>
+            demoApi.createTransaction({ type: 'EXPENSE', amount, date, note: null, categoryId: category.id })
+        const later = await add(0, '2026-05-10')
+        await add(12, '2026-03-02')
+        const earlier = await add(0, '2026-02-20')
+
+        const drafts = await demoApi.listDrafts()
+
+        expect(drafts.map((t) => t.id)).toEqual([earlier.id, later.id])
+    })
+
+    it('stops listing a Draft once it gets a non-zero amount', async () => {
+        const category = await demoApi.createCategory({ name: 'Bills' })
+        const draft = await demoApi.createTransaction({
+            type: 'EXPENSE', amount: 0, date: '2026-02-20', note: null, categoryId: category.id,
+        })
+        await demoApi.updateTransaction(draft.id, {
+            type: 'EXPENSE', amount: 30, date: '2026-02-20', note: null, categoryId: category.id,
+        })
+
+        expect(await demoApi.listDrafts()).toEqual([])
     })
 })
 

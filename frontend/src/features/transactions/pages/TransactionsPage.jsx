@@ -1,10 +1,14 @@
+import { useState } from 'react'
 import { PageTitle } from '@components/PageTitle'
 import { AddButton } from '@components/AddButton'
 import { StatusMessage } from '@components/StatusMessage'
 import { MonthBar } from '@features/month/components/MonthBar'
 import { useCategories } from '@features/categories/hooks/useCategories'
 import { useMonthTransactions } from '@features/transactions/hooks/useMonthTransactions'
+import { useDrafts } from '@features/transactions/hooks/useTransactions'
 import { useTransactionEditor } from '@features/transactions/hooks/useTransactionEditor'
+import { DraftsNotice } from '@features/transactions/components/DraftsNotice'
+import { DraftsSheet } from '@features/transactions/components/DraftsSheet'
 import { TransactionList } from '@features/transactions/components/TransactionList'
 import { TransactionFormModal } from '@features/transactions/components/TransactionFormModal'
 import { TransactionDialogs } from '@features/transactions/components/TransactionDialogs'
@@ -16,7 +20,14 @@ export function TransactionsPage() {
     const isMobile = useIsMobile()
     const { data: categories } = useCategories()
     const { dayGroups, isLoading, hasError } = useMonthTransactions(month)
+    const { data: drafts = [] } = useDrafts()
+    const [isDraftsSheetOpen, setIsDraftsSheetOpen] = useState(false)
     const { error, form, discard, remove, detail } = useTransactionEditor({ month, onMonthChange: setMonth })
+
+    function editDraft(draft) {
+        setIsDraftsSheetOpen(false)
+        form.openEdit(draft)
+    }
 
     return (
         <div>
@@ -27,6 +38,12 @@ export function TransactionsPage() {
                 <MonthBar month={month} onChange={setMonth} />
                 {!form.isOpen && <AddButton onClick={form.openCreate} />}
             </div>
+
+            <DraftsNotice count={drafts.length} onOpen={() => setIsDraftsSheetOpen(true)} />
+
+            {isDraftsSheetOpen && (
+                <DraftsSheet drafts={drafts} onSelect={editDraft} onClose={() => setIsDraftsSheetOpen(false)} />
+            )}
 
             {/* While a form is open, its modal shows the error instead. */}
             {error && !form.isOpen && (

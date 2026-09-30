@@ -1,7 +1,6 @@
 package com.project.financetracker.controller;
 
 import com.project.financetracker.model.Transaction;
-import com.project.financetracker.repository.TransactionRepository;
 import com.project.financetracker.security.CurrentUserService;
 import com.project.financetracker.service.TransactionService;
 import jakarta.validation.Valid;
@@ -23,14 +22,19 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class TransactionController {
 
-    private final TransactionRepository transactionRepository;
     private final TransactionService transactionService;
     private final CurrentUserService currentUserService;
 
     @GetMapping
-    public List<Transaction> list() {
+    public List<Transaction> list(@RequestParam(required = false) String month) {
         UUID userId = currentUserService.getCurrentUserId();
-        return transactionRepository.findByUserId(userId);
+        return transactionService.listForMonth(userId, MonthParam.resolve(month));
+    }
+
+    @GetMapping("/drafts")
+    public List<Transaction> drafts() {
+        UUID userId = currentUserService.getCurrentUserId();
+        return transactionService.listDrafts(userId);
     }
 
     @PostMapping
