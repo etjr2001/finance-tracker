@@ -1,16 +1,13 @@
 import { useMemo } from 'react'
 import { useTransactions } from '@features/transactions/hooks/useTransactions'
-import { transactionsInMonth } from '@features/transactions/utils/transaction'
 import { groupByDay } from '@features/transactions/utils/dayGroups'
 
 // The viewed month's Transactions, grouped into day sections.
 export function useMonthTransactions(month) {
-    const { data: transactions, isLoading, isError } = useTransactions()
+    const { data: transactions, isLoading, isError } = useTransactions(month)
 
-    const dayGroups = useMemo(
-        () => groupByDay(transactionsInMonth(transactions ?? [], month)),
-        [transactions, month]
-    )
+    // The server returns the month newest first, which groupByDay relies on.
+    const dayGroups = useMemo(() => groupByDay(transactions ?? []), [transactions])
 
     return { dayGroups, isLoading, hasError: isError }
 }

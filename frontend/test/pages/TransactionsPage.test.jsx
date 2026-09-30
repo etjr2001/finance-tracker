@@ -45,6 +45,12 @@ function renderPage(initialEntry = '/transactions?month=2026-09') {
     )
 }
 
+// Every page render also loads the Drafts list; default it to empty so
+// tests that don't care about Drafts don't have to mock it.
+beforeEach(() => {
+    transactionsApi.listDrafts.mockResolvedValue([])
+})
+
 // Grabs the currently-open modal/dialog's backdrop, for simulating an
 // outside click. Assumes only one Modal is open at the time it's called.
 function getBackdrop(container) {
@@ -340,21 +346,18 @@ describe('TransactionsPage month scope', () => {
         vi.restoreAllMocks()
     })
 
-    it('only shows transactions dated in the viewed month', async () => {
-        transactionsApi.listTransactions.mockResolvedValue([
-            sampleTransaction, // 2026-09-01
-            { ...sampleTransaction, id: 43, date: '2026-08-15', note: 'August thing' },
-        ])
+    it('asks the server for the viewed month and shows what it returns', async () => {
+        transactionsApi.listTransactions.mockResolvedValue([sampleTransaction])
         categoriesApi.listCategories.mockResolvedValue([{ id: 1, name: 'Groceries' }])
 
         renderPage('/transactions?month=2026-09')
 
         await screen.findByText('Weekly shop')
-        expect(screen.queryByText('August thing')).not.toBeInTheDocument()
+        expect(transactionsApi.listTransactions).toHaveBeenCalledWith('2026-09')
     })
 
     it('shows an empty state with an Add action when the month has no transactions', async () => {
-        transactionsApi.listTransactions.mockResolvedValue([sampleTransaction]) // 2026-09-01
+        transactionsApi.listTransactions.mockResolvedValue([])
         categoriesApi.listCategories.mockResolvedValue([{ id: 1, name: 'Groceries' }])
 
         renderPage('/transactions?month=2026-03')
@@ -386,5 +389,64 @@ describe('TransactionsPage month scope', () => {
 
         await waitFor(() => expect(transactionsApi.createTransaction).toHaveBeenCalled())
         await screen.findByText('November 2026')
+    })
+})
+describe('TransactionsPage drafts notice and sheet', () => {
+    const augustDraft = { ...sampleTransaction, id: 50, amount: 0, date: '2026-08-15', note: 'August bill' }
+    const septemberDraft = { ...sampleTransaction, id: 51, amount: 0, date: '2026-09-03', note: 'September bill' }
+
+    beforeEach(() => {
+        transactionsApi.listTransactions.mockResolvedValue([sampleTransaction])
+        categoriesApi.listCategories.mockResolvedValue([{ id: 1, name: 'Groceries' }])
+    })
+
+    afterEach(() => {
+        vi.restoreAllMocks()
+    })
+
+    it('shows no notice when there are no Drafts', async () => {
+        renderPage()
+
+        await screen.findByText('Weekly shop')
+        expect(screen.queryByText(/to finish/)).not.toBeInTheDocument()
+    })
+
+    it('counts every Draft, including ones in the viewed month', async () => {
+        transactionsApi.listDrafts.mockResolvedValue([augustDraft, septemberDraft])
+        renderPage('/transactions?month=2026-09')
+
+        expect(await screen.findByText('2 Drafts to finish')).toBeInTheDocument()
+    })
+
+    it('uses the singular for one Draft', async () => {
+        transactionsApi.listDrafts.mockResolvedValue([augustDraft])
+        renderPage()
+
+        expect(await screen.findByText('1 Draft to finish')).toBeInTheDocument()
+    })
+
+    it('lists Drafts grouped by month, oldest month first, in the sheet', async () => {
+        transactionsApi.listDrafts.mockResolvedValue([augustDraft, septemberDraft])
+        const user = userEvent.setup()
+        renderPage()
+
+        await user.click(await screen.findByText('2 Drafts to finish'))
+
+        const sections = screen.getAllByRole('region')
+        expect(sections.map((s) => s.getAttribute('aria-label'))).toEqual(['August 2026', 'September 2026'])
+        expect(within(sections[0]).getByText('August bill')).toBeInTheDocument()
+        expect(within(sections[1]).getByText('September bill')).toBeInTheDocument()
+    })
+
+    it('opens the edit form for a tapped Draft and closes the sheet', async () => {
+        transactionsApi.listDrafts.mockResolvedValue([augustDraft])
+        const user = userEvent.setup()
+        renderPage()
+
+        await user.click(await screen.findByText('1 Draft to finish'))
+        await user.click(screen.getByText('August bill'))
+
+        expect(screen.getByLabelText('Amount')).toBeInTheDocument()
+        expect(screen.queryByText('Drafts to finish')).not.toBeInTheDocument()
     })
 })

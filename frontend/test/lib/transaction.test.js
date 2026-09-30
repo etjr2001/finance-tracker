@@ -3,7 +3,6 @@ import {
     describeTransaction,
     isDraft,
     signedAmount,
-    transactionsInMonth,
     categoryNameOf,
 } from '@features/transactions/utils/transaction'
 
@@ -29,14 +28,5 @@ describe('transaction helpers', () => {
 
     it('falls back to a placeholder category name', () => {
         expect(categoryNameOf({ ...expense, category: null })).toBe('Unknown category')
-    })
-
-    it('keeps only the given month, newest first', () => {
-        const list = [
-            { ...expense, id: 1, date: '2026-09-01' },
-            { ...expense, id: 2, date: '2026-10-02' },
-            { ...expense, id: 3, date: '2026-09-15' },
-        ]
-        expect(transactionsInMonth(list, '2026-09').map((t) => t.id)).toEqual([3, 1])
     })
 })

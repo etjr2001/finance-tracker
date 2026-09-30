@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -26,6 +28,16 @@ public class TransactionService {
             throw new ForbiddenException("Not your transaction");
         }
         return transaction;
+    }
+
+    // ADR0011: every list is bounded to one month, newest first.
+    public List<Transaction> listForMonth(UUID userId, YearMonth month) {
+        return transactionRepository.findByUserIdAndDateBetween(userId, month.atDay(1), month.atEndOfMonth());
+    }
+
+    // Every Draft (zero amount, ADR0008) across all months, oldest first.
+    public List<Transaction> listDrafts(UUID userId) {
+        return transactionRepository.findDraftsByUserId(userId);
     }
 
     public Transaction createTransaction(
