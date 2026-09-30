@@ -449,4 +449,71 @@ describe('TransactionsPage drafts notice and sheet', () => {
         expect(screen.getByLabelText('Amount')).toBeInTheDocument()
         expect(screen.queryByText('Drafts to finish')).not.toBeInTheDocument()
     })
+    describe('deleting from the sheet', () => {
+        function sheet() {
+            return within(screen.getByText('Drafts to finish').closest('.fixed'))
+        }
+
+        beforeEach(() => {
+            transactionsApi.deleteTransaction.mockResolvedValue(undefined)
+        })
+
+        it('asks for confirmation before deleting a Draft', async () => {
+            transactionsApi.listDrafts.mockResolvedValue([augustDraft])
+            const user = userEvent.setup()
+            renderPage()
+
+            await user.click(await screen.findByText('1 Draft to finish'))
+            await user.click(sheet().getByRole('button', { name: 'Delete' }))
+
+            expect(screen.getByText("Delete Groceries — August bill? This can't be undone.")).toBeInTheDocument()
+            expect(transactionsApi.deleteTransaction).not.toHaveBeenCalled()
+        })
+
+        it('deletes the Draft when confirmed', async () => {
+            transactionsApi.listDrafts.mockResolvedValue([augustDraft, septemberDraft])
+            const user = userEvent.setup()
+            renderPage()
+
+            await user.click(await screen.findByText('2 Drafts to finish'))
+            const [firstDelete] = sheet().getAllByRole('button', { name: 'Delete' })
+            await user.click(firstDelete)
+
+            const dialog = screen.getByText(/This can't be undone/).closest('div')
+            await user.click(within(dialog).getByRole('button', { name: 'Delete' }))
+
+            await waitFor(() => expect(transactionsApi.deleteTransaction).toHaveBeenCalledWith(50, expect.anything()))
+        })
+
+        it('keeps the Draft when the confirmation is cancelled', async () => {
+            transactionsApi.listDrafts.mockResolvedValue([augustDraft])
+            const user = userEvent.setup()
+            renderPage()
+
+            await user.click(await screen.findByText('1 Draft to finish'))
+            await user.click(sheet().getByRole('button', { name: 'Delete' }))
+
+            const dialog = screen.getByText(/This can't be undone/).closest('div')
+            await user.click(within(dialog).getByRole('button', { name: 'Cancel' }))
+
+            expect(transactionsApi.deleteTransaction).not.toHaveBeenCalled()
+            expect(sheet().getByText('August bill')).toBeInTheDocument()
+        })
+
+        it('closes the sheet once the last Draft is gone', async () => {
+            transactionsApi.listDrafts
+                .mockResolvedValueOnce([augustDraft])
+                .mockResolvedValue([])
+            const user = userEvent.setup()
+            renderPage()
+
+            await user.click(await screen.findByText('1 Draft to finish'))
+            await user.click(sheet().getByRole('button', { name: 'Delete' }))
+            const dialog = screen.getByText(/This can't be undone/).closest('div')
+            await user.click(within(dialog).getByRole('button', { name: 'Delete' }))
+
+            await waitFor(() => expect(screen.queryByText('Drafts to finish')).not.toBeInTheDocument())
+            expect(screen.queryByText(/to finish/)).not.toBeInTheDocument()
+        })
+    })
 })
