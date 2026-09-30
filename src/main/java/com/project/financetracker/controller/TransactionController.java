@@ -1,5 +1,6 @@
 package com.project.financetracker.controller;
 
+import com.project.financetracker.dto.TransactionResponse;
 import com.project.financetracker.model.Transaction;
 import com.project.financetracker.security.CurrentUserService;
 import com.project.financetracker.service.TransactionService;
@@ -26,31 +27,35 @@ public class TransactionController {
     private final CurrentUserService currentUserService;
 
     @GetMapping
-    public List<Transaction> list(@RequestParam(required = false) String month) {
+    public List<TransactionResponse> list(@RequestParam(required = false) String month) {
         UUID userId = currentUserService.getCurrentUserId();
-        return transactionService.listForMonth(userId, MonthParam.resolve(month));
+        return transactionService.listForMonth(userId, MonthParam.resolve(month)).stream()
+                .map(TransactionResponse::from)
+                .toList();
     }
 
     @GetMapping("/drafts")
-    public List<Transaction> drafts() {
+    public List<TransactionResponse> drafts() {
         UUID userId = currentUserService.getCurrentUserId();
-        return transactionService.listDrafts(userId);
+        return transactionService.listDrafts(userId).stream()
+                .map(TransactionResponse::from)
+                .toList();
     }
 
     @PostMapping
-    public Transaction create(@Valid @RequestBody TransactionRequest request) {
+    public TransactionResponse create(@Valid @RequestBody TransactionRequest request) {
         UUID userId = currentUserService.getCurrentUserId();
-        return transactionService.createTransaction(
+        return TransactionResponse.from(transactionService.createTransaction(
                 request.type(), request.amount(), request.date(), request.note(), request.categoryId(), userId
-        );
+        ));
     }
 
     @PutMapping("/{id}")
-    public Transaction update(@PathVariable Long id, @Valid @RequestBody TransactionRequest request) {
+    public TransactionResponse update(@PathVariable Long id, @Valid @RequestBody TransactionRequest request) {
         UUID userId = currentUserService.getCurrentUserId();
-        return transactionService.updateTransaction(
+        return TransactionResponse.from(transactionService.updateTransaction(
                 id, request.type(), request.amount(), request.date(), request.note(), request.categoryId(), userId
-        );
+        ));
     }
 
     @DeleteMapping("/{id}")
