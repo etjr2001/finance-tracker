@@ -5,9 +5,10 @@ Tests must not need a live Supabase connection — Spring Initializr's boilerpla
 a real Supabase connection just to boot the context in CI).
 
 What's here:
-- Unit tests for service and validation logic (`CategoryServiceTest`,
-  `TransactionRequestValidationTest`, `CategoryRequestValidationTest`,
-  `DashboardServiceTest`) — no Spring context needed, dependencies mocked with Mockito.
+- Unit tests for service, validation and mapping logic (`CategoryServiceTest`,
+  `TransactionServiceTest`, `DashboardServiceTest`, `TransactionRequestValidationTest`,
+  `CategoryRequestValidationTest`, `MonthParamTest`, `ResponseMappingTest`) — no Spring
+  context needed, dependencies mocked with Mockito.
 - `GlobalExceptionHandlerTest` covers every handler, including the catch-all.
 
 Conventions for new tests:

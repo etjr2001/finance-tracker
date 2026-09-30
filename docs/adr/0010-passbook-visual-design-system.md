@@ -113,7 +113,7 @@ Colour semantics:
 
 ### Charts
 - No charting library. The category breakdown is a ranked list with CSS bars.
-- The Overall tab's diverging bars (Sprint 3 Bundle B) are also CSS.
+- The Overall tab's diverging bars (Sprint 3 Bundle B) were also to be CSS. The Overall tab was dropped (ADR0014), so this no longer applies.
 - A library is revisited only if a chart CSS handles badly is scoped, such as a trend
   over time.
 

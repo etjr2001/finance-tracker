@@ -12,7 +12,7 @@ ADR0011 scoped the Transactions page to one global month, filtered in the browse
 ## Decision
 - **The month filter is server-side.** `GET /api/transactions?month=YYYY-MM` returns that month's Transactions, newest first. An absent or blank `month` means the current month (same rule as the Dashboard); a malformed one is a 400. `demoApi.js` mirrors it (ADR0009). Each month is its own React Query cache entry, and the previous month stays on screen while the next loads.
 - **Drafts have their own endpoint.** `GET /api/transactions/drafts` returns every Draft across all months, oldest first. It is a full list, not a count plus a list: Drafts are rare, and the notice and the sheet share one response.
-- **The notice reads "N Drafts to finish"** and shows whenever any Draft exists, including in the viewed month. Tapping it opens a sheet of every Draft, grouped by month (oldest month first, oldest date first within each). Tapping a Draft closes the sheet and opens its edit form.
+- **The notice reads "N Drafts to finish"** and shows whenever any Draft exists, including in the viewed month. Tapping it opens a sheet of every Draft, grouped by month (oldest month first, oldest date first within each). Tapping a Draft closes the sheet and opens its edit form. Each row also has a delete button that starts the usual delete confirmation (#43), so a Draft can be cleared without finding it in its month; the sheet closes once the last Draft is gone.
 
 ## Consequences
 - `GET /api/transactions` with no `month` no longer returns the full history. Anything wanting it needs the planned CSV export (`docs/backlog.md`).
