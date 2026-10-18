@@ -19,8 +19,12 @@ Living document. Not an ADR: this tracks *what's outstanding*, not *decisions ma
 - **Installable PWA (manifest + service worker, offline support).** Out of scope for the pre-Sprint-3 hardening batch below, which only adds a minimal manifest to fix iOS storage persistence. A real installable PWA is a separate feature, not a bug fix.
 - **Duplicate transaction (clone action).** Pick an existing transaction, get a prefilled form to create a new one from it. Settled scope (grilled) — not yet scoped into a branch.
 - **Duplicate transaction detection.** Distinct from the clone action above — the app flagging likely-accidental double-entries (e.g. same amount/category/date entered twice). Parked as an idea to explore later; no definition yet of what counts as a match.
-- **Favourite transactions.** Settled domain concept (`CONTEXT.md`): a reusable Transaction template (Category + amount + note) created from an existing Transaction, picked again later to prefill a new one — manual trigger only, no scheduling. Ship before Recurring below; needs no new infrastructure.
-- **Recurring transactions.** Time-based repetition (e.g. a monthly subscription or a paycheck) — distinct from Favourite (`CONTEXT.md`). Not yet fully defined: schedule granularity, and whether it auto-creates Transactions (or Drafts, for amounts that vary) or just reminds the User to enter one. Needs real domain definition before implementation, and new scheduling/background-job infrastructure this app doesn't have today — the account-pool approach ADR0009 considered and rejected for demo accounts hit the same gap.
+- ~~**Favourite transactions.**~~ Scheduled: Phase 1 of "Favourites and Recurring" below (ADR0017).
+- ~~**Recurring transactions.**~~ Settled (grilled 2026-10-11) and scheduled: Phase 2 of "Favourites and Recurring" below.
+- **Edit a Favourite.** Left out of the first version (ADR0017): a User deletes and recreates one instead. Small follow-up (`PUT /api/favourites/{id}`) if that grates in practice.
+- **Per-user timezone.** Recurring (Phase 2) uses one app-wide `app.timezone` for when the job runs and what "today" is on the server. Fine for a single User; needs a per-User setting if the app ever has Users in different zones.
+- **Currency.** Deferred, not yet scheduled (`CONTEXT.md`). Still open: one currency per User (a setting; `formatMoney` stops hard-coding SGD; the form allows the currency's decimal places) or a currency per Transaction converted to a home currency (needs an exchange-rate source, a rate per Transaction date, and Dashboard rework). Grill it before building; the per-Transaction option probably needs an ADR.
+  - **Widen amounts to `numeric(19,4)` when Currency is built.** `numeric(12,2)` can't hold three-decimal currencies like KWD; four decimal places covers every ISO 4217 currency. One lossless `ALTER COLUMN ... TYPE` per table with an amount (`transactions`, `favourites`, and `recurring` once it exists). Not done ahead of time: the extra decimals are useless until the app knows each amount's currency, and `BigDecimal` scale changes (`12.34` comes back as `12.3400`) would churn tests and the Dashboard rounding for nothing. Integer minor units (`long`) were considered and rejected: they don't remove the per-currency decimal-places work, and would change the JSON contract, every DTO, and the Dashboard maths.
 - **CSV export of all Transactions.** Since ADR0011 the UI only ever shows one month; this is the route to a User's full history. Not yet scheduled. Planned shape:
   - Real accounts: a backend endpoint (e.g. `GET /api/transactions/export`) returning every Transaction as CSV, rather than paging through the list endpoint client-side.
   - Demo mode: generated in the browser from `demoApi.js`'s data. Both go through a hook, per ADR0009.
@@ -88,6 +92,20 @@ Also shipped in the same working session, neither part of the planned Sprint 3 i
 - **`feat/category-icons-addition` (#37).** Added `dices` and `trending-up` to the Category icon registry (Sprint 3 item 1's `icon_key` set). `trending-up` has an auto-guess keyword match (investment/stocks/portfolio); `dices` deliberately has none — available to pick manually, but the app shouldn't nudge a new Category toward it.
 
 All Sprint 3 work follows ADR0007: tests land with each item, not as a separate pass.
+
+### Favourites and Recurring: in progress
+Brought forward ahead of Sprint 4 so the app can show how much of the month bills have already spoken for. Two phases, each on its own branch; Phase 2 starts after Phase 1 merges. Favourite and Recurring stay two terms and two tables (ADR0017).
+
+1. **Phase 1: Favourites (`feat/favourites`, ADR0017).** In progress.
+   - Backend: `V6__favourites.sql` and `GET`/`POST`/`DELETE /api/favourites`. The Category delete guard also checks Favourites.
+   - Demo: `demoApi.js` mirrors it, and Reset demo data clears Favourites (ADR0009).
+   - Frontend: a "From a favourite" sheet next to Add on the Transactions page (pick one to open a prefilled Transaction form dated today, or delete one), "+ New favourite" in that sheet, and "Save as favourite" in a Transaction's actions.
+2. **Phase 2: Recurring (`feat/recurring`).** Settled (grilled 2026-10-11), not started. Gets its own ADR (0018) and `CONTEXT.md` entry when built.
+   - Its own table and a Recurring page (fourth nav item). Created from scratch or with "Make recurring" on a Transaction. Only the job links a Transaction to a Recurring item.
+   - Schedule: a frequency (every N days, weeks, months or years) with two fixed anchors, one for when the entry is posted and one for the date the Transaction gets (e.g. posted on the 1st, dated the 21st). Editing either date re-anchors from the new dates; entries already posted stay as they are.
+   - "Amount varies" posts Drafts (amount zero). ADR0008 is unchanged.
+   - Runs as a scheduled job in the same Railway instance (ADR0001), plus a catch-up run at startup, so runs missed during a redeploy or while the app slept are posted with their correct dates. Assumes a single replica; a version column guards against double-posting.
+   - "Left to avoid spending: $X + N unknown" next to the Drafts notice: Expense entries still to come this month, plus a count of varying-amount ones.
 
 ### Sprint 4: planned
 One bundle, **the Dashboard rework**, since everything in it changes the Dashboard response and `demoApi.js`'s copy of it, which should happen once. Reuses Sprint 3's `SegmentedControl`.
