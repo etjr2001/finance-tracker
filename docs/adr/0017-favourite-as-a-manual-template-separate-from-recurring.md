@@ -19,7 +19,7 @@ Alternatives considered for how a Favourite is created:
 - **A Favourite stores type, Category, amount and an optional note.** It has no date. Amount is zero or more. Zero is allowed and prefills a Draft (ADR0008). The note follows the Transaction note's 256-character limit.
 - **The server takes explicit fields.** `POST /api/favourites` takes `{ type, categoryId, amount, note }`. "Save as favourite" on a Transaction and "+ New favourite" both send the same request. The first just opens the form prefilled from the Transaction. The Category must belong to the User, checked the same way as for a Transaction.
 - **Using a Favourite only prefills the form.** Picking one opens the normal Transaction form filled from the Favourite and dated today. The User can edit any field, and nothing is saved until they tap Save, which goes through the usual create-Transaction path. There is no server call for using a Favourite, and nothing links the new Transaction back to it.
-- **No editing a Favourite in the first version.** A User deletes and recreates one instead. Amounts are usually overridden when a Favourite is used, so editing is rarely needed.
+- **A Favourite can be edited.** `PUT /api/favourites/{id}` takes the same fields as create and replaces all of them, with the same ownership checks on the Favourite and the Category. Editing a Favourite never changes Transactions already created from it, since nothing links them. Leaving edit out was considered (delete and recreate instead) and rejected: a stale amount (e.g. a price rise) would then be retyped on every use, which defeats the point of a Favourite.
 - **Duplicates are allowed.** No uniqueness rule on any combination of fields.
 - **A Category used by a Favourite can't be deleted,** the same rule as a Category used by a Transaction.
 - **Demo mode mirrors it** in `demoApi.js`, per ADR0009, and Reset demo data clears Favourites too.
@@ -29,5 +29,4 @@ Alternatives considered for how a Favourite is created:
 - Recurring will copy some of Favourite's columns (type, Category, amount, note). That duplication is accepted in exchange for neither table having half-empty rows.
 - Since nothing links a Transaction to the Favourite it came from, there's no "used N times" count or "most used first" ordering. Adding one later needs a new nullable column on Transaction.
 - A User can't remove a Category until they delete every Favourite using it. The in-use error message should mention Favourites, so it isn't confusing when the Category has no Transactions.
-- No edit means a typo costs a delete and recreate. If that grates, editing is a small follow-up (`PUT /api/favourites/{id}`), tracked in `docs/backlog.md`.
 - When Currency is built (`CONTEXT.md`), Favourite's amount needs the same widening and currency handling as Transaction's.

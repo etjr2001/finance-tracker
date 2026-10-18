@@ -6,6 +6,7 @@ import com.project.financetracker.exception.ForbiddenException;
 import com.project.financetracker.exception.ResourceNotFoundException;
 import com.project.financetracker.model.Category;
 import com.project.financetracker.repository.CategoryRepository;
+import com.project.financetracker.repository.FavouriteRepository;
 import com.project.financetracker.repository.TransactionRepository;
 import org.junit.jupiter.api.Test;
 
@@ -24,7 +25,9 @@ class CategoryServiceTest {
 
     private final CategoryRepository categoryRepository = mock(CategoryRepository.class);
     private final TransactionRepository transactionRepository = mock(TransactionRepository.class);
-    private final CategoryService service = new CategoryService(categoryRepository, transactionRepository);
+    private final FavouriteRepository favouriteRepository = mock(FavouriteRepository.class);
+    private final CategoryService service =
+            new CategoryService(categoryRepository, transactionRepository, favouriteRepository);
 
     private static final UUID USER_ID = UUID.randomUUID();
 
@@ -153,7 +156,25 @@ class CategoryServiceTest {
         when(transactionRepository.existsByCategoryId(1L)).thenReturn(true);
 
         assertThatThrownBy(() -> service.deleteCategory(1L, USER_ID))
-                .isInstanceOf(CategoryInUseException.class);
+                .isInstanceOf(CategoryInUseException.class)
+                .hasMessageContaining("transactions")
+                .hasMessageNotContaining("favourites");
+        verify(categoryRepository, never()).delete(any());
+    }
+
+    @Test
+    void deleteCategoryRefusesWhenUsedByAFavourite() {
+        // ADR0017: a Category a Favourite uses can't be deleted, even with no
+        // Transactions. The message names Favourites so the refusal makes sense.
+        Category existing = category(1L, USER_ID, "Groceries", null, null);
+        when(categoryRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(transactionRepository.existsByCategoryId(1L)).thenReturn(false);
+        when(favouriteRepository.existsByCategoryId(1L)).thenReturn(true);
+
+        assertThatThrownBy(() -> service.deleteCategory(1L, USER_ID))
+                .isInstanceOf(CategoryInUseException.class)
+                .hasMessageContaining("favourites")
+                .hasMessageNotContaining("transactions");
         verify(categoryRepository, never()).delete(any());
     }
 
@@ -162,6 +183,7 @@ class CategoryServiceTest {
         Category existing = category(1L, USER_ID, "Groceries", null, null);
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(transactionRepository.existsByCategoryId(1L)).thenReturn(false);
+        when(favouriteRepository.existsByCategoryId(1L)).thenReturn(false);
 
         service.deleteCategory(1L, USER_ID);
 
