@@ -152,17 +152,30 @@ describe('demoApi favourites', () => {
     })
 })
 
-describe('demoApi resetDemoData', () => {
-    it('clears favourites and restarts their ids', async () => {
+describe('demoApi seeding', () => {
+    it('seeds starter favourites, and new ones get ids after them', async () => {
         demoApi.ensureSeeded()
-        const category = (await demoApi.listCategories())[0]
-        const payload = { type: 'EXPENSE', amount: 5, note: null, categoryId: category.id }
+        const seeded = await demoApi.listFavourites()
+        expect(seeded).toHaveLength(2)
+
+        const created = await demoApi.createFavourite({
+            type: 'EXPENSE', amount: 5, note: null, categoryId: seeded[0].category.id,
+        })
+
+        expect(seeded.map((f) => f.id)).not.toContain(created.id)
+    })
+
+    it('reset removes added favourites, restores the starters and restarts ids', async () => {
+        demoApi.ensureSeeded()
+        const seeded = await demoApi.listFavourites()
+        const payload = { type: 'EXPENSE', amount: 5, note: null, categoryId: seeded[0].category.id }
         await demoApi.createFavourite(payload)
         const beforeReset = await demoApi.createFavourite(payload)
+        await demoApi.deleteFavourite(seeded[0].id)
 
         demoApi.resetDemoData()
 
-        expect(await demoApi.listFavourites()).toEqual([])
+        expect(await demoApi.listFavourites()).toEqual(seeded)
         const afterReset = await demoApi.createFavourite(payload)
         expect(afterReset.id).toBeLessThan(beforeReset.id)
     })

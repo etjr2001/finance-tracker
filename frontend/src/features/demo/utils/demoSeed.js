@@ -29,6 +29,28 @@ export function buildSeedCategories() {
     }))
 }
 
+// Returns a lookup from Category name to the copy embedded on a seed row,
+// the same shape the real API nests on a Transaction or Favourite.
+function categoryLookup(categories) {
+    const byName = Object.fromEntries(categories.map((c) => [c.name, c]))
+    return (name) => ({
+        id: byName[name].id,
+        name: byName[name].name,
+        colorKey: byName[name].colorKey,
+        iconKey: byName[name].iconKey,
+    })
+}
+
+// One with an amount, and one at zero so the demo can show prefilling a
+// Draft (ADR0017).
+export function buildSeedFavourites(categories) {
+    const cat = categoryLookup(categories)
+    return [
+        { id: 1, type: 'EXPENSE', amount: 1500.0, note: null, category: cat('Rent') },
+        { id: 2, type: 'EXPENSE', amount: 0, note: null, category: cat('Utilities') },
+    ]
+}
+
 function pad(n) {
     return String(n).padStart(2, '0')
 }
@@ -56,13 +78,7 @@ function lastMonthDate(today, day) {
 }
 
 export function buildSeedTransactions(categories, today = new Date()) {
-    const byName = Object.fromEntries(categories.map((c) => [c.name, c]))
-    const cat = (name) => ({
-        id: byName[name].id,
-        name: byName[name].name,
-        colorKey: byName[name].colorKey,
-        iconKey: byName[name].iconKey,
-    })
+    const cat = categoryLookup(categories)
 
     const rows = [
         // this month

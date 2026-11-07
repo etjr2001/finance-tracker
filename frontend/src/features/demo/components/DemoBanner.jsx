@@ -5,7 +5,12 @@ import { resetDemoData } from '@features/demo/api/demoApi'
 import { queryKeys } from '@api/queryKeys'
 import { ConfirmDialog } from '@components/ConfirmDialog'
 
-const DEMO_QUERY_KEYS = [queryKeys.transactions(true), queryKeys.categories(true), queryKeys.dashboard(true)]
+const DEMO_QUERY_KEYS = [
+    queryKeys.transactions(true),
+    queryKeys.categories(true),
+    queryKeys.dashboard(true),
+    queryKeys.favourites(true),
+]
 
 function InlineLink({ to, children }) {
     return (
@@ -41,7 +46,7 @@ export function DemoBanner() {
 
             {isConfirmingReset && (
                 <ConfirmDialog
-                    message="Reset demo data? This clears every demo Transaction and Category you've added and restores the starter set."
+                    message="Reset demo data? This clears every demo Transaction, Category and Favourite you've added and restores the starter set."
                     confirmLabel="Reset"
                     onConfirm={handleReset}
                     onCancel={() => setIsConfirmingReset(false)}

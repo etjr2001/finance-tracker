@@ -3,7 +3,7 @@
 // hook branches between this module and the real one, so the shapes here
 // must match the real API's responses exactly. See ADR0009.
 import { KEYS, readJSON, writeJSON, removeAll } from '@features/demo/utils/demoStorage'
-import { buildSeedCategories, buildSeedTransactions } from '@features/demo/utils/demoSeed'
+import { buildSeedCategories, buildSeedFavourites, buildSeedTransactions } from '@features/demo/utils/demoSeed'
 import { roundHalfEven } from '@features/demo/utils/demoMoney'
 import { currentMonth, monthBounds } from '@utils/date'
 
@@ -13,10 +13,13 @@ export function ensureSeeded() {
     if (readJSON(KEYS.seeded, false)) return
     const categories = buildSeedCategories()
     const transactions = buildSeedTransactions(categories)
+    const favourites = buildSeedFavourites(categories)
     writeJSON(KEYS.categories, categories)
     writeJSON(KEYS.transactions, transactions)
+    writeJSON(KEYS.favourites, favourites)
     writeJSON(KEYS.nextCategoryId, categories.length + 1)
     writeJSON(KEYS.nextTransactionId, transactions.length + 1)
+    writeJSON(KEYS.nextFavouriteId, favourites.length + 1)
     writeJSON(KEYS.seeded, true)
 }
 
