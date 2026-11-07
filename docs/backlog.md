@@ -107,10 +107,10 @@ Brought forward ahead of Sprint 4 so the app can show how much of the month bill
 1. **Phase 1: Favourites (`feat/favourites`, ADR0017).** In progress.
    - Backend: `V6__favourites.sql` and `GET`/`POST`/`PUT`/`DELETE /api/favourites`. The Category delete guard also checks Favourites.
    - Demo: `demoApi.js` mirrors it, and Reset demo data clears Favourites (ADR0009).
-   - Frontend: a "From a favourite" sheet next to Add on the Transactions page (pick one to open a prefilled Transaction form dated today, or edit or delete one), "+ New favourite" in that sheet, and "Save as favourite" in a Transaction's actions.
+   - Frontend: a Favourites nav tab for adding, editing and deleting; "Use a favourite" in the Add transaction form, which fills the form in place; and "Save as favourite" in a Transaction's actions, which opens the prefilled Favourite form on the tab.
    - Editing was first left out, then brought into this phase (2026-10-18).
 2. **Phase 2: Recurring (`feat/recurring`).** Settled (grilled 2026-10-11), not started. Gets its own ADR (0018) and `CONTEXT.md` entry when built.
-   - Its own table and a Recurring page (fourth nav item). Created from scratch or with "Make recurring" on a Transaction. Only the job links a Transaction to a Recurring item.
+   - Its own table and a Recurring page (fifth nav item; check the bottom tab bar still fits on a phone). Created from scratch or with "Make recurring" on a Transaction. Only the job links a Transaction to a Recurring item.
    - Schedule: a frequency (every N days, weeks, months or years) with two fixed anchors, one for when the entry is posted and one for the date the Transaction gets (e.g. posted on the 1st, dated the 21st). Editing either date re-anchors from the new dates; entries already posted stay as they are.
    - "Amount varies" posts Drafts (amount zero). ADR0008 is unchanged.
    - Runs as a scheduled job in the same Railway instance (ADR0001), plus a catch-up run at startup, so runs missed during a redeploy or while the app slept are posted with their correct dates. Assumes a single replica; a version column guards against double-posting.
