@@ -4,8 +4,10 @@
 export const KEYS = {
     transactions: 'demo:transactions',
     categories: 'demo:categories',
+    favourites: 'demo:favourites',
     nextTransactionId: 'demo:nextTransactionId',
     nextCategoryId: 'demo:nextCategoryId',
+    nextFavouriteId: 'demo:nextFavouriteId',
     seeded: 'demo:seeded',
 }
 

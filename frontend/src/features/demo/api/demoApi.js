@@ -45,26 +45,27 @@ export async function updateCategory(id, { name, colorKey = null, iconKey = null
     const updated = categories.map((c) => (c.id === id ? { ...c, name, colorKey, iconKey } : c))
     writeJSON(KEYS.categories, updated)
 
-    // The real API embeds the full Category on each Transaction too, so a
-    // rename/recolour must be reflected on every Transaction referencing it.
-    const transactions = readJSON(KEYS.transactions, [])
-    writeJSON(
-        KEYS.transactions,
-        transactions.map((t) =>
-            t.category?.id === id ? { ...t, category: { ...t.category, name, colorKey, iconKey } } : t
+    // The real API embeds the full Category on each Transaction and Favourite
+    // too, so a rename/recolour must be reflected on every row referencing it.
+    const withUpdatedCategory = (rows) =>
+        rows.map((r) =>
+            r.category?.id === id ? { ...r, category: { ...r.category, name, colorKey, iconKey } } : r
         )
-    )
+    writeJSON(KEYS.transactions, withUpdatedCategory(readJSON(KEYS.transactions, [])))
+    writeJSON(KEYS.favourites, withUpdatedCategory(readJSON(KEYS.favourites, [])))
 
     return updated.find((c) => c.id === id)
 }
 
 export async function deleteCategory(id) {
     const categories = readJSON(KEYS.categories, [])
-    const transactions = readJSON(KEYS.transactions, [])
-    const isInUse = transactions.some((t) => t.category?.id === id)
-    if (isInUse) {
-        const category = categories.find((c) => c.id === id)
+    const category = categories.find((c) => c.id === id)
+    const isUsedBy = (key) => readJSON(key, []).some((r) => r.category?.id === id)
+    if (isUsedBy(KEYS.transactions)) {
         throw new Error(`Cannot delete category '${category?.name ?? ''}' - it has existing transactions.`)
+    }
+    if (isUsedBy(KEYS.favourites)) {
+        throw new Error(`Cannot delete category '${category?.name ?? ''}' - it has existing favourites.`)
     }
     writeJSON(KEYS.categories, categories.filter((c) => c.id !== id))
 }
@@ -124,6 +125,45 @@ export async function updateTransaction(id, payload) {
 export async function deleteTransaction(id) {
     const transactions = readJSON(KEYS.transactions, [])
     writeJSON(KEYS.transactions, transactions.filter((t) => t.id !== id))
+}
+
+// --- favourites ---
+
+// Mirrors GET /api/favourites: newest first. See ADR0017.
+export async function listFavourites() {
+    return readJSON(KEYS.favourites, []).sort((a, b) => b.id - a.id)
+}
+
+// Same shape the real API returns for a Favourite.
+function toFavouriteRecord(id, payload) {
+    return {
+        id,
+        type: payload.type,
+        amount: payload.amount,
+        note: payload.note ?? null,
+        category: resolveCategory(payload.categoryId),
+    }
+}
+
+export async function createFavourite(payload) {
+    const favourites = readJSON(KEYS.favourites, [])
+    const id = readJSON(KEYS.nextFavouriteId, 1)
+    const created = toFavouriteRecord(id, payload)
+    writeJSON(KEYS.favourites, [...favourites, created])
+    writeJSON(KEYS.nextFavouriteId, id + 1)
+    return created
+}
+
+export async function updateFavourite(id, payload) {
+    const favourites = readJSON(KEYS.favourites, [])
+    const updated = favourites.map((f) => (f.id === id ? toFavouriteRecord(id, payload) : f))
+    writeJSON(KEYS.favourites, updated)
+    return updated.find((f) => f.id === id)
+}
+
+export async function deleteFavourite(id) {
+    const favourites = readJSON(KEYS.favourites, [])
+    writeJSON(KEYS.favourites, favourites.filter((f) => f.id !== id))
 }
 
 // --- dashboard ---
