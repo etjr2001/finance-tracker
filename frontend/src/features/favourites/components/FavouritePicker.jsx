@@ -15,7 +15,9 @@ const FAVOURITES_PATH = '/favourites'
 // Opened by the Favourites button in the Add transaction form (ADR0017).
 // Picking one hands it to `onPick`, which fills the form in place; nothing
 // is saved here. Sorted A–Z by name. The title stays put while the list
-// scrolls, so a long list still fits a phone screen. With no Favourites it
+// scrolls, so a long list still fits a phone screen. dvh, not vh: iOS
+// Safari's vh ignores its visible toolbars, which could push the panel
+// past the visible area. With no Favourites it
 // links to the Favourites page and doesn't return afterwards.
 export function FavouritePicker({ onPick, onClose }) {
     const isDemo = useDemoMode()
@@ -23,7 +25,7 @@ export function FavouritePicker({ onPick, onClose }) {
     const sortedFavourites = useMemo(() => (favourites ? sortFavouritesByName(favourites) : []), [favourites])
 
     return (
-        <Modal onRequestClose={onClose} contentClassName="max-w-md max-h-[85vh] flex flex-col">
+        <Modal onRequestClose={onClose} contentClassName="max-w-md max-h-[85dvh] flex flex-col">
             <SectionTitle className="mb-4 shrink-0">Favourites</SectionTitle>
 
             {isLoading && <StatusMessage>Loading favourites…</StatusMessage>}

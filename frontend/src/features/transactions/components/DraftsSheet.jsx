@@ -13,12 +13,13 @@ import { groupDraftsByMonth } from '@features/transactions/utils/draftGroups'
 // hands off to its edit form; the trash button starts the usual delete
 // confirmation, so a stale Draft can be cleared without hunting for it in
 // its month. Scrolls inside the modal so a long list still fits a phone
-// screen.
+// screen (dvh, so iOS Safari's toolbars can't push it past the visible
+// area).
 export function DraftsSheet({ drafts, isDeleting, onSelect, onDelete, onClose }) {
     const groups = groupDraftsByMonth(drafts)
 
     return (
-        <Modal onRequestClose={onClose} contentClassName="max-w-md max-h-[85vh] overflow-y-auto">
+        <Modal onRequestClose={onClose} contentClassName="max-w-md max-h-[85dvh] overflow-y-auto">
             <SectionTitle className="mb-4">Drafts to finish</SectionTitle>
             <div className="space-y-5">
                 {groups.map((group) => (
