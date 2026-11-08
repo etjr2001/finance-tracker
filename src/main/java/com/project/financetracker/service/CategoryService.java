@@ -6,6 +6,7 @@ import com.project.financetracker.exception.ForbiddenException;
 import com.project.financetracker.exception.ResourceNotFoundException;
 import com.project.financetracker.model.Category;
 import com.project.financetracker.repository.CategoryRepository;
+import com.project.financetracker.repository.FavouriteRepository;
 import com.project.financetracker.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ public class CategoryService {
 
     private final CategoryRepository categoryRepository;
     private final TransactionRepository transactionRepository;
+    private final FavouriteRepository favouriteRepository;
 
     public Category requireOwnedCategory(Long id, UUID userId) {
         Category category = categoryRepository.findById(id)
@@ -56,10 +58,14 @@ public class CategoryService {
 
     public void deleteCategory(Long id, UUID userId) {
         Category category = requireOwnedCategory(id, userId);
-        boolean inUse = transactionRepository.existsByCategoryId(id);
-        if (inUse) {
+        if (transactionRepository.existsByCategoryId(id)) {
             throw new CategoryInUseException(
                     "Cannot delete category '" + category.getName() + "' - it has existing transactions."
+            );
+        }
+        if (favouriteRepository.existsByCategoryId(id)) {
+            throw new CategoryInUseException(
+                    "Cannot delete category '" + category.getName() + "' - it has existing favourites."
             );
         }
         categoryRepository.delete(category);

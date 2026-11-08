@@ -47,6 +47,7 @@ describe('DemoBanner reset', () => {
         expect(queryClient.invalidateQueries).toHaveBeenCalledWith({ queryKey: ['transactions', true] })
         expect(queryClient.invalidateQueries).toHaveBeenCalledWith({ queryKey: ['categories', true] })
         expect(queryClient.invalidateQueries).toHaveBeenCalledWith({ queryKey: ['dashboard', true] })
+        expect(queryClient.invalidateQueries).toHaveBeenCalledWith({ queryKey: ['favourites', true] })
     })
 
     it('does not reset when cancelled', async () => {

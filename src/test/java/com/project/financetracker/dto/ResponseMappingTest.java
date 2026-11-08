@@ -1,6 +1,7 @@
 package com.project.financetracker.dto;
 
 import com.project.financetracker.model.Category;
+import com.project.financetracker.model.Favourite;
 import com.project.financetracker.model.Transaction;
 import org.junit.jupiter.api.Test;
 
@@ -66,11 +67,36 @@ class ResponseMappingTest {
     }
 
     @Test
+    void favouriteResponseNestsTheCategoryAndKeepsTheAmountScale() {
+        Favourite favourite = Favourite.builder()
+                .id(4L)
+                .userId(UUID.randomUUID())
+                .type(Transaction.Type.EXPENSE)
+                .amount(new BigDecimal("12.50"))
+                .note("Weekly shop")
+                .category(category())
+                .build();
+
+        FavouriteResponse response = FavouriteResponse.from(favourite);
+
+        assertThat(response).isEqualTo(new FavouriteResponse(
+                4L,
+                Transaction.Type.EXPENSE,
+                new BigDecimal("12.50"),
+                "Weekly shop",
+                new CategoryResponse(7L, "Groceries", "ochre", "food")
+        ));
+    }
+
+    @Test
     void responsesDoNotExposeTheOwnersUserId() {
         assertThat(CategoryResponse.class.getRecordComponents())
                 .extracting(component -> component.getName())
                 .doesNotContain("userId");
         assertThat(TransactionResponse.class.getRecordComponents())
+                .extracting(component -> component.getName())
+                .doesNotContain("userId");
+        assertThat(FavouriteResponse.class.getRecordComponents())
                 .extracting(component -> component.getName())
                 .doesNotContain("userId");
     }

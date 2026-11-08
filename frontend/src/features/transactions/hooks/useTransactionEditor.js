@@ -38,7 +38,6 @@ export function useTransactionEditor({ month, onMonthChange }) {
         setIsDirty(false)
     }
 
-    // Stable: Modal re-binds its Escape listener whenever this changes.
     const requestCloseForm = useCallback(() => {
         if (isDirty) {
             setIsDiscardConfirmOpen(true)

@@ -10,4 +10,5 @@ export const queryKeys = {
     drafts: (isDemo) => ['transactions', isDemo, 'drafts'],
     dashboard: (isDemo) => ['dashboard', isDemo],
     dashboardForMonth: (isDemo, month) => ['dashboard', isDemo, month],
+    favourites: (isDemo) => ['favourites', isDemo],
 }

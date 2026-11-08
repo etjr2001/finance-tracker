@@ -11,7 +11,9 @@ export function TransactionList({
     hasError,
     isMobile,
     isDeleting,
+    findMatchingFavourite,
     onOpenDetail,
+    onFavouriteClick,
     onEdit,
     onDelete,
 }) {
@@ -36,7 +38,9 @@ export function TransactionList({
                                 transaction={transaction}
                                 isMobile={isMobile}
                                 isDeleting={isDeleting(transaction.id)}
+                                isSavedAsFavourite={Boolean(findMatchingFavourite(transaction))}
                                 onOpenDetail={onOpenDetail}
+                                onFavouriteClick={onFavouriteClick}
                                 onEdit={onEdit}
                                 onDelete={onDelete}
                             />

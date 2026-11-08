@@ -9,6 +9,14 @@ describe('FormField', () => {
         expect(screen.getByLabelText('Email')).toBeInTheDocument()
     })
 
+    it('shows helper text under the input only when given', () => {
+        const { rerender } = render(<FormField label="Note" htmlFor="note" helper="Shown in the list" />)
+        expect(screen.getByText('Shown in the list')).toBeInTheDocument()
+
+        rerender(<FormField label="Note" htmlFor="note" />)
+        expect(screen.queryByText('Shown in the list')).not.toBeInTheDocument()
+    })
+
     it('passes extra props through to the input', () => {
         const onChange = vi.fn()
         render(<FormField label="Email" htmlFor="email" type="email" value="" onChange={onChange} />)

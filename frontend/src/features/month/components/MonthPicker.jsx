@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { IconButton } from '@components/IconButton'
+import { SectionTitle } from '@components/SectionTitle'
 import { MonthGrid } from '@features/month/components/MonthGrid'
 import { useEscapeKey } from '@hooks/useEscapeKey'
 import { currentMonth } from '@utils/date'
@@ -25,7 +26,7 @@ export function MonthPicker({ month, onSelect, onClose }) {
             <div className="fixed left-0 right-0 bottom-0 z-50 md:absolute md:left-auto md:bottom-auto md:top-full md:right-0 md:mt-2 md:w-72">
                 <div className="rounded-t-[14px] md:rounded-[14px] bg-paper-raised shadow-xl p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] md:pb-5">
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="font-serif font-semibold text-lg">Choose month</h3>
+                        <SectionTitle as="h3">Choose month</SectionTitle>
                         <IconButton icon={X} label="Close" onClick={onClose} iconSize="h-5 w-5" className="-mr-2 -mt-2" />
                     </div>
 

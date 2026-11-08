@@ -3,6 +3,7 @@ import { X } from 'lucide-react'
 import { Modal } from '@components/Modal'
 import { Button } from '@components/Button'
 import { IconButton } from '@components/IconButton'
+import { SectionTitle } from '@components/SectionTitle'
 import { FormField } from '@components/FormField'
 import { CategoryTile } from '@features/categories/components/CategoryTile'
 import { COLOR_KEYS, categoryBarClass } from '@features/categories/utils/categorySwatch'
@@ -28,7 +29,7 @@ export function CategoryEditModal({
     return (
         <Modal onRequestClose={onCancel}>
             <div className="flex items-center justify-between mb-4">
-                <h2 className="font-serif font-semibold text-lg">Edit category</h2>
+                <SectionTitle>Edit category</SectionTitle>
                 <IconButton icon={X} label="Close" onClick={onCancel} />
             </div>
 

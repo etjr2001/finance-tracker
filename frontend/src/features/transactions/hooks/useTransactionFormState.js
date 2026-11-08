@@ -1,45 +1,26 @@
-import { useEffect, useMemo, useState } from 'react'
-import { checkAmountInput, emptyForm, isFormDirty, toFormShape, toPayload } from '@features/transactions/utils/transactionForm'
+import { emptyForm, toFormShape, toPayload } from '@features/transactions/utils/transactionForm'
+import { useAmountFormState } from '@features/transactions/hooks/useAmountFormState'
+import { toFavouriteFormShape } from '@features/favourites/utils/favouriteForm'
 
-// Form values for TransactionForm plus the amount-field guard. Reports
-// dirtiness upward so a wrapping Modal can decide whether closing needs a
-// confirmation.
+// Form values for TransactionForm. Fixed for this mount: the parent
+// remounts the form (via `key`) when switching between transactions or
+// between edit and create.
 export function useTransactionFormState(initialTransaction, onDirtyChange) {
-    // Lazy, fixed for this mount: the parent remounts the form (via `key`)
-    // when switching between transactions or between edit and create.
-    const [initialForm] = useState(() => (initialTransaction ? toFormShape(initialTransaction) : emptyForm()))
-    const [form, setForm] = useState(initialForm)
-    // null | 'tooManyDecimals' | 'overMax' — a blocked keystroke must show
-    // *why*, or it reads as a broken field (especially on mobile).
-    const [amountHint, setAmountHint] = useState(null)
-
-    const isDirty = useMemo(() => isFormDirty(form, initialForm), [form, initialForm])
-
-    useEffect(() => {
-        onDirtyChange?.(isDirty)
-    }, [isDirty, onDirtyChange])
-
-    function updateField(field, value) {
-        setForm((previous) => ({ ...previous, [field]: value }))
-    }
-
-    function changeAmount(value) {
-        const result = checkAmountInput(value)
-        if (result === 'invalid') return
-        if (result !== 'ok') {
-            setAmountHint(result)
-            return
-        }
-        setAmountHint(null)
-        updateField('amount', value)
-    }
+    const { form, updateField, fillFields, changeAmount, amountHint, isZeroAmount } = useAmountFormState(
+        () => (initialTransaction ? toFormShape(initialTransaction) : emptyForm()),
+        onDirtyChange
+    )
 
     return {
         form,
         updateField,
         changeAmount,
         amountHint,
-        isDraftAmount: form.amount !== '' && Number(form.amount) === 0,
+        isDraftAmount: isZeroAmount,
+        // A Favourite's form shape is the Transaction's minus the date, so
+        // using one fills type, amount, Category and note and leaves the
+        // date as it is (ADR0017).
+        applyFavourite: (favourite) => fillFields(toFavouriteFormShape(favourite)),
         toPayload: () => toPayload(form),
     }
 }

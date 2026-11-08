@@ -11,11 +11,17 @@ describe('resolveNavItems', () => {
         const items = resolveNavItems({ isDemo: false, carriedMonth: '2026-03' })
         const byLabel = Object.fromEntries(items.map((item) => [item.label, item.to]))
         expect(byLabel.Dashboard).toEqual({ pathname: '/', search: '?month=2026-03' })
+        expect(byLabel.Favourites).toBe('/favourites')
         expect(byLabel.Categories).toBe('/categories')
     })
 
     it('uses plain paths when no month is known', () => {
         const items = resolveNavItems({ isDemo: true, carriedMonth: null })
-        expect(items.map((item) => item.to)).toEqual(['/demo', '/demo/transactions', '/demo/categories'])
+        expect(items.map((item) => item.to)).toEqual([
+            '/demo',
+            '/demo/transactions',
+            '/demo/favourites',
+            '/demo/categories',
+        ])
     })
 })

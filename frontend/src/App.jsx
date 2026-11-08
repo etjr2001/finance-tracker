@@ -8,15 +8,17 @@ import { AppLayout } from '@features/layout/components/AppLayout'
 import { DashboardPage } from '@features/dashboard/pages/DashboardPage'
 import { TransactionsPage } from '@features/transactions/pages/TransactionsPage'
 import { CategoriesPage } from '@features/categories/pages/CategoriesPage'
+import { FavouritesPage } from '@features/favourites/pages/FavouritesPage'
 import { DemoProvider } from '@features/demo/components/DemoProvider'
 
-// The same three app pages, mounted under both /demo and the protected
+// The same app pages, mounted under both /demo and the protected
 // root. A function (not a component) because <Routes> only accepts
 // <Route> elements as children.
 function appPageRoutes() {
     return [
         <Route key="dashboard" index element={<DashboardPage />} />,
         <Route key="transactions" path="transactions" element={<TransactionsPage />} />,
+        <Route key="favourites" path="favourites" element={<FavouritesPage />} />,
         <Route key="categories" path="categories" element={<CategoriesPage />} />,
     ]
 }

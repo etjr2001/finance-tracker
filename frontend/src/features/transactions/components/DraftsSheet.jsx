@@ -2,6 +2,7 @@ import { Trash2 } from 'lucide-react'
 import { Modal } from '@components/Modal'
 import { Card } from '@components/Card'
 import { IconButton } from '@components/IconButton'
+import { SectionTitle } from '@components/SectionTitle'
 import { CategoryTile } from '@features/categories/components/CategoryTile'
 import { categoryNameOf } from '@features/transactions/utils/transaction'
 import { dayGroupLabel } from '@features/transactions/utils/dayGroups'
@@ -12,13 +13,14 @@ import { groupDraftsByMonth } from '@features/transactions/utils/draftGroups'
 // hands off to its edit form; the trash button starts the usual delete
 // confirmation, so a stale Draft can be cleared without hunting for it in
 // its month. Scrolls inside the modal so a long list still fits a phone
-// screen.
+// screen (dvh, so iOS Safari's toolbars can't push it past the visible
+// area).
 export function DraftsSheet({ drafts, isDeleting, onSelect, onDelete, onClose }) {
     const groups = groupDraftsByMonth(drafts)
 
     return (
-        <Modal onRequestClose={onClose} contentClassName="max-w-md max-h-[85vh] overflow-y-auto">
-            <h2 className="mb-4 text-lg font-medium">Drafts to finish</h2>
+        <Modal onRequestClose={onClose} contentClassName="max-w-md max-h-[85dvh] overflow-y-auto">
+            <SectionTitle className="mb-4">Drafts to finish</SectionTitle>
             <div className="space-y-5">
                 {groups.map((group) => (
                     <section key={group.month} aria-label={group.label}>

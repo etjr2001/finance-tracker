@@ -29,7 +29,21 @@ describe('demoApi categories', () => {
             categoryId: category.id,
         })
 
-        await expect(demoApi.deleteCategory(category.id)).rejects.toThrow(/existing transactions/)
+        const deletion = demoApi.deleteCategory(category.id)
+
+        await expect(deletion).rejects.toThrow(/existing transactions/)
+        await expect(deletion).rejects.not.toThrow(/favourites/)
+    })
+
+    it('refuses to delete a category that has favourites', async () => {
+        const category = await demoApi.createCategory({ name: 'Groceries' })
+        await demoApi.createFavourite({ type: 'EXPENSE', amount: 10, note: null, categoryId: category.id })
+
+        const deletion = demoApi.deleteCategory(category.id)
+
+        await expect(deletion).rejects.toThrow(/existing favourites/)
+        await expect(deletion).rejects.not.toThrow(/transactions/)
+        expect(await demoApi.listCategories()).toEqual([category])
     })
 
     it('renaming a category updates the denormalized name on its transactions', async () => {
@@ -46,6 +60,124 @@ describe('demoApi categories', () => {
 
         const transactions = await demoApi.listTransactions('2026-01')
         expect(transactions.find((t) => t.id === transaction.id).category.name).toBe('New Name')
+    })
+
+    it('updating a category updates the denormalized copy on its favourites', async () => {
+        const category = await demoApi.createCategory({ name: 'Old Name' })
+        const other = await demoApi.createCategory({ name: 'Other' })
+        const favourite = await demoApi.createFavourite({ type: 'EXPENSE', amount: 10, note: null, categoryId: category.id })
+        const untouched = await demoApi.createFavourite({ type: 'EXPENSE', amount: 10, note: null, categoryId: other.id })
+
+        await demoApi.updateCategory(category.id, { name: 'New Name', colorKey: 'ochre', iconKey: 'food' })
+
+        const favourites = await demoApi.listFavourites()
+        expect(favourites.find((f) => f.id === favourite.id).category).toEqual({
+            id: category.id, name: 'New Name', colorKey: 'ochre', iconKey: 'food',
+        })
+        expect(favourites.find((f) => f.id === untouched.id)).toEqual(untouched)
+    })
+})
+
+describe('demoApi favourites', () => {
+    it('creates, lists, updates, and deletes a favourite', async () => {
+        const category = await demoApi.createCategory({ name: 'Groceries' })
+        const created = await demoApi.createFavourite({
+            type: 'EXPENSE',
+            amount: 42.5,
+            note: 'Weekly shop',
+            categoryId: category.id,
+        })
+        expect(created).toEqual({
+            id: expect.any(Number),
+            type: 'EXPENSE',
+            amount: 42.5,
+            note: 'Weekly shop',
+            category: { id: category.id, name: 'Groceries', colorKey: null, iconKey: null },
+        })
+
+        expect(await demoApi.listFavourites()).toEqual([created])
+
+        const updated = await demoApi.updateFavourite(created.id, {
+            type: 'INCOME',
+            amount: 50,
+            note: null,
+            categoryId: category.id,
+        })
+        expect(updated).toEqual({ ...created, type: 'INCOME', amount: 50, note: null })
+        expect(await demoApi.listFavourites()).toEqual([updated])
+
+        await demoApi.deleteFavourite(created.id)
+        expect(await demoApi.listFavourites()).toEqual([])
+    })
+
+    it('lists newest first', async () => {
+        const category = await demoApi.createCategory({ name: 'Groceries' })
+        const add = () => demoApi.createFavourite({ type: 'EXPENSE', amount: 5, note: null, categoryId: category.id })
+        const first = await add()
+        const second = await add()
+        const third = await add()
+
+        const listed = await demoApi.listFavourites()
+
+        expect(listed.map((f) => f.id)).toEqual([third.id, second.id, first.id])
+    })
+
+    it('allows duplicates and a zero amount', async () => {
+        const category = await demoApi.createCategory({ name: 'Bills' })
+        const payload = { type: 'EXPENSE', amount: 0, note: null, categoryId: category.id }
+
+        const first = await demoApi.createFavourite(payload)
+        const second = await demoApi.createFavourite(payload)
+
+        expect(first.amount).toBe(0)
+        expect(second.id).not.toBe(first.id)
+    })
+
+    it('stores a missing note as null, like the real API', async () => {
+        const category = await demoApi.createCategory({ name: 'Bills' })
+
+        const created = await demoApi.createFavourite({ type: 'EXPENSE', amount: 1, categoryId: category.id })
+
+        expect(created.note).toBeNull()
+    })
+
+    it('is not a transaction, so it never reaches the transaction list, drafts or dashboard', async () => {
+        const category = await demoApi.createCategory({ name: 'Bills' })
+        await demoApi.createFavourite({ type: 'EXPENSE', amount: 0, note: null, categoryId: category.id })
+        await demoApi.createFavourite({ type: 'EXPENSE', amount: 9, note: null, categoryId: category.id })
+
+        expect(await demoApi.listTransactions()).toEqual([])
+        expect(await demoApi.listDrafts()).toEqual([])
+        expect((await demoApi.getDashboard()).totalExpenses).toBe(0)
+    })
+})
+
+describe('demoApi seeding', () => {
+    it('seeds starter favourites, and new ones get ids after them', async () => {
+        demoApi.ensureSeeded()
+        const seeded = await demoApi.listFavourites()
+        expect(seeded).toHaveLength(2)
+
+        const created = await demoApi.createFavourite({
+            type: 'EXPENSE', amount: 5, note: null, categoryId: seeded[0].category.id,
+        })
+
+        expect(seeded.map((f) => f.id)).not.toContain(created.id)
+    })
+
+    it('reset removes added favourites, restores the starters and restarts ids', async () => {
+        demoApi.ensureSeeded()
+        const seeded = await demoApi.listFavourites()
+        const payload = { type: 'EXPENSE', amount: 5, note: null, categoryId: seeded[0].category.id }
+        await demoApi.createFavourite(payload)
+        const beforeReset = await demoApi.createFavourite(payload)
+        await demoApi.deleteFavourite(seeded[0].id)
+
+        demoApi.resetDemoData()
+
+        expect(await demoApi.listFavourites()).toEqual(seeded)
+        const afterReset = await demoApi.createFavourite(payload)
+        expect(afterReset.id).toBeLessThan(beforeReset.id)
     })
 })
 

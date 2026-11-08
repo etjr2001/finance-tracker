@@ -7,7 +7,8 @@ const HINTS = {
 
 // type="text" + inputMode="decimal" gives the clean 0-9 + dot keypad on
 // both iOS and Android; filtering happens in the form-state hook.
-export function AmountField({ value, onChange, hint }) {
+// `hint` is a blocked-keystroke warning; `helper` is muted guidance text.
+export function AmountField({ value, onChange, hint, helper }) {
     const isZero = Number(value) === 0
 
     return (
@@ -26,6 +27,7 @@ export function AmountField({ value, onChange, hint }) {
                 className={`${inputClass} ${isZero ? 'text-ink-soft' : ''}`}
             />
             {hint && <p className="mt-1 text-xs text-withdrawal">{HINTS[hint]}</p>}
+            {helper && <p className="mt-1 text-xs text-ink-soft">{helper}</p>}
         </div>
     )
 }

@@ -4,6 +4,9 @@
 const VARIANTS = {
     primary: 'bg-deposit text-paper hover:opacity-90 disabled:opacity-50',
     danger: 'bg-withdrawal text-paper hover:opacity-90 disabled:opacity-50',
+    // Outlined: a real button for a supporting action (e.g. Favourites in
+    // the Transaction form) that shouldn't compete with the primary one.
+    secondary: 'border border-rule text-ink hover:bg-paper disabled:opacity-50',
     ghost: 'text-ink-soft hover:text-ink disabled:opacity-50',
     // De-emphasized destructive action (text-only red) for a *first*
     // destructive trigger beside a dominant primary action. `danger`
