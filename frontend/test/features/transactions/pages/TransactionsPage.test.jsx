@@ -246,7 +246,9 @@ describe('TransactionsPage add/edit modal', () => {
         await user.clear(amountInput)
         await user.type(amountInput, '15')
         await user.selectOptions(screen.getByRole('combobox'), '2')
-        await user.click(screen.getByRole('button', { name: 'Add transaction' }))
+        // The page's Add button hides while the form is open, so this is
+        // the form's submit.
+        await user.click(screen.getByRole('button', { name: 'Add' }))
 
         await waitFor(() => expect(transactionsApi.createTransaction).toHaveBeenCalled())
         expect(transactionsApi.createTransaction.mock.calls[0][0]).toEqual(
@@ -385,7 +387,7 @@ describe('TransactionsPage month scope', () => {
         await user.type(amountInput, '15')
         fireEvent.change(screen.getByLabelText('Date'), { target: { value: '2026-11-05' } })
         await user.selectOptions(screen.getByRole('combobox'), '2')
-        await user.click(screen.getByRole('button', { name: 'Add transaction' }))
+        await user.click(screen.getByRole('button', { name: 'Add' }))
 
         await waitFor(() => expect(transactionsApi.createTransaction).toHaveBeenCalled())
         await screen.findByText('November 2026')

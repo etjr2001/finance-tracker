@@ -6,7 +6,8 @@ import { inputClass } from '@components/formStyles'
 // wrapper, so forwarding (type, value, onChange, required…) is the point.
 // A maxLength prop also renders a live "N/max" counter next to the label —
 // maxLength alone silently stops keystrokes with no visible feedback.
-export function FormField({ label, htmlFor, className = '', children, ...inputProps }) {
+// `helper` adds muted text under the control.
+export function FormField({ label, htmlFor, helper, className = '', children, ...inputProps }) {
     const { maxLength, value } = inputProps
 
     return (
@@ -22,6 +23,7 @@ export function FormField({ label, htmlFor, className = '', children, ...inputPr
                 )}
             </div>
             {children ?? <input id={htmlFor} className={inputClass} {...inputProps} />}
+            {helper && <p className="mt-1 text-xs text-ink-soft">{helper}</p>}
         </div>
     )
 }

@@ -61,7 +61,7 @@ describe('TransactionForm date picker', () => {
 describe('TransactionForm draft hint', () => {
     it('shows the Draft hint by default for a new transaction (defaults to $0)', () => {
         renderForm()
-        expect(screen.getByText('Will show as a Draft (0 amount)')).toBeInTheDocument()
+        expect(screen.getByText('0 shows as a Draft')).toBeInTheDocument()
     })
 
     it('shows no hint when editing an existing non-zero transaction', () => {
@@ -74,19 +74,19 @@ describe('TransactionForm draft hint', () => {
             category: { id: 1, name: 'Groceries' },
         }
         renderForm({ initial })
-        expect(screen.queryByText(/Will show as a Draft/)).not.toBeInTheDocument()
+        expect(screen.queryByText(/0 shows as a Draft/)).not.toBeInTheDocument()
     })
 
     it('hides the Draft hint once a non-zero amount is entered', async () => {
         const user = userEvent.setup()
         renderForm()
 
-        expect(screen.getByText('Will show as a Draft (0 amount)')).toBeInTheDocument()
+        expect(screen.getByText('0 shows as a Draft')).toBeInTheDocument()
 
         const amountInput = screen.getByLabelText('Amount')
         await user.type(amountInput, '.01')
 
-        expect(screen.queryByText(/Will show as a Draft/)).not.toBeInTheDocument()
+        expect(screen.queryByText(/0 shows as a Draft/)).not.toBeInTheDocument()
     })
 
     it('shows the Draft hint again if the amount is cleared back to 0', async () => {
@@ -95,11 +95,36 @@ describe('TransactionForm draft hint', () => {
 
         const amountInput = screen.getByLabelText('Amount')
         await user.type(amountInput, '.01')
-        expect(screen.queryByText(/Will show as a Draft/)).not.toBeInTheDocument()
+        expect(screen.queryByText(/0 shows as a Draft/)).not.toBeInTheDocument()
 
         await user.clear(amountInput)
         await user.type(amountInput, '0')
-        expect(screen.getByText('Will show as a Draft (0 amount)')).toBeInTheDocument()
+        expect(screen.getByText('0 shows as a Draft')).toBeInTheDocument()
+    })
+})
+
+describe('TransactionForm layout', () => {
+    it('titles the form Add transaction when creating and Edit transaction when editing', () => {
+        const { unmount } = renderForm()
+        expect(screen.getByRole('heading', { name: 'Add transaction' })).toBeInTheDocument()
+        unmount()
+
+        const initial = { id: 5, type: 'EXPENSE', amount: 1, date: '2026-01-01', note: '', category: { id: 1 } }
+        renderForm({ initial })
+        expect(screen.getByRole('heading', { name: 'Edit transaction' })).toBeInTheDocument()
+    })
+
+    it('orders the fields Category, Amount, Date, Note, so tabbing follows the layout', async () => {
+        const user = userEvent.setup()
+        renderForm()
+
+        screen.getByLabelText('Category').focus()
+        await user.tab()
+        expect(screen.getByLabelText('Amount')).toHaveFocus()
+        await user.tab()
+        expect(screen.getByLabelText('Date')).toHaveFocus()
+        await user.tab()
+        expect(screen.getByLabelText('Note (optional)')).toHaveFocus()
     })
 })
 
@@ -177,7 +202,7 @@ describe('TransactionForm type toggle', () => {
 
         fireEvent.click(screen.getByRole('radio', { name: 'Income' }))
         fireEvent.change(screen.getByRole('combobox'), { target: { value: '2' } })
-        fireEvent.click(screen.getByRole('button', { name: 'Add transaction' }))
+        fireEvent.click(screen.getByRole('button', { name: 'Add' }))
 
         expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ type: 'INCOME' }))
         expect(screen.getByRole('radio', { name: 'Income' })).toHaveAttribute('aria-checked', 'true')
@@ -192,7 +217,7 @@ describe('TransactionForm submission', () => {
         fireEvent.change(screen.getByLabelText('Amount'), { target: { value: '42.5' } })
         fireEvent.change(screen.getByRole('combobox'), { target: { value: '2' } })
         fireEvent.change(screen.getByLabelText('Note (optional)'), { target: { value: 'bonus' } })
-        fireEvent.click(screen.getByRole('button', { name: 'Add transaction' }))
+        fireEvent.click(screen.getByRole('button', { name: 'Add' }))
 
         expect(onSubmit).toHaveBeenCalledWith(
             expect.objectContaining({
@@ -209,7 +234,7 @@ describe('TransactionForm submission', () => {
         renderForm({ onSubmit })
 
         fireEvent.change(screen.getByRole('combobox'), { target: { value: '1' } })
-        fireEvent.click(screen.getByRole('button', { name: 'Add transaction' }))
+        fireEvent.click(screen.getByRole('button', { name: 'Add' }))
 
         expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ note: null }))
     })

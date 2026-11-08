@@ -31,21 +31,25 @@ export function TransactionForm({ categories, initial, onSubmit, onCancel, isSub
 
     return (
         <>
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <h2 className="mb-4 text-lg font-medium">{isEditing ? 'Edit transaction' : 'Add transaction'}</h2>
+            {/* Markup order is the visual and tab order: Category, Amount,
+                Date, Note. items-start keeps a helper under Amount from
+                pushing it out of line with Category. */}
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 items-start gap-3">
                 <TransactionTypeToggle value={form.type} onChange={(type) => updateField('type', type)} />
-                <AmountField value={form.amount} onChange={changeAmount} hint={amountHint} />
-                <DateField value={form.date} onChange={(date) => updateField('date', date)} />
-
-                {isDraftAmount && (
-                    <p className="md:col-span-2 -mt-1.5 text-xs text-ink-soft">Will show as a Draft (0 amount)</p>
-                )}
-
                 <CategorySelect
                     categories={newCategory.sortedCategories}
                     value={form.categoryId}
                     onChange={(categoryId) => updateField('categoryId', categoryId)}
                     onRequestNew={newCategory.open}
                 />
+                <AmountField
+                    value={form.amount}
+                    onChange={changeAmount}
+                    hint={amountHint}
+                    helper={isDraftAmount ? '0 shows as a Draft' : null}
+                />
+                <DateField value={form.date} onChange={(date) => updateField('date', date)} />
                 <FormField
                     label="Note (optional)"
                     htmlFor="note"
@@ -63,9 +67,7 @@ export function TransactionForm({ categories, initial, onSubmit, onCancel, isSub
                             Save changes
                         </Button>
                     ) : (
-                        <AddButton type="submit" disabled={isSubmitting}>
-                            Add transaction
-                        </AddButton>
+                        <AddButton type="submit" disabled={isSubmitting} />
                     )}
                     {onCancel && (
                         <Button variant="ghost" onClick={onCancel}>
