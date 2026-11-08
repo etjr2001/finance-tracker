@@ -1,4 +1,6 @@
 import { Button } from '@components/Button'
+import { AddButton } from '@components/AddButton'
+import { SectionTitle } from '@components/SectionTitle'
 import { FormField } from '@components/FormField'
 import { useAmountFormState } from '@features/transactions/hooks/useAmountFormState'
 import { useInlineCategoryCreate } from '@features/transactions/hooks/useInlineCategoryCreate'
@@ -35,7 +37,7 @@ export function FavouriteForm({ categories, initial, onSubmit, onCancel, isSubmi
 
     return (
         <>
-            <h2 className="mb-4 text-lg font-medium">{isEditing ? 'Edit favourite' : 'Add favourite'}</h2>
+            <SectionTitle className="mb-4">{isEditing ? 'Edit favourite' : 'Add favourite'}</SectionTitle>
             {/* Same order as TransactionForm minus Date: Category, Amount,
                 then Note full width. items-start keeps Amount's helper from
                 pushing it out of line with Category. */}
@@ -67,9 +69,15 @@ export function FavouriteForm({ categories, initial, onSubmit, onCancel, isSubmi
                 <div className="md:col-span-2 flex gap-4 pt-1">
                     {/* Disabled while in flight, so a double tap can't save
                         a duplicate (duplicates are allowed, ADR0017). */}
-                    <Button type="submit" disabled={isSubmitting}>
-                        {isEditing ? 'Save changes' : 'Save favourite'}
-                    </Button>
+                    {/* Same labels as TransactionForm: + Add to create, Save
+                        changes to edit. */}
+                    {isEditing ? (
+                        <Button type="submit" disabled={isSubmitting}>
+                            Save changes
+                        </Button>
+                    ) : (
+                        <AddButton type="submit" disabled={isSubmitting} />
+                    )}
                     {onCancel && (
                         <Button variant="ghost" onClick={onCancel}>
                             Cancel

@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { StatusMessage } from '@components/StatusMessage'
 import { ProgressBar } from '@components/ProgressBar'
+import { SectionTitle } from '@components/SectionTitle'
 import { CategoryTile } from '@features/categories/components/CategoryTile'
 import { categoryBarClass } from '@features/categories/utils/categorySwatch'
 import { useCategories } from '@features/categories/hooks/useCategories'
@@ -34,7 +35,7 @@ export function CategoryBreakdown({ byCategory }) {
 
     return (
         <>
-            <h3 className="font-serif font-semibold text-lg mb-4">Spending by category</h3>
+            <SectionTitle as="h3" className="mb-4">Spending by category</SectionTitle>
             {rows.length === 0 ? (
                 <StatusMessage>No transactions in this period yet.</StatusMessage>
             ) : (

@@ -115,7 +115,7 @@ describe('FavouritesPage create and edit', () => {
         await user.type(screen.getByLabelText('Amount'), '25')
         await user.selectOptions(screen.getByLabelText('Category'), '1')
         await user.type(screen.getByLabelText('Note (optional)'), 'Refund')
-        await user.click(screen.getByRole('button', { name: 'Save favourite' }))
+        await user.click(screen.getByRole('button', { name: 'Add' }))
 
         await waitFor(() =>
             expect(favouritesApi.createFavourite).toHaveBeenCalledWith(
@@ -171,9 +171,9 @@ describe('FavouritesPage create and edit', () => {
         await screen.findByText('Rent')
         await user.click(screen.getByRole('button', { name: 'Add' }))
         await user.selectOptions(screen.getByLabelText('Category'), '1')
-        await user.click(screen.getByRole('button', { name: 'Save favourite' }))
+        await user.click(screen.getByRole('button', { name: 'Add' }))
 
-        await waitFor(() => expect(screen.getByRole('button', { name: 'Save favourite' })).toBeDisabled())
+        await waitFor(() => expect(screen.getByRole('button', { name: 'Add' })).toBeDisabled())
     })
 
     it("keeps the form open and shows the server's error when saving fails", async () => {
@@ -184,7 +184,7 @@ describe('FavouritesPage create and edit', () => {
         await screen.findByText('Rent')
         await user.click(screen.getByRole('button', { name: 'Add' }))
         await user.selectOptions(screen.getByLabelText('Category'), '1')
-        await user.click(screen.getByRole('button', { name: 'Save favourite' }))
+        await user.click(screen.getByRole('button', { name: 'Add' }))
 
         expect(await screen.findByText('Category not found')).toBeInTheDocument()
         expect(screen.getByText('Add favourite')).toBeInTheDocument()

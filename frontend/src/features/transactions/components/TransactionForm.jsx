@@ -1,5 +1,6 @@
 import { Button } from '@components/Button'
 import { AddButton } from '@components/AddButton'
+import { SectionTitle } from '@components/SectionTitle'
 import { FormField } from '@components/FormField'
 import { useTransactionFormState } from '@features/transactions/hooks/useTransactionFormState'
 import { useInlineCategoryCreate } from '@features/transactions/hooks/useInlineCategoryCreate'
@@ -31,7 +32,7 @@ export function TransactionForm({ categories, initial, onSubmit, onCancel, isSub
 
     return (
         <>
-            <h2 className="mb-4 text-lg font-medium">{isEditing ? 'Edit transaction' : 'Add transaction'}</h2>
+            <SectionTitle className="mb-4">{isEditing ? 'Edit transaction' : 'Add transaction'}</SectionTitle>
             {/* Markup order is the visual and tab order: Category, Amount,
                 Date, Note. items-start keeps a helper under Amount from
                 pushing it out of line with Category. */}

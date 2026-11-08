@@ -2,6 +2,7 @@ import { Trash2 } from 'lucide-react'
 import { Modal } from '@components/Modal'
 import { Card } from '@components/Card'
 import { IconButton } from '@components/IconButton'
+import { SectionTitle } from '@components/SectionTitle'
 import { CategoryTile } from '@features/categories/components/CategoryTile'
 import { categoryNameOf } from '@features/transactions/utils/transaction'
 import { dayGroupLabel } from '@features/transactions/utils/dayGroups'
@@ -18,7 +19,7 @@ export function DraftsSheet({ drafts, isDeleting, onSelect, onDelete, onClose })
 
     return (
         <Modal onRequestClose={onClose} contentClassName="max-w-md max-h-[85vh] overflow-y-auto">
-            <h2 className="mb-4 text-lg font-medium">Drafts to finish</h2>
+            <SectionTitle className="mb-4">Drafts to finish</SectionTitle>
             <div className="space-y-5">
                 {groups.map((group) => (
                     <section key={group.month} aria-label={group.label}>
