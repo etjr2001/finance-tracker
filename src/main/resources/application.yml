@@ -2,6 +2,12 @@ spring:
   datasource:
     url: ${DB_URL}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      max-lifetime: 300000      # 5 min, retire before Supabase drops them
+      keepalive-time: 120000    # 2 min, ping idle connections (must be < max-lifetime)
+      idle-timeout: 240000      # 4 min
+      minimum-idle: 2
+      maximum-pool-size: 5      # Supabase session pooler has a client cap
   jpa:
     hibernate:
       ddl-auto: validate
