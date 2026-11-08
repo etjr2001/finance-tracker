@@ -57,6 +57,21 @@ describe('FavouritesPage list', () => {
         expect(screen.getByText(/1,500\.00/)).toBeInTheDocument()
     })
 
+    it('lists Favourites A–Z by name, not in the newest-first order the API returns', async () => {
+        favouritesApi.listFavourites.mockResolvedValue([
+            { ...utilities, id: 13 },
+            { ...rent, id: 12, note: 'kopi' },
+            { ...rent, id: 11, note: 'Bills' },
+        ])
+        renderPage()
+
+        await screen.findByText('Utilities')
+        const names = screen.getAllByRole('button', { name: 'Edit' }).map(
+            (button) => button.closest('.flex.items-center.gap-3').querySelector('.truncate').textContent
+        )
+        expect(names).toEqual(['Bills', 'kopi', 'Utilities'])
+    })
+
     it('names a Favourite without a note by its Category alone', async () => {
         favouritesApi.listFavourites.mockResolvedValue([utilities])
         renderPage()

@@ -2,14 +2,19 @@ import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { MemoryRouter } from 'react-router-dom'
 import { TransactionForm } from '@features/transactions/components/TransactionForm'
 import * as categoriesApi from '@features/categories/api/categoriesApi'
+import * as favouritesApi from '@features/favourites/api/favouritesApi'
 import { MAX_CATEGORY_NAME_LENGTH } from '@features/categories/utils/categoryName'
 
 // TransactionForm calls useCreateCategory() internally (a real React Query
 // hook), so every render needs a QueryClientProvider ancestor now, even
-// tests that never touch category creation.
+// tests that never touch category creation. The Favourites picker
+// lists Favourites and can link to their page, hence the API mock and the
+// router.
 vi.mock('@features/categories/api/categoriesApi')
+vi.mock('@features/favourites/api/favouritesApi')
 
 const categories = [
     { id: 1, name: 'Groceries' },
@@ -21,9 +26,11 @@ function renderForm(props = {}) {
         defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
     })
     return render(
-        <QueryClientProvider client={queryClient}>
-            <TransactionForm categories={categories} onSubmit={() => {}} {...props} />
-        </QueryClientProvider>
+        <MemoryRouter>
+            <QueryClientProvider client={queryClient}>
+                <TransactionForm categories={categories} onSubmit={() => {}} {...props} />
+            </QueryClientProvider>
+        </MemoryRouter>
     )
 }
 
@@ -125,6 +132,112 @@ describe('TransactionForm layout', () => {
         expect(screen.getByLabelText('Date')).toHaveFocus()
         await user.tab()
         expect(screen.getByLabelText('Note (optional)')).toHaveFocus()
+    })
+})
+
+describe('TransactionForm Favourites picker', () => {
+    const lunch = { id: 7, type: 'INCOME', amount: 42.5, note: 'Refund', category: { id: 2, name: 'Salary' } }
+    const bill = { id: 8, type: 'EXPENSE', amount: 0, note: null, category: { id: 1, name: 'Groceries' } }
+
+    afterEach(() => {
+        vi.restoreAllMocks()
+    })
+
+    it('offers the picker when adding but not when editing', () => {
+        const { unmount } = renderForm()
+        expect(screen.getByRole('button', { name: 'Favourites' })).toBeInTheDocument()
+        unmount()
+
+        const initial = { id: 5, type: 'EXPENSE', amount: 1, date: '2026-01-01', note: '', category: { id: 1 } }
+        renderForm({ initial })
+        expect(screen.queryByRole('button', { name: 'Favourites' })).not.toBeInTheDocument()
+    })
+
+    it("fills type, amount, Category and note from the picked Favourite, keeps the date, and closes the picker", async () => {
+        favouritesApi.listFavourites.mockResolvedValue([lunch])
+        const onSubmit = vi.fn()
+        const user = userEvent.setup()
+        renderForm({ onSubmit })
+
+        fireEvent.change(screen.getByLabelText('Date'), { target: { value: '2026-03-14' } })
+        await user.click(screen.getByRole('button', { name: 'Favourites' }))
+        await user.click(await screen.findByRole('button', { name: /Refund/ }))
+
+        expect(screen.queryByRole('heading', { name: 'Favourites' })).not.toBeInTheDocument()
+        expect(screen.getByRole('radio', { name: 'Income' })).toHaveAttribute('aria-checked', 'true')
+        expect(screen.getByLabelText('Amount')).toHaveValue('42.5')
+        expect(screen.getByLabelText('Category')).toHaveValue('2')
+        expect(screen.getByLabelText('Note (optional)')).toHaveValue('Refund')
+        expect(screen.getByLabelText('Date')).toHaveValue('2026-03-14')
+
+        await user.click(screen.getByRole('button', { name: 'Add' }))
+        expect(onSubmit).toHaveBeenCalledWith({
+            type: 'INCOME',
+            amount: 42.5,
+            date: '2026-03-14',
+            note: 'Refund',
+            categoryId: 2,
+        })
+    })
+
+    it('replaces anything already typed, including clearing the note for a Favourite without one', async () => {
+        favouritesApi.listFavourites.mockResolvedValue([bill])
+        const user = userEvent.setup()
+        renderForm()
+
+        await user.type(screen.getByLabelText('Note (optional)'), 'old note')
+        await user.click(screen.getByRole('button', { name: 'Favourites' }))
+        await user.click(await screen.findByRole('button', { name: /Groceries/ }))
+
+        expect(screen.getByLabelText('Note (optional)')).toHaveValue('')
+        expect(screen.getByLabelText('Category')).toHaveValue('1')
+    })
+
+    it('shows the Draft helper after picking a zero-amount Favourite', async () => {
+        favouritesApi.listFavourites.mockResolvedValue([bill])
+        const user = userEvent.setup()
+        renderForm()
+
+        await user.type(screen.getByLabelText('Amount'), '5')
+        expect(screen.queryByText('0 shows as a Draft')).not.toBeInTheDocument()
+
+        await user.click(screen.getByRole('button', { name: 'Favourites' }))
+        await user.click(await screen.findByRole('button', { name: /Groceries/ }))
+
+        expect(screen.getByText('0 shows as a Draft')).toBeInTheDocument()
+    })
+
+    it('marks the form dirty once a Favourite is picked', async () => {
+        favouritesApi.listFavourites.mockResolvedValue([lunch])
+        const onDirtyChange = vi.fn()
+        const user = userEvent.setup()
+        renderForm({ onDirtyChange })
+
+        await user.click(screen.getByRole('button', { name: 'Favourites' }))
+        await user.click(await screen.findByRole('button', { name: /Refund/ }))
+
+        expect(onDirtyChange).toHaveBeenLastCalledWith(true)
+    })
+
+    it('links to the Favourites page when there are none', async () => {
+        favouritesApi.listFavourites.mockResolvedValue([])
+        const user = userEvent.setup()
+        renderForm()
+
+        await user.click(screen.getByRole('button', { name: 'Favourites' }))
+
+        expect(await screen.findByText(/No favourites yet/)).toBeInTheDocument()
+        expect(screen.getByRole('link', { name: 'Add one on the Favourites page' })).toHaveAttribute('href', '/favourites')
+    })
+
+    it('shows an error when Favourites fail to load', async () => {
+        favouritesApi.listFavourites.mockRejectedValue(new Error('boom'))
+        const user = userEvent.setup()
+        renderForm()
+
+        await user.click(screen.getByRole('button', { name: 'Favourites' }))
+
+        expect(await screen.findByText('Could not load favourites.')).toBeInTheDocument()
     })
 })
 

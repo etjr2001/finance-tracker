@@ -32,7 +32,6 @@ export function useFavouriteEditor() {
         setIsDirty(false)
     }
 
-    // Stable: Modal re-binds its Escape listener whenever this changes.
     const requestCloseForm = useCallback(() => {
         if (isDirty) {
             setIsDiscardConfirmOpen(true)

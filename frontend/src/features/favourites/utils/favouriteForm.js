@@ -36,6 +36,20 @@ export function hasNoAmount(favourite) {
     return Number(favourite.amount) === 0
 }
 
+// What a Favourite is called in lists: its note, or its Category when it
+// has none.
+export function favouriteName(favourite) {
+    return favourite.note || categoryNameOf(favourite)
+}
+
+// A–Z by name, ignoring case and accents; oldest first among equal names
+// so the order is stable. A custom order may come later (docs/backlog.md).
+export function sortFavouritesByName(favourites) {
+    return [...favourites].sort(
+        (a, b) => favouriteName(a).localeCompare(favouriteName(b), undefined, { sensitivity: 'base' }) || a.id - b.id
+    )
+}
+
 // Human description used in the delete confirmation, e.g. "Rent" or
 // "Dining Out — Kopi".
 export function describeFavourite(favourite) {

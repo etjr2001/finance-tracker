@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import { Star } from 'lucide-react'
 import { Button } from '@components/Button'
 import { AddButton } from '@components/AddButton'
 import { SectionTitle } from '@components/SectionTitle'
@@ -10,19 +12,19 @@ import { AmountField } from '@features/transactions/components/AmountField'
 import { DateField } from '@features/transactions/components/DateField'
 import { CategorySelect } from '@features/transactions/components/CategorySelect'
 import { NewCategoryModal } from '@features/transactions/components/NewCategoryModal'
+import { FavouritePicker } from '@features/favourites/components/FavouritePicker'
 
 // Create/edit form for a Transaction. The parent must pass a `key` (e.g.
 // key={initial?.id ?? 'new'}) so switching targets remounts it.
 // `onDirtyChange` should be stable (e.g. a useState setter).
 export function TransactionForm({ categories, initial, onSubmit, onCancel, isSubmitting, onDirtyChange }) {
-    const { form, updateField, changeAmount, amountHint, isDraftAmount, toPayload } = useTransactionFormState(
-        initial,
-        onDirtyChange
-    )
+    const { form, updateField, changeAmount, amountHint, isDraftAmount, applyFavourite, toPayload } =
+        useTransactionFormState(initial, onDirtyChange)
     const newCategory = useInlineCategoryCreate({
         categories,
         onSelect: (categoryId) => updateField('categoryId', categoryId),
     })
+    const [isPickerOpen, setIsPickerOpen] = useState(false)
     const isEditing = Boolean(initial)
 
     function handleSubmit(event) {
@@ -30,9 +32,24 @@ export function TransactionForm({ categories, initial, onSubmit, onCancel, isSub
         onSubmit(toPayload())
     }
 
+    function pickFavourite(favourite) {
+        applyFavourite(favourite)
+        setIsPickerOpen(false)
+    }
+
     return (
         <>
-            <SectionTitle className="mb-4">{isEditing ? 'Edit transaction' : 'Add transaction'}</SectionTitle>
+            <div className="mb-4 flex items-center justify-between gap-3">
+                <SectionTitle>{isEditing ? 'Edit transaction' : 'Add transaction'}</SectionTitle>
+                {/* Only when adding: a Favourite prefills a new Transaction
+                    (ADR0017), it doesn't overwrite one being edited. */}
+                {!isEditing && (
+                    <Button variant="secondary" onClick={() => setIsPickerOpen(true)}>
+                        <Star aria-hidden="true" strokeWidth={1.7} className="h-4 w-4 -ml-1 mr-1.5" />
+                        Favourites
+                    </Button>
+                )}
+            </div>
             {/* Markup order is the visual and tab order: Category, Amount,
                 Date, Note. items-start keeps a helper under Amount from
                 pushing it out of line with Category. */}
@@ -77,6 +94,8 @@ export function TransactionForm({ categories, initial, onSubmit, onCancel, isSub
                     )}
                 </div>
             </form>
+
+            {isPickerOpen && <FavouritePicker onPick={pickFavourite} onClose={() => setIsPickerOpen(false)} />}
 
             {newCategory.isOpen && (
                 <NewCategoryModal

@@ -2,12 +2,9 @@ import { Pencil, Trash2 } from 'lucide-react'
 import { Card } from '@components/Card'
 import { IconButton } from '@components/IconButton'
 import { StatusMessage } from '@components/StatusMessage'
-import { CategoryTile } from '@features/categories/components/CategoryTile'
-import { SignedAmount } from '@features/transactions/components/SignedAmount'
-import { categoryNameOf } from '@features/transactions/utils/transaction'
-import { hasNoAmount } from '@features/favourites/utils/favouriteForm'
+import { FavouriteSummary } from '@features/favourites/components/FavouriteSummary'
 
-// Every Favourite, newest first (the API's order). Edit and Delete stay
+// Every Favourite, in the order given (the page sorts A–Z). Edit and Delete stay
 // inline at every width: unlike a Transaction row there's no detail card
 // to hand off to, and the row is short enough to fit both on a phone.
 export function FavouriteList({ favourites, isLoading, hasError, isDeleting, onEdit, onDelete }) {
@@ -25,22 +22,7 @@ export function FavouriteList({ favourites, isLoading, hasError, isDeleting, onE
         <Card className="divide-y divide-rule-soft">
             {favourites.map((favourite) => (
                 <div key={favourite.id} className="flex items-center gap-3 py-3 pl-4 pr-2">
-                    <CategoryTile colorKey={favourite.category?.colorKey} iconKey={favourite.category?.iconKey} />
-                    {/* The note names the Favourite when there is one, with
-                        its Category underneath; otherwise the Category alone. */}
-                    <div className="min-w-0 flex-1">
-                        <div className="truncate">{favourite.note || categoryNameOf(favourite)}</div>
-                        {favourite.note && (
-                            <div className="text-sm text-ink-soft truncate">{categoryNameOf(favourite)}</div>
-                        )}
-                    </div>
-                    {/* A zero amount isn't $0 spent: it means "fill in when
-                        used", which starts a Draft (ADR0008, ADR0017). */}
-                    {hasNoAmount(favourite) ? (
-                        <span className="shrink-0 text-sm text-ink-soft">No amount</span>
-                    ) : (
-                        <SignedAmount transaction={favourite} className="shrink-0" />
-                    )}
+                    <FavouriteSummary favourite={favourite} />
                     <div className="flex shrink-0 items-center">
                         <IconButton icon={Pencil} label="Edit" onClick={() => onEdit(favourite)} />
                         <IconButton

@@ -2,7 +2,9 @@ import { describe, it, expect } from 'vitest'
 import {
     describeFavourite,
     emptyFavouriteForm,
+    favouriteName,
     hasNoAmount,
+    sortFavouritesByName,
     toFavouriteFormShape,
     toFavouritePayload,
 } from '@features/favourites/utils/favouriteForm'
@@ -34,6 +36,23 @@ describe('favouriteForm', () => {
         expect(hasNoAmount({ amount: 0 })).toBe(true)
         expect(hasNoAmount({ amount: '0.00' })).toBe(true)
         expect(hasNoAmount({ amount: 0.01 })).toBe(false)
+    })
+
+    it('names a Favourite by its note, or its Category when it has none', () => {
+        expect(favouriteName(rent)).toBe('Rent')
+        expect(favouriteName({ ...rent, note: 'Monthly' })).toBe('Monthly')
+    })
+
+    it('sorts A–Z by name ignoring case, oldest first among equal names, without mutating the input', () => {
+        const input = [
+            { id: 4, note: null, category: { name: 'rent' } },
+            { id: 2, note: 'Bills', category: { name: 'Rent' } },
+            { id: 3, note: null, category: { name: 'Rent' } },
+            { id: 1, note: 'apples', category: { name: 'Groceries' } },
+        ]
+
+        expect(sortFavouritesByName(input).map((f) => f.id)).toEqual([1, 2, 3, 4])
+        expect(input.map((f) => f.id)).toEqual([4, 2, 3, 1])
     })
 
     it('describes a Favourite by Category, adding the note when there is one', () => {

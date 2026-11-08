@@ -23,6 +23,14 @@ export function useAmountFormState(createInitialForm, onDirtyChange) {
         setForm((previous) => ({ ...previous, [field]: value }))
     }
 
+    // Overwrites several fields at once (e.g. from a Favourite). The amount
+    // comes from saved data, not a keystroke, so any blocked-keystroke hint
+    // no longer applies.
+    function fillFields(fields) {
+        setForm((previous) => ({ ...previous, ...fields }))
+        setAmountHint(null)
+    }
+
     function changeAmount(value) {
         const result = checkAmountInput(value)
         if (result === 'invalid') return
@@ -37,6 +45,7 @@ export function useAmountFormState(createInitialForm, onDirtyChange) {
     return {
         form,
         updateField,
+        fillFields,
         changeAmount,
         amountHint,
         isZeroAmount: form.amount !== '' && Number(form.amount) === 0,

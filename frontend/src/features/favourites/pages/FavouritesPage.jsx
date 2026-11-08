@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { PageTitle } from '@components/PageTitle'
 import { AddButton } from '@components/AddButton'
 import { StatusMessage } from '@components/StatusMessage'
@@ -7,13 +8,18 @@ import { useFavourites } from '@features/favourites/hooks/useFavourites'
 import { useFavouriteEditor } from '@features/favourites/hooks/useFavouriteEditor'
 import { FavouriteList } from '@features/favourites/components/FavouriteList'
 import { FavouriteFormModal } from '@features/favourites/components/FavouriteFormModal'
-import { describeFavourite } from '@features/favourites/utils/favouriteForm'
+import { describeFavourite, sortFavouritesByName } from '@features/favourites/utils/favouriteForm'
 
 // Add, edit and delete Favourites. Nothing here creates a Transaction:
 // Favourites are only used from the Add transaction form (ADR0017).
 export function FavouritesPage() {
     const { data: categories } = useCategories()
     const { data: favourites, isLoading, isError } = useFavourites()
+    // A–Z, the same order as the picker in the Transaction form.
+    const sortedFavourites = useMemo(
+        () => (favourites ? sortFavouritesByName(favourites) : favourites),
+        [favourites]
+    )
     const { error, form, discard, remove } = useFavouriteEditor()
 
     return (
@@ -32,7 +38,7 @@ export function FavouritesPage() {
             )}
 
             <FavouriteList
-                favourites={favourites}
+                favourites={sortedFavourites}
                 isLoading={isLoading}
                 hasError={isError}
                 isDeleting={remove.isDeleting}

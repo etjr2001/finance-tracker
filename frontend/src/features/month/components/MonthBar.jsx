@@ -24,7 +24,6 @@ function ThisMonthButton({ onClick }) {
 export function MonthBar({ month, onChange }) {
     const [isPickerOpen, setIsPickerOpen] = useState(false)
     const isCurrentMonth = month === currentMonth()
-    // Stable identity so MonthPicker's Escape listener isn't re-bound every render.
     const closePicker = useCallback(() => setIsPickerOpen(false), [])
 
     function selectMonth(value) {

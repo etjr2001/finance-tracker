@@ -6,9 +6,11 @@ import { MemoryRouter } from 'react-router-dom'
 import { TransactionsPage } from '@features/transactions/pages/TransactionsPage'
 import * as transactionsApi from '@features/transactions/api/transactionsApi'
 import * as categoriesApi from '@features/categories/api/categoriesApi'
+import * as favouritesApi from '@features/favourites/api/favouritesApi'
 
 vi.mock('@features/transactions/api/transactionsApi')
 vi.mock('@features/categories/api/categoriesApi')
+vi.mock('@features/favourites/api/favouritesApi')
 
 const sampleTransaction = {
     id: 42,
@@ -135,6 +137,67 @@ describe('TransactionsPage delete confirmation', () => {
 
         resolveDelete()
         await waitFor(() => expect(firstDelete).toBeEnabled())
+    })
+})
+
+describe('TransactionsPage stacked dialogs and Escape', () => {
+    beforeEach(() => {
+        transactionsApi.listTransactions.mockResolvedValue([sampleTransaction])
+        categoriesApi.listCategories.mockResolvedValue([{ id: 1, name: 'Groceries' }])
+        favouritesApi.listFavourites.mockResolvedValue([
+            { id: 3, type: 'EXPENSE', amount: 4, note: 'Kopi', category: { id: 1, name: 'Groceries' } },
+        ])
+    })
+
+    afterEach(() => {
+        vi.restoreAllMocks()
+    })
+
+    it('closes only the favourite picker on Escape, leaving the typed form open', async () => {
+        const user = userEvent.setup()
+        renderPage()
+
+        await screen.findByText('Weekly shop')
+        await user.click(screen.getByRole('button', { name: 'Add' }))
+        await user.type(screen.getByLabelText('Note (optional)'), 'draft note')
+        await user.click(screen.getByRole('button', { name: 'Favourites' }))
+        await screen.findByRole('button', { name: /Kopi/ })
+
+        await user.keyboard('{Escape}')
+
+        expect(screen.queryByRole('button', { name: /Kopi/ })).not.toBeInTheDocument()
+        expect(screen.queryByText('Discard unsaved changes?')).not.toBeInTheDocument()
+        expect(screen.getByLabelText('Note (optional)')).toHaveValue('draft note')
+    })
+
+    it('closes only the new-category dialog on Escape, leaving the form open', async () => {
+        const user = userEvent.setup()
+        renderPage()
+
+        await screen.findByText('Weekly shop')
+        await user.click(screen.getByRole('button', { name: 'Add' }))
+        await user.selectOptions(screen.getByLabelText('Category'), '__new__')
+        expect(screen.getByText('New category name')).toBeInTheDocument()
+
+        await user.keyboard('{Escape}')
+
+        expect(screen.queryByText('New category name')).not.toBeInTheDocument()
+        expect(screen.getByLabelText('Amount')).toBeInTheDocument()
+    })
+
+    it('then closes the form itself on a second Escape', async () => {
+        const user = userEvent.setup()
+        renderPage()
+
+        await screen.findByText('Weekly shop')
+        await user.click(screen.getByRole('button', { name: 'Add' }))
+        await user.click(screen.getByRole('button', { name: 'Favourites' }))
+        await screen.findByRole('button', { name: /Kopi/ })
+
+        await user.keyboard('{Escape}')
+        await user.keyboard('{Escape}')
+
+        expect(screen.queryByLabelText('Amount')).not.toBeInTheDocument()
     })
 })
 
