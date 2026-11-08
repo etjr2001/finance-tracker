@@ -49,6 +49,7 @@ export function FavouritesPage() {
             {form.isOpen && (
                 <FavouriteFormModal
                     favourite={form.favourite}
+                    prefill={form.prefill}
                     categories={categories}
                     error={error}
                     isSubmitting={form.isSubmitting}

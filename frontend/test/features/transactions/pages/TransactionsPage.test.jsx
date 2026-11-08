@@ -47,10 +47,12 @@ function renderPage(initialEntry = '/transactions?month=2026-09') {
     )
 }
 
-// Every page render also loads the Drafts list; default it to empty so
-// tests that don't care about Drafts don't have to mock it.
+// Every page render also loads the Drafts list and the Favourites (for the
+// stars); default both to empty so tests that don't care don't have to mock
+// them.
 beforeEach(() => {
     transactionsApi.listDrafts.mockResolvedValue([])
+    favouritesApi.listFavourites.mockResolvedValue([])
 })
 
 // Grabs the currently-open modal/dialog's backdrop, for simulating an
@@ -343,6 +345,105 @@ describe('TransactionsPage add/edit modal', () => {
     })
 })
 
+describe('TransactionsPage star (desktop row)', () => {
+    // Matches sampleTransaction: same type, Category, amount and note.
+    const weeklyShop = { id: 7, type: 'EXPENSE', amount: 12.5, note: 'Weekly shop', category: { id: 1, name: 'Groceries' } }
+
+    beforeEach(() => {
+        transactionsApi.listTransactions.mockResolvedValue([sampleTransaction])
+        categoriesApi.listCategories.mockResolvedValue([{ id: 1, name: 'Groceries' }])
+    })
+
+    afterEach(() => {
+        vi.restoreAllMocks()
+    })
+
+    it('shows an outline "Save as favourite" star next to Edit and Delete, with a hover tooltip', async () => {
+        renderPage()
+
+        await screen.findByText('Weekly shop')
+        const star = screen.getByRole('button', { name: 'Save as favourite' })
+        expect(star).toHaveAttribute('title', 'Save as favourite')
+        expect(star.querySelector('svg')).toHaveAttribute('fill', 'none')
+        expect(star.parentElement).toContainElement(screen.getByRole('button', { name: 'Edit' }))
+        expect(star.parentElement).toContainElement(screen.getByRole('button', { name: 'Delete' }))
+    })
+
+    it('opens Add favourite in place, prefilled from the Transaction, and saves a new Favourite', async () => {
+        favouritesApi.createFavourite.mockResolvedValue({ ...weeklyShop, id: 99 })
+        const user = userEvent.setup()
+        renderPage()
+
+        await screen.findByText('Weekly shop')
+        await user.click(screen.getByRole('button', { name: 'Save as favourite' }))
+
+        // Still on the Transactions page, with the form over the list.
+        expect(screen.getByRole('heading', { name: 'Add favourite' })).toBeInTheDocument()
+        expect(screen.getByText('Transactions')).toBeInTheDocument()
+        expect(screen.getByLabelText('Amount')).toHaveValue('12.5')
+        expect(screen.getByLabelText('Category')).toHaveValue('1')
+        expect(screen.getByLabelText('Note (optional)')).toHaveValue('Weekly shop')
+        expect(screen.queryByLabelText('Date')).not.toBeInTheDocument()
+
+        // The page's own + Add stays behind the backdrop, so use the form's.
+        const favouriteModal = screen.getByRole('heading', { name: 'Add favourite' }).parentElement
+        await user.click(within(favouriteModal).getByRole('button', { name: 'Add' }))
+
+        await waitFor(() =>
+            expect(favouritesApi.createFavourite).toHaveBeenCalledWith(
+                { type: 'EXPENSE', amount: 12.5, note: 'Weekly shop', categoryId: 1 },
+                expect.anything()
+            )
+        )
+        await waitFor(() => expect(screen.queryByRole('heading', { name: 'Add favourite' })).not.toBeInTheDocument())
+        expect(screen.getByText('Weekly shop')).toBeInTheDocument()
+    })
+
+    it('shows a filled "Saved as favourite" star when the Transaction matches a Favourite', async () => {
+        favouritesApi.listFavourites.mockResolvedValue([weeklyShop])
+        renderPage()
+
+        const star = await screen.findByRole('button', { name: 'Saved as favourite' })
+        expect(star.querySelector('svg')).toHaveAttribute('fill', 'currentColor')
+    })
+
+    it('opens Edit favourite in place for the matched Favourite, and updates it', async () => {
+        favouritesApi.listFavourites.mockResolvedValue([weeklyShop])
+        favouritesApi.updateFavourite.mockResolvedValue({ ...weeklyShop, note: 'Big shop' })
+        const user = userEvent.setup()
+        renderPage()
+
+        await user.click(await screen.findByRole('button', { name: 'Saved as favourite' }))
+        expect(screen.getByRole('heading', { name: 'Edit favourite' })).toBeInTheDocument()
+
+        await user.clear(screen.getByLabelText('Note (optional)'))
+        await user.type(screen.getByLabelText('Note (optional)'), 'Big shop')
+        await user.click(screen.getByRole('button', { name: 'Save changes' }))
+
+        await waitFor(() =>
+            expect(favouritesApi.updateFavourite).toHaveBeenCalledWith(7, {
+                type: 'EXPENSE',
+                amount: 12.5,
+                note: 'Big shop',
+                categoryId: 1,
+            })
+        )
+        expect(favouritesApi.createFavourite).not.toHaveBeenCalled()
+    })
+
+    it('asks before discarding an edited Favourite form', async () => {
+        const user = userEvent.setup()
+        const { container } = renderPage()
+
+        await screen.findByText('Weekly shop')
+        await user.click(screen.getByRole('button', { name: 'Save as favourite' }))
+        await user.type(screen.getByLabelText('Note (optional)'), '!')
+        await user.click(getBackdrop(container))
+
+        expect(screen.getByText('Discard unsaved changes?')).toBeInTheDocument()
+    })
+})
+
 describe('TransactionsPage mobile row', () => {
     beforeEach(() => {
         mockMobileViewport()
@@ -362,6 +463,19 @@ describe('TransactionsPage mobile row', () => {
 
         expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument()
         expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Save as favourite' })).not.toBeInTheDocument()
+    })
+
+    it("closes the detail card and opens Add favourite in place from the card's star", async () => {
+        const user = userEvent.setup()
+        renderPage()
+
+        await user.click(await screen.findByText('Weekly shop'))
+        await user.click(screen.getByRole('button', { name: 'Save as favourite' }))
+
+        expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument()
+        expect(screen.getByRole('heading', { name: 'Add favourite' })).toBeInTheDocument()
+        expect(screen.getByLabelText('Note (optional)')).toHaveValue('Weekly shop')
     })
 
     it('opens a read-only detail card when the row is tapped', async () => {

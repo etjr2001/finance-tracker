@@ -27,6 +27,14 @@
 
   --font-serif: 'Source Serif 4', Georgia, serif;
   --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+
+  /* Bottom sheet entrance (Sheet.jsx), used as motion-safe:animate-sheet-up
+     so it's skipped when the phone asks for reduced motion. */
+  --animate-sheet-up: sheet-up 200ms ease-out;
+  @keyframes sheet-up {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
 }
 
 body {

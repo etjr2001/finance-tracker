@@ -4,7 +4,7 @@ import { describeTransaction } from '@features/transactions/utils/transaction'
 
 // The page's secondary overlays: discard-changes confirm, delete confirm,
 // and the mobile detail card.
-export function TransactionDialogs({ discard, remove, detail }) {
+export function TransactionDialogs({ discard, remove, detail, findMatchingFavourite, onFavouriteClick }) {
     return (
         <>
             {discard.isOpen && (
@@ -29,6 +29,8 @@ export function TransactionDialogs({ discard, remove, detail }) {
                 <TransactionDetail
                     transaction={detail.target}
                     onClose={detail.close}
+                    isSavedAsFavourite={Boolean(findMatchingFavourite(detail.target))}
+                    onFavouriteClick={() => onFavouriteClick(detail.target)}
                     onEdit={detail.edit}
                     onDelete={detail.delete}
                 />

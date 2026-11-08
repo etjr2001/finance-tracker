@@ -19,11 +19,15 @@ import {
 // date (ADR0017). The parent must pass a `key` (e.g.
 // key={initial?.id ?? 'new'}) so switching targets remounts it.
 // `onDirtyChange` should be stable (e.g. a useState setter).
-export function FavouriteForm({ categories, initial, onSubmit, onCancel, isSubmitting, onDirtyChange }) {
-    const { form, updateField, changeAmount, amountHint, isZeroAmount } = useAmountFormState(
-        () => (initial ? toFavouriteFormShape(initial) : emptyFavouriteForm()),
-        onDirtyChange
-    )
+//
+// `initial` is a Favourite to edit. `prefill` is a Transaction to start a
+// new Favourite from ("Save as favourite"): its fields fill the form, but
+// it's still an Add. Every field stays editable before saving.
+export function FavouriteForm({ categories, initial, prefill, onSubmit, onCancel, isSubmitting, onDirtyChange }) {
+    const { form, updateField, changeAmount, amountHint, isZeroAmount } = useAmountFormState(() => {
+        const source = initial ?? prefill
+        return source ? toFavouriteFormShape(source) : emptyFavouriteForm()
+    }, onDirtyChange)
     const newCategory = useInlineCategoryCreate({
         categories,
         onSelect: (categoryId) => updateField('categoryId', categoryId),

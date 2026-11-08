@@ -12,6 +12,10 @@ import { DraftsSheet } from '@features/transactions/components/DraftsSheet'
 import { TransactionList } from '@features/transactions/components/TransactionList'
 import { TransactionFormModal } from '@features/transactions/components/TransactionFormModal'
 import { TransactionDialogs } from '@features/transactions/components/TransactionDialogs'
+import { useFavouriteMatcher } from '@features/favourites/hooks/useFavouriteMatcher'
+import { useFavouriteEditor } from '@features/favourites/hooks/useFavouriteEditor'
+import { FavouriteFormModal } from '@features/favourites/components/FavouriteFormModal'
+import { ConfirmDialog } from '@components/ConfirmDialog'
 import { useIsMobile } from '@hooks/useIsMobile'
 import { useSelectedMonth } from '@hooks/useSelectedMonth'
 
@@ -23,6 +27,19 @@ export function TransactionsPage() {
     const { data: drafts = [] } = useDrafts()
     const [isDraftsSheetOpen, setIsDraftsSheetOpen] = useState(false)
     const { error, form, discard, remove, detail } = useTransactionEditor({ month, onMonthChange: setMonth })
+    const findMatchingFavourite = useFavouriteMatcher()
+    const favouriteEditor = useFavouriteEditor()
+
+    // The star on a row or the detail card opens the Favourite form right
+    // here, over the list, so the User keeps their place (ADR0017). An
+    // outline star opens Add favourite prefilled from this Transaction; a
+    // filled star opens Edit favourite for the Favourite it matches.
+    function handleFavouriteClick(transaction) {
+        detail.close()
+        const matched = findMatchingFavourite(transaction)
+        if (matched) favouriteEditor.form.openEdit(matched)
+        else favouriteEditor.form.openCreateFrom(transaction)
+    }
 
     // Nothing left to show once the last Draft is finished or deleted. Also
     // resets the flag, so a later Draft doesn't reopen the sheet by itself.
@@ -83,11 +100,41 @@ export function TransactionsPage() {
                 isMobile={isMobile}
                 isDeleting={remove.isDeleting}
                 onOpenDetail={detail.open}
+                findMatchingFavourite={findMatchingFavourite}
+                onFavouriteClick={handleFavouriteClick}
                 onEdit={form.openEdit}
                 onDelete={remove.request}
             />
 
-            <TransactionDialogs discard={discard} remove={remove} detail={detail} />
+            <TransactionDialogs
+                discard={discard}
+                remove={remove}
+                detail={detail}
+                findMatchingFavourite={findMatchingFavourite}
+                onFavouriteClick={handleFavouriteClick}
+            />
+
+            {/* Same form and unsaved-changes check as the Favourites page. */}
+            {favouriteEditor.form.isOpen && (
+                <FavouriteFormModal
+                    favourite={favouriteEditor.form.favourite}
+                    prefill={favouriteEditor.form.prefill}
+                    categories={categories}
+                    error={favouriteEditor.error}
+                    isSubmitting={favouriteEditor.form.isSubmitting}
+                    onSubmit={favouriteEditor.form.submit}
+                    onRequestClose={favouriteEditor.form.requestClose}
+                    onDirtyChange={favouriteEditor.form.setIsDirty}
+                />
+            )}
+            {favouriteEditor.discard.isOpen && (
+                <ConfirmDialog
+                    message="Discard unsaved changes?"
+                    confirmLabel="Discard"
+                    onConfirm={favouriteEditor.discard.confirm}
+                    onCancel={favouriteEditor.discard.cancel}
+                />
+            )}
         </div>
     )
 }

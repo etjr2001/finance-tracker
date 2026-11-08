@@ -111,7 +111,7 @@ Brought forward ahead of Sprint 4 so the app can show how much of the month bill
 1. **Phase 1: Favourites (`feat/favourites`, ADR0017).** In progress.
    - Backend: `V6__favourites.sql` and `GET`/`POST`/`PUT`/`DELETE /api/favourites`. The Category delete guard also checks Favourites.
    - Demo: `demoApi.js` mirrors it, and Reset demo data clears Favourites (ADR0009).
-   - Frontend: a Favourites nav tab for adding, editing and deleting; a Favourites button in the Add transaction form, opening an A–Z list that fills the form in place; and "Save as favourite" in a Transaction's actions, which opens the prefilled Favourite form on the tab.
+   - Frontend: a Favourites nav tab for adding, editing and deleting; a Favourites button in the Add transaction form, opening an A–Z list that fills the form in place; and a star on each Transaction (row actions on desktop, the bottom-sheet detail card on mobile), outline or filled by whether it matches a Favourite, which opens Add or Edit favourite in place over the Transactions list.
    - Editing was first left out, then brought into this phase (2026-10-18).
 2. **Phase 2: Recurring (`feat/recurring`).** Settled (grilled 2026-10-11), not started. Gets its own ADR (0018) and `CONTEXT.md` entry when built.
    - Its own table and a Recurring page (fifth nav item; check the bottom tab bar still fits on a phone). Created from scratch or with "Make recurring" on a Transaction. Only the job links a Transaction to a Recurring item.

@@ -6,12 +6,16 @@ import { apiErrorMessage } from '@api/httpClient'
 // whether closing it needs a discard confirmation, the pending delete, and
 // the shared error line. Same shape as useTransactionEditor, minus the
 // month handling and detail card a Favourite doesn't have.
+//
+// Used by the Favourites page, and by the Transactions page for a
+// Transaction's star (ADR0017), which opens the form in place.
 export function useFavouriteEditor() {
     const createFavourite = useCreateFavourite()
     const updateFavourite = useUpdateFavourite()
     const deleteFavourite = useDeleteFavourite()
 
-    // null (closed) | { favourite: null } (create) | { favourite } (edit)
+    // null (closed) | { favourite: null, prefill } (create; prefill is a
+    // Transaction to start from, or null) | { favourite } (edit)
     const [formTarget, setFormTarget] = useState(null)
     const [isDirty, setIsDirty] = useState(false)
     const [isDiscardConfirmOpen, setIsDiscardConfirmOpen] = useState(false)
@@ -21,10 +25,10 @@ export function useFavouriteEditor() {
     const editingFavourite = formTarget?.favourite ?? null
     const activeMutation = editingFavourite ? updateFavourite : createFavourite
 
-    function openForm(favourite) {
+    function openForm(favourite, prefill = null) {
         setError(null)
         setIsDirty(false)
-        setFormTarget({ favourite })
+        setFormTarget({ favourite, prefill })
     }
 
     function closeForm() {
@@ -76,9 +80,12 @@ export function useFavouriteEditor() {
         form: {
             isOpen: formTarget !== null,
             favourite: editingFavourite,
+            prefill: formTarget?.prefill ?? null,
             isSubmitting: activeMutation.isPending,
             openCreate: () => openForm(null),
-            openEdit: openForm,
+            // "Save as favourite": an Add form prefilled from a Transaction.
+            openCreateFrom: (transaction) => openForm(null, transaction),
+            openEdit: (favourite) => openForm(favourite),
             requestClose: requestCloseForm,
             submit: submitForm,
             setIsDirty,

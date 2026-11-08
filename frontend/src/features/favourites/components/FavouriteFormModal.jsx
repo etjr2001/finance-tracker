@@ -2,7 +2,7 @@ import { Modal } from '@components/Modal'
 import { StatusMessage } from '@components/StatusMessage'
 import { FavouriteForm } from '@features/favourites/components/FavouriteForm'
 
-export function FavouriteFormModal({ favourite, categories, error, isSubmitting, onSubmit, onRequestClose, onDirtyChange }) {
+export function FavouriteFormModal({ favourite, prefill, categories, error, isSubmitting, onSubmit, onRequestClose, onDirtyChange }) {
     return (
         <Modal onRequestClose={onRequestClose}>
             {error && (
@@ -14,6 +14,7 @@ export function FavouriteFormModal({ favourite, categories, error, isSubmitting,
                 key={favourite?.id ?? 'new'}
                 categories={categories}
                 initial={favourite}
+                prefill={prefill}
                 onSubmit={onSubmit}
                 onCancel={onRequestClose}
                 onDirtyChange={onDirtyChange}

@@ -5,12 +5,10 @@ import { Card } from '@components/Card'
 import { SectionTitle } from '@components/SectionTitle'
 import { StatusMessage } from '@components/StatusMessage'
 import { useDemoMode } from '@features/demo/context/DemoModeContext'
-import { toDemoPath } from '@features/layout/utils/navItems'
 import { useFavourites } from '@features/favourites/hooks/useFavourites'
 import { sortFavouritesByName } from '@features/favourites/utils/favouriteForm'
+import { favouritesPath } from '@features/favourites/utils/favouritesPath'
 import { FavouriteSummary } from '@features/favourites/components/FavouriteSummary'
-
-const FAVOURITES_PATH = '/favourites'
 
 // Opened by the Favourites button in the Add transaction form (ADR0017).
 // Picking one hands it to `onPick`, which fills the form in place; nothing
@@ -34,7 +32,7 @@ export function FavouritePicker({ onPick, onClose }) {
             {favourites?.length === 0 && (
                 <StatusMessage>
                     No favourites yet.{' '}
-                    <Link to={isDemo ? toDemoPath(FAVOURITES_PATH) : FAVOURITES_PATH} className="text-deposit underline">
+                    <Link to={favouritesPath(isDemo)} className="text-deposit underline">
                         Add one on the Favourites page
                     </Link>
                 </StatusMessage>
