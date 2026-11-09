@@ -2,50 +2,95 @@ import { useState } from 'react'
 import { X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { IconButton } from '@components/IconButton'
 import { SectionTitle } from '@components/SectionTitle'
+import { Sheet } from '@components/Sheet'
 import { MonthGrid } from '@features/month/components/MonthGrid'
 import { useEscapeKey } from '@hooks/useEscapeKey'
+import { useIsMobile } from '@hooks/useIsMobile'
 import { currentMonth } from '@utils/date'
 
-// Month-grid picker opened from MonthBar's label (ADR0011) — our own
+// Month-grid picker opened from MonthBar's label (ADR0011): our own
 // component, since native month inputs are uneven across desktop browsers.
-// Below md: a bottom sheet; md:+ a popover under the trigger. Same
-// component, positioned with responsive classes.
+// Below md: the shared bottom Sheet (slide up/down, swipe-to-close,
+// backdrop); picking a month or Close slides it down first. md:+ a popover
+// under the month bar, left-aligned with it.
 export function MonthPicker({ month, onSelect, onClose }) {
-    const [year, setYear] = useState(() => Number(month.split('-')[0]))
+    const isMobile = useIsMobile()
+
+    if (isMobile) {
+        return (
+            <Sheet onRequestClose={onClose}>
+                {({ close }) => (
+                    <MonthPickerContent
+                        month={month}
+                        onSelect={(value) => close(() => onSelect(value))}
+                        onClose={() => close()}
+                    />
+                )}
+            </Sheet>
+        )
+    }
+    return (
+        <MonthPopover onClose={onClose}>
+            <MonthPickerContent month={month} onSelect={onSelect} onClose={onClose} />
+        </MonthPopover>
+    )
+}
+
+// md:+ only. Sheet handles Escape itself on mobile, so only this branch
+// registers it: both doing so would close twice per keypress.
+function MonthPopover({ onClose, children }) {
     useEscapeKey(onClose)
 
     return (
         <>
-            {/* Dims the page below md: (sheet); md:+ it's only an invisible
-                outside-click catcher for the popover. */}
-            <div className="fixed inset-0 z-40 bg-black/45 md:bg-transparent" onClick={onClose} />
+            {/* Invisible outside-click catcher. */}
+            <div className="fixed inset-0 z-40" onClick={onClose} />
 
-            {/* Single-property side utilities only: inset-x-0 + inset-x-auto
-                would both set `right`, and Tailwind's stylesheet order (not
-                source order) would decide the winner. */}
-            <div className="fixed left-0 right-0 bottom-0 z-50 md:absolute md:left-auto md:bottom-auto md:top-full md:right-0 md:mt-2 md:w-72">
-                <div className="rounded-t-[14px] md:rounded-[14px] bg-paper-raised shadow-xl p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] md:pb-5">
-                    <div className="flex items-center justify-between mb-4">
-                        <SectionTitle as="h3">Choose month</SectionTitle>
-                        <IconButton icon={X} label="Close" onClick={onClose} iconSize="h-5 w-5" className="-mr-2 -mt-2" />
-                    </div>
-
-                    <div className="flex items-center justify-between mb-3">
-                        <IconButton icon={ChevronLeft} label="Previous year" onClick={() => setYear((y) => y - 1)} />
-                        <span className="font-medium tabular">{year}</span>
-                        <IconButton icon={ChevronRight} label="Next year" onClick={() => setYear((y) => y + 1)} />
-                    </div>
-
-                    <MonthGrid year={year} selectedMonth={month} onSelect={onSelect} />
-
-                    <button
-                        onClick={() => onSelect(currentMonth())}
-                        className="w-full h-11 rounded-xl border border-rule text-sm text-deposit hover:opacity-70 transition-opacity"
-                    >
-                        Back to this month
-                    </button>
-                </div>
+            {/* Anchored to MonthBar's relative wrapper. */}
+            <div
+                role="dialog"
+                className="absolute left-0 top-full z-50 mt-2 w-72 rounded-[14px] bg-paper-raised p-5 shadow-xl"
+            >
+                {children}
             </div>
+        </>
+    )
+}
+
+function MonthPickerContent({ month, onSelect, onClose }) {
+    const [year, setYear] = useState(() => Number(month.split('-')[0]))
+
+    return (
+        <>
+            {/* Three columns so the heading centres on the panel, not on the
+                space left beside the Close button. */}
+            <div className="grid grid-cols-[2.75rem_1fr_2.75rem] items-center mb-4">
+                <SectionTitle as="h3" className="col-start-2 text-center">
+                    Choose month
+                </SectionTitle>
+                <IconButton
+                    icon={X}
+                    label="Close"
+                    onClick={onClose}
+                    iconSize="h-5 w-5"
+                    className="col-start-3 justify-self-end -mr-2"
+                />
+            </div>
+
+            <div className="flex items-center justify-between mb-3">
+                <IconButton icon={ChevronLeft} label="Previous year" onClick={() => setYear((y) => y - 1)} />
+                <span className="font-medium tabular">{year}</span>
+                <IconButton icon={ChevronRight} label="Next year" onClick={() => setYear((y) => y + 1)} />
+            </div>
+
+            <MonthGrid year={year} selectedMonth={month} onSelect={onSelect} />
+
+            <button
+                onClick={() => onSelect(currentMonth())}
+                className="w-full h-11 rounded-xl border border-rule text-sm text-deposit hover:opacity-70 transition-opacity"
+            >
+                Back to this month
+            </button>
         </>
     )
 }

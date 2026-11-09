@@ -31,9 +31,9 @@ export function MonthBar({ month, onChange }) {
         setIsPickerOpen(false)
     }
 
-    // relative: MonthPicker anchors its md:+ popover here. inline-flex (not
-    // flex) so the bar shrink-wraps in any parent; a block-level flex box
-    // would stretch full-width and push the popover's right-0 off-screen.
+    // relative: MonthPicker anchors its md:+ popover here, left-aligned with
+    // the bar. inline-flex (not flex) so the bar shrink-wraps in any parent
+    // and the popover lines up with the bar itself, not a full-width box.
     return (
         <div className="relative inline-flex items-center gap-2">
             {/* ring, not border: a border adds to this wrapper's auto height on

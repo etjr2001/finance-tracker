@@ -4,8 +4,9 @@
 // version.
 //
 // `as` picks the tag (h2 for a modal's own title, h3 inside a page section).
-// `className` is for spacing only, since that depends on the layout around
-// the heading (e.g. none when it shares a row with a Close button).
+// `className` is for spacing and placement only, since those depend on the
+// layout around the heading (e.g. no margin when it shares a row with a
+// Close button, or centred in MonthPicker's header).
 export function SectionTitle({ as: Tag = 'h2', className = '', children }) {
     return <Tag className={`font-serif font-semibold text-lg ${className}`}>{children}</Tag>
 }

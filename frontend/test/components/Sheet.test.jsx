@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
-import { Sheet } from '@components/Sheet'
+import { render, screen, fireEvent, act } from '@testing-library/react'
+import { Sheet, SHEET_EXIT_MS } from '@components/Sheet'
 
 // The global test/setup.js matchMedia polyfill reports desktop. Sheet's
 // swipe-to-close is mobile-only, so these tests switch to mobile.
@@ -23,6 +23,11 @@ function renderSheet(onRequestClose = vi.fn()) {
     return { onRequestClose, panel: screen.getByRole('dialog') }
 }
 
+// Mobile closes wait for the slide-down before reporting the close.
+function finishExit() {
+    act(() => vi.advanceTimersByTime(SHEET_EXIT_MS))
+}
+
 function swipe(target, fromY, toY) {
     fireEvent.pointerDown(target, { clientY: fromY, pointerId: 1 })
     fireEvent.pointerMove(target, { clientY: toY, pointerId: 1 })
@@ -32,6 +37,7 @@ function swipe(target, fromY, toY) {
 describe('Sheet', () => {
     afterEach(() => {
         window.matchMedia = desktopMatchMedia
+        vi.useRealTimers()
     })
 
     it('renders its content in a dialog', () => {
@@ -66,11 +72,76 @@ describe('Sheet', () => {
     })
 
     describe('on mobile', () => {
-        it('closes on a swipe down past the threshold', () => {
+        it('slides down, then closes, on a swipe down past the threshold', () => {
+            vi.useFakeTimers()
             mockMobileViewport()
             const { onRequestClose, panel } = renderSheet()
 
             swipe(panel, 100, 220)
+
+            expect(onRequestClose).not.toHaveBeenCalled()
+            expect(panel.style.transform).toBe('translateY(100%)')
+            finishExit()
+            expect(onRequestClose).toHaveBeenCalledTimes(1)
+        })
+
+        it('slides down, then closes, on Escape', () => {
+            vi.useFakeTimers()
+            mockMobileViewport()
+            const { onRequestClose, panel } = renderSheet()
+
+            fireEvent.keyDown(document, { key: 'Escape' })
+
+            expect(onRequestClose).not.toHaveBeenCalled()
+            expect(panel.style.transform).toBe('translateY(100%)')
+            finishExit()
+            expect(onRequestClose).toHaveBeenCalledTimes(1)
+        })
+
+        it('ignores further close requests while sliding down', () => {
+            vi.useFakeTimers()
+            mockMobileViewport()
+            const { onRequestClose, panel } = renderSheet()
+
+            fireEvent.mouseDown(panel.parentElement)
+            fireEvent.keyDown(document, { key: 'Escape' })
+            finishExit()
+
+            expect(onRequestClose).toHaveBeenCalledTimes(1)
+        })
+
+        it('passes close() to function children: slides down, then runs the given callback', () => {
+            vi.useFakeTimers()
+            mockMobileViewport()
+            const onRequestClose = vi.fn()
+            const afterClose = vi.fn()
+            render(
+                <Sheet onRequestClose={onRequestClose}>
+                    {({ close }) => (
+                        <button type="button" onClick={() => close(afterClose)}>
+                            Pick
+                        </button>
+                    )}
+                </Sheet>
+            )
+
+            fireEvent.click(screen.getByRole('button', { name: 'Pick' }))
+
+            expect(afterClose).not.toHaveBeenCalled()
+            finishExit()
+            expect(afterClose).toHaveBeenCalledTimes(1)
+            expect(onRequestClose).not.toHaveBeenCalled()
+        })
+
+        it('closes straight away when the phone asks for reduced motion', () => {
+            window.matchMedia = vi.fn().mockImplementation((query) => ({
+                matches: query.includes('reduce'),
+                addEventListener: vi.fn(),
+                removeEventListener: vi.fn(),
+            }))
+            const { onRequestClose } = renderSheet()
+
+            fireEvent.keyDown(document, { key: 'Escape' })
 
             expect(onRequestClose).toHaveBeenCalledTimes(1)
         })
