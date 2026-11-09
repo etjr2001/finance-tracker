@@ -3,6 +3,7 @@ import { X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { IconButton } from '@components/IconButton'
 import { SectionTitle } from '@components/SectionTitle'
 import { Sheet } from '@components/Sheet'
+import { useIsExiting } from '@hooks/useIsExiting'
 import { MonthGrid } from '@features/month/components/MonthGrid'
 import { useEscapeKey } from '@hooks/useEscapeKey'
 import { useIsMobile } from '@hooks/useIsMobile'
@@ -11,45 +12,37 @@ import { currentMonth } from '@utils/date'
 // Month-grid picker opened from MonthBar's label (ADR0011): our own
 // component, since native month inputs are uneven across desktop browsers.
 // Below md: the shared bottom Sheet (slide up/down, swipe-to-close,
-// backdrop); picking a month or Close slides it down first. md:+ a popover
-// under the month bar, left-aligned with it.
+// backdrop). md:+ a popover under the month bar, left-aligned with it,
+// popping in from that corner. MonthBar renders it inside ExitPresence, so
+// both animate out too.
 export function MonthPicker({ month, onSelect, onClose }) {
     const isMobile = useIsMobile()
+    const content = <MonthPickerContent month={month} onSelect={onSelect} onClose={onClose} />
 
-    if (isMobile) {
-        return (
-            <Sheet onRequestClose={onClose}>
-                {({ close }) => (
-                    <MonthPickerContent
-                        month={month}
-                        onSelect={(value) => close(() => onSelect(value))}
-                        onClose={() => close()}
-                    />
-                )}
-            </Sheet>
-        )
-    }
-    return (
-        <MonthPopover onClose={onClose}>
-            <MonthPickerContent month={month} onSelect={onSelect} onClose={onClose} />
-        </MonthPopover>
-    )
+    if (isMobile) return <Sheet onRequestClose={onClose}>{content}</Sheet>
+    return <MonthPopover onClose={onClose}>{content}</MonthPopover>
 }
 
 // md:+ only. Sheet handles Escape itself on mobile, so only this branch
 // registers it: both doing so would close twice per keypress.
 function MonthPopover({ onClose, children }) {
-    useEscapeKey(onClose)
+    const isExiting = useIsExiting()
+    function requestClose() {
+        if (!isExiting) onClose()
+    }
+    useEscapeKey(requestClose)
 
     return (
         <>
             {/* Invisible outside-click catcher. */}
-            <div className="fixed inset-0 z-40" onClick={onClose} />
+            <div className="fixed inset-0 z-40" onClick={requestClose} />
 
             {/* Anchored to MonthBar's relative wrapper. */}
             <div
                 role="dialog"
-                className="absolute left-0 top-full z-50 mt-2 w-72 rounded-[14px] bg-paper-raised p-5 shadow-xl"
+                className={`absolute left-0 top-full z-50 mt-2 w-72 origin-top-left rounded-[14px] bg-paper-raised p-5 shadow-xl ${
+                    isExiting ? 'animate-pop-out pointer-events-none' : 'motion-safe:animate-pop-in'
+                }`}
             >
                 {children}
             </div>

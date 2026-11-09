@@ -35,6 +35,27 @@
     from { transform: translateY(100%); }
     to { transform: translateY(0); }
   }
+
+  /* Open/close transitions. Entrances are used as motion-safe:animate-*;
+     exits only ever run inside ExitPresence, which skips them under
+     reduced motion. fade-out matches ExitPresence's EXIT_MS (200ms) so a
+     sliding Sheet's backdrop fades for the whole slide. */
+  --animate-fade-in: fade-in 150ms ease-out;
+  --animate-fade-out: fade-out 200ms ease-in forwards;
+  --animate-pop-in: pop-in 150ms ease-out;
+  --animate-pop-out: pop-out 150ms ease-in forwards;
+  @keyframes fade-in {
+    from { opacity: 0; }
+  }
+  @keyframes fade-out {
+    to { opacity: 0; }
+  }
+  @keyframes pop-in {
+    from { opacity: 0; transform: scale(0.97); }
+  }
+  @keyframes pop-out {
+    to { opacity: 0; transform: scale(0.97); }
+  }
 }
 
 body {

@@ -7,6 +7,7 @@ import { useCategoryManager } from '@features/categories/hooks/useCategoryManage
 import { sortCategoriesByName } from '@features/categories/utils/categoryName'
 import { NewCategoryForm } from '@features/categories/components/NewCategoryForm'
 import { CategoryGrid } from '@features/categories/components/CategoryGrid'
+import { ExitPresence } from '@components/ExitPresence'
 
 export function CategoriesPage() {
     const { data: categories, isLoading, isError } = useCategories()
@@ -46,14 +47,16 @@ export function CategoriesPage() {
                 isDeleting={manager.isDeleting}
             />
 
-            {manager.deleteTarget && (
-                <ConfirmDialog
-                    message={`Delete category "${manager.deleteTarget.name}"? This can't be undone.`}
-                    confirmLabel="Delete"
-                    onConfirm={manager.confirmDelete}
-                    onCancel={manager.cancelDelete}
-                />
-            )}
+            <ExitPresence>
+                {manager.deleteTarget && (
+                    <ConfirmDialog
+                        message={`Delete category "${manager.deleteTarget.name}"? This can't be undone.`}
+                        confirmLabel="Delete"
+                        onConfirm={manager.confirmDelete}
+                        onCancel={manager.cancelDelete}
+                    />
+                )}
+            </ExitPresence>
         </div>
     )
 }

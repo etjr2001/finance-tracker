@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 import { ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react'
 import { IconButton } from '@components/IconButton'
+import { ExitPresence } from '@components/ExitPresence'
 import { MonthPicker } from '@features/month/components/MonthPicker'
 import { currentMonth, formatMonth, shiftMonth } from '@utils/date'
 
@@ -49,7 +50,9 @@ export function MonthBar({ month, onChange }) {
 
             {!isCurrentMonth && <ThisMonthButton onClick={() => onChange(currentMonth())} />}
 
-            {isPickerOpen && <MonthPicker month={month} onSelect={selectMonth} onClose={closePicker} />}
+            <ExitPresence>
+                {isPickerOpen && <MonthPicker month={month} onSelect={selectMonth} onClose={closePicker} />}
+            </ExitPresence>
         </div>
     )
 }

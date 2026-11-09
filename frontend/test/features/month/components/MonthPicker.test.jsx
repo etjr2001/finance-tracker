@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, fireEvent, act } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { MonthPicker } from '@features/month/components/MonthPicker'
-import { SHEET_EXIT_MS } from '@components/Sheet'
 
 describe('MonthPicker', () => {
     afterEach(() => {
@@ -88,6 +87,12 @@ describe('MonthPicker', () => {
             expect(popover).toHaveClass('left-0')
             expect(popover).not.toHaveClass('right-0')
         })
+
+        it('pops in from its top-left corner', () => {
+            render(<MonthPicker month="2026-09" onSelect={() => {}} onClose={() => {}} />)
+
+            expect(screen.getByRole('dialog')).toHaveClass('motion-safe:animate-pop-in', 'origin-top-left')
+        })
     })
 
     describe('on mobile', () => {
@@ -112,56 +117,22 @@ describe('MonthPicker', () => {
             expect(screen.getByRole('dialog')).toHaveClass('motion-safe:animate-sheet-up')
         })
 
-        // Mobile closes wait for Sheet's slide-down.
-        function finishExit() {
-            act(() => vi.advanceTimersByTime(SHEET_EXIT_MS))
-        }
-
         it('closes once on Escape, not once per layer', () => {
-            vi.useFakeTimers()
             const onClose = vi.fn()
             render(<MonthPicker month="2026-09" onSelect={() => {}} onClose={onClose} />)
 
             fireEvent.keyDown(document, { key: 'Escape' })
-            finishExit()
 
             expect(onClose).toHaveBeenCalledTimes(1)
         })
 
-        it('slides down, then closes, on a backdrop tap', () => {
-            vi.useFakeTimers()
+        it('closes on a backdrop tap', () => {
             const onClose = vi.fn()
             render(<MonthPicker month="2026-09" onSelect={() => {}} onClose={onClose} />)
 
             fireEvent.mouseDown(screen.getByRole('dialog').parentElement)
-            expect(onClose).not.toHaveBeenCalled()
-            finishExit()
 
             expect(onClose).toHaveBeenCalledTimes(1)
-        })
-
-        it('slides down, then closes, on the Close button', () => {
-            vi.useFakeTimers()
-            const onClose = vi.fn()
-            render(<MonthPicker month="2026-09" onSelect={() => {}} onClose={onClose} />)
-
-            fireEvent.click(screen.getByRole('button', { name: 'Close' }))
-            expect(onClose).not.toHaveBeenCalled()
-            finishExit()
-
-            expect(onClose).toHaveBeenCalledTimes(1)
-        })
-
-        it('slides down before selecting a picked month', () => {
-            vi.useFakeTimers()
-            const onSelect = vi.fn()
-            render(<MonthPicker month="2026-09" onSelect={onSelect} onClose={() => {}} />)
-
-            fireEvent.click(screen.getByRole('button', { name: 'Jul' }))
-            expect(onSelect).not.toHaveBeenCalled()
-            finishExit()
-
-            expect(onSelect).toHaveBeenCalledWith('2026-07')
         })
     })
 })

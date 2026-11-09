@@ -527,7 +527,8 @@ describe('TransactionsPage mobile row', () => {
         await user.click(await screen.findByText('Weekly shop'))
         await user.click(screen.getByRole('button', { name: 'Save as favourite' }))
 
-        expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument()
+        // The detail card animates out (ExitPresence) before it's gone.
+        await waitFor(() => expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument())
         expect(screen.getByRole('heading', { name: 'Add favourite' })).toBeInTheDocument()
         expect(screen.getByLabelText('Note (optional)')).toHaveValue('Weekly shop')
     })
@@ -555,7 +556,7 @@ describe('TransactionsPage mobile row', () => {
         await user.click(screen.getByRole('button', { name: 'Edit' }))
 
         expect(screen.getByLabelText('Amount')).toBeInTheDocument()
-        expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument()
+        await waitFor(() => expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument())
     })
 
     it('hands off to the delete confirmation and closes the detail card', async () => {
@@ -567,6 +568,8 @@ describe('TransactionsPage mobile row', () => {
         await user.click(screen.getByRole('button', { name: 'Delete' }))
 
         expect(screen.getByText("Delete Groceries — Weekly shop? This can't be undone.")).toBeInTheDocument()
+        // Wait for the detail card (and its own Delete) to finish animating out.
+        await waitFor(() => expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument())
 
         await user.click(screen.getByRole('button', { name: 'Delete' }))
 
@@ -680,7 +683,7 @@ describe('TransactionsPage drafts notice and sheet', () => {
         await user.click(screen.getByText('August bill'))
 
         expect(screen.getByLabelText('Amount')).toBeInTheDocument()
-        expect(screen.queryByText('Drafts to finish')).not.toBeInTheDocument()
+        await waitFor(() => expect(screen.queryByText('Drafts to finish')).not.toBeInTheDocument())
     })
     describe('deleting from the sheet', () => {
         function sheet() {

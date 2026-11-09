@@ -6,9 +6,12 @@
 // a reliable way to override one — Tailwind doesn't order generated
 // utilities by where they appear in a class string, so callers always pass
 // their own (e.g. `<Card className="p-5">`).
+//
+// Fades in when it appears (e.g. a new month's cards), so content doesn't
+// blink in; opacity only, skipped under reduced motion.
 export function Card({ className = '', children }) {
     return (
-        <div className={`bg-paper-raised border border-rule rounded-[14px] ${className}`}>
+        <div className={`bg-paper-raised border border-rule rounded-[14px] motion-safe:animate-fade-in ${className}`}>
             {children}
         </div>
     )

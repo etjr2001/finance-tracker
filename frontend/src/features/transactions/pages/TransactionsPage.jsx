@@ -18,6 +18,7 @@ import { FavouriteFormModal } from '@features/favourites/components/FavouriteFor
 import { ConfirmDialog } from '@components/ConfirmDialog'
 import { useIsMobile } from '@hooks/useIsMobile'
 import { useSelectedMonth } from '@hooks/useSelectedMonth'
+import { ExitPresence } from '@components/ExitPresence'
 
 export function TransactionsPage() {
     const [month, setMonth] = useSelectedMonth()
@@ -61,16 +62,18 @@ export function TransactionsPage() {
 
             <DraftsNotice count={drafts.length} onOpen={() => setIsDraftsSheetOpen(true)} />
 
-            {isDraftsSheetOpen && (
-                <DraftsSheet
-                    drafts={drafts}
-                    isDeleting={remove.isDeleting}
-                    onSelect={editDraft}
-                    onDelete={remove.request}
-                    // Escape belongs to the delete confirmation while it's open.
-                    onClose={() => !remove.target && setIsDraftsSheetOpen(false)}
-                />
-            )}
+            <ExitPresence>
+                {isDraftsSheetOpen && (
+                    <DraftsSheet
+                        drafts={drafts}
+                        isDeleting={remove.isDeleting}
+                        onSelect={editDraft}
+                        onDelete={remove.request}
+                        // Escape belongs to the delete confirmation while it's open.
+                        onClose={() => !remove.target && setIsDraftsSheetOpen(false)}
+                    />
+                )}
+            </ExitPresence>
 
             {/* While a form is open, its modal shows the error instead. */}
             {error && !form.isOpen && (
@@ -79,17 +82,19 @@ export function TransactionsPage() {
                 </StatusMessage>
             )}
 
-            {form.isOpen && (
-                <TransactionFormModal
-                    transaction={form.transaction}
-                    categories={categories}
-                    error={error}
-                    isSubmitting={form.isSubmitting}
-                    onSubmit={form.submit}
-                    onRequestClose={form.requestClose}
-                    onDirtyChange={form.setIsDirty}
-                />
-            )}
+            <ExitPresence>
+                {form.isOpen && (
+                    <TransactionFormModal
+                        transaction={form.transaction}
+                        categories={categories}
+                        error={error}
+                        isSubmitting={form.isSubmitting}
+                        onSubmit={form.submit}
+                        onRequestClose={form.requestClose}
+                        onDirtyChange={form.setIsDirty}
+                    />
+                )}
+            </ExitPresence>
 
             <TransactionList
                 dayGroups={dayGroups}
@@ -114,26 +119,30 @@ export function TransactionsPage() {
             />
 
             {/* Same form and unsaved-changes check as the Favourites page. */}
-            {favouriteEditor.form.isOpen && (
-                <FavouriteFormModal
-                    favourite={favouriteEditor.form.favourite}
-                    prefill={favouriteEditor.form.prefill}
-                    categories={categories}
-                    error={favouriteEditor.error}
-                    isSubmitting={favouriteEditor.form.isSubmitting}
-                    onSubmit={favouriteEditor.form.submit}
-                    onRequestClose={favouriteEditor.form.requestClose}
-                    onDirtyChange={favouriteEditor.form.setIsDirty}
-                />
-            )}
-            {favouriteEditor.discard.isOpen && (
-                <ConfirmDialog
-                    message="Discard unsaved changes?"
-                    confirmLabel="Discard"
-                    onConfirm={favouriteEditor.discard.confirm}
-                    onCancel={favouriteEditor.discard.cancel}
-                />
-            )}
+            <ExitPresence>
+                {favouriteEditor.form.isOpen && (
+                    <FavouriteFormModal
+                        favourite={favouriteEditor.form.favourite}
+                        prefill={favouriteEditor.form.prefill}
+                        categories={categories}
+                        error={favouriteEditor.error}
+                        isSubmitting={favouriteEditor.form.isSubmitting}
+                        onSubmit={favouriteEditor.form.submit}
+                        onRequestClose={favouriteEditor.form.requestClose}
+                        onDirtyChange={favouriteEditor.form.setIsDirty}
+                    />
+                )}
+            </ExitPresence>
+            <ExitPresence>
+                {favouriteEditor.discard.isOpen && (
+                    <ConfirmDialog
+                        message="Discard unsaved changes?"
+                        confirmLabel="Discard"
+                        onConfirm={favouriteEditor.discard.confirm}
+                        onCancel={favouriteEditor.discard.cancel}
+                    />
+                )}
+            </ExitPresence>
         </div>
     )
 }

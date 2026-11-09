@@ -2,6 +2,7 @@ import { Card } from '@components/Card'
 import { StatusMessage } from '@components/StatusMessage'
 import { CategoryRow } from '@features/categories/components/CategoryRow'
 import { CategoryEditModal } from '@features/categories/components/CategoryEditModal'
+import { ExitPresence } from '@components/ExitPresence'
 
 export function CategoryGrid({
     categories,
@@ -34,20 +35,22 @@ export function CategoryGrid({
                 </Card>
             ))}
 
-            {editingId != null && (
-                <CategoryEditModal
-                    name={editingName}
-                    onNameChange={onEditingNameChange}
-                    colorKey={editingColorKey}
-                    onColorKeyChange={onEditingColorKeyChange}
-                    iconKey={editingIconKey}
-                    onIconKeyChange={onEditingIconKeyChange}
-                    error={editError}
-                    isSaving={isSaving}
-                    onSave={onSaveEdit}
-                    onCancel={onCancelEdit}
-                />
-            )}
+            <ExitPresence>
+                {editingId != null && (
+                    <CategoryEditModal
+                        name={editingName}
+                        onNameChange={onEditingNameChange}
+                        colorKey={editingColorKey}
+                        onColorKeyChange={onEditingColorKeyChange}
+                        iconKey={editingIconKey}
+                        onIconKeyChange={onEditingIconKeyChange}
+                        error={editError}
+                        isSaving={isSaving}
+                        onSave={onSaveEdit}
+                        onCancel={onCancelEdit}
+                    />
+                )}
+            </ExitPresence>
         </div>
     )
 }
