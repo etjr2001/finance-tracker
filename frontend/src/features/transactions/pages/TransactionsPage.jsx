@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { PageTitle } from '@components/PageTitle'
-import { AddButton } from '@components/AddButton'
+import { PageToolbar } from '@components/PageToolbar'
 import { StatusMessage } from '@components/StatusMessage'
 import { MonthBar } from '@features/month/components/MonthBar'
 import { useCategories } from '@features/categories/hooks/useCategories'
@@ -55,10 +55,9 @@ export function TransactionsPage() {
             {/* Title on its own row, matching the other pages exactly;
                 MonthBar + Add share the next row without wrapping. */}
             <PageTitle>Transactions</PageTitle>
-            <div className="flex items-center justify-between gap-3 mb-6">
+            <PageToolbar onAdd={form.openCreate}>
                 <MonthBar month={month} onChange={setMonth} />
-                {!form.isOpen && <AddButton onClick={form.openCreate} />}
-            </div>
+            </PageToolbar>
 
             <DraftsNotice count={drafts.length} onOpen={() => setIsDraftsSheetOpen(true)} />
 

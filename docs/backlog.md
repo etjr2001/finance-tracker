@@ -18,6 +18,18 @@ Living document. Not an ADR: this tracks *what's outstanding*, not *decisions ma
 - **No custom domain/DNS.** The app is live on the default Railway URL. Explicitly non-blocking, parked indefinitely.
 - ~~**Bottom tab bar feels too narrow to tap comfortably on phone.**~~ Fixed (`fix/nav-bar-tap-targets-and-new-transaction-date`): grew the `NavLink`s from `min-h-11`/`py-1.5` to `min-h-14`/`py-2`, so the tap targets themselves sit clear of the iPhone home-indicator gesture area — the existing `pb-[env(safe-area-inset-bottom)]` only cleared the bar's *background* there, not the tappable zone. Awaiting on-device confirmation this was the whole story.
 
+- **Page behind an open Modal/Sheet stays reachable by keyboard and screen readers.** The backdrop blocks clicks, but Tab can move focus out of a dialog to the page behind (no focus trap), and screen readers can read it. Found when the page's Add stopped hiding while its form is open (`PageToolbar`). Mouse and touch can't reach anything behind a dialog. For now `openCreate` and `openEdit` in `useTransactionEditor`/`useFavouriteEditor` are no-ops while a form is open, so Add or another row's Edit can't swap out an open edit. Still reachable by keyboard behind an open form, unguarded:
+  - Nav links: leave the page, dropping the form without the discard prompt.
+  - A row's Delete: opens the delete confirm over the form; deleting the Transaction being edited makes Save fail.
+  - Month bar, Drafts notice, the star: change the month or stack another dialog. Confusing, but nothing is lost.
+
+  Proper fix, about 1–2h with tests:
+  - Render `Modal` and `Sheet` through a portal into `<body>`, so the page and the dialog are separate trees.
+  - Extend `useEscapeKey`'s layer stack into a shared layer hook: while any layer is open, the app root is `inert`; a layer opened over another (e.g. New category over the Transaction form) makes the one below `inert` too, until it closes.
+  - Return focus to the opening button on close.
+  - Tests that find the backdrop via the render `container` switch to `document`.
+  - Then drop the `openCreate` guards.
+
 ## Backlog (not yet scheduled into a sprint)
 
 - **Payment Method.** Explicitly deferred to v2 per `CONTEXT.md`. Not a candidate for any near-term sprint; it's a genuinely separate domain concept, not a bug or polish item.

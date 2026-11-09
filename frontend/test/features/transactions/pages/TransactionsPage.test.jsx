@@ -61,6 +61,12 @@ function getBackdrop(container) {
     return container.querySelector('.fixed.inset-0')
 }
 
+// The open form's own Add (submit) button. The page's Add stays visible
+// behind the modal, so an unscoped query would find both.
+function formAddButton() {
+    return within(screen.getByRole('dialog')).getByRole('button', { name: 'Add' })
+}
+
 describe('TransactionsPage delete confirmation', () => {
     beforeEach(() => {
         transactionsApi.listTransactions.mockResolvedValue([sampleTransaction])
@@ -153,6 +159,54 @@ describe('TransactionsPage stacked dialogs and Escape', () => {
 
     afterEach(() => {
         vi.restoreAllMocks()
+    })
+
+    // The modal covers it anyway, so there's no reason to hide it.
+    it("keeps the page's Add button in place while the form is open", async () => {
+        const user = userEvent.setup()
+        renderPage()
+
+        await screen.findByText('Weekly shop')
+        await user.click(screen.getByRole('button', { name: 'Add' }))
+
+        // The page's Add, plus the form's own Add (submit) button.
+        expect(screen.getAllByRole('button', { name: 'Add' })).toHaveLength(2)
+    })
+
+    // The backdrop blocks clicks, but keyboard focus can still Tab out of
+    // the modal to the page's Add (no inert background yet; see backlog).
+    it("ignores the page's Add while an edit is open, keeping the edits", async () => {
+        const user = userEvent.setup()
+        renderPage()
+
+        await screen.findByText('Weekly shop')
+        await user.click(screen.getAllByRole('button', { name: 'Edit' })[0])
+        await user.type(screen.getByLabelText('Note (optional)'), ' edited')
+
+        fireEvent.click(screen.getByRole('button', { name: 'Add' }))
+
+        expect(screen.getByText('Edit transaction')).toBeInTheDocument()
+        expect(screen.getByLabelText('Note (optional)')).toHaveValue('Weekly shop edited')
+    })
+
+    it("ignores another row's Edit while an edit is open, keeping the edits", async () => {
+        transactionsApi.listTransactions.mockResolvedValue([
+            sampleTransaction,
+            { ...sampleTransaction, id: 2, note: 'Dinner' },
+        ])
+        const user = userEvent.setup()
+        renderPage()
+
+        await screen.findByText('Weekly shop')
+        const [, dinnerRow] = screen.getAllByRole('button', { name: 'Edit' })
+        await user.click(screen.getAllByRole('button', { name: 'Edit' })[0])
+        const note = screen.getByLabelText('Note (optional)')
+        const editedNote = `${note.value} edited`
+        await user.type(note, ' edited')
+
+        fireEvent.click(dinnerRow)
+
+        expect(screen.getByLabelText('Note (optional)')).toHaveValue(editedNote)
     })
 
     it('closes only the favourite picker on Escape, leaving the typed form open', async () => {
@@ -313,7 +367,7 @@ describe('TransactionsPage add/edit modal', () => {
         await user.selectOptions(screen.getByRole('combobox'), '2')
         // The page's Add button hides while the form is open, so this is
         // the form's submit.
-        await user.click(screen.getByRole('button', { name: 'Add' }))
+        await user.click(formAddButton())
 
         await waitFor(() => expect(transactionsApi.createTransaction).toHaveBeenCalled())
         expect(transactionsApi.createTransaction.mock.calls[0][0]).toEqual(
@@ -564,7 +618,7 @@ describe('TransactionsPage month scope', () => {
         await user.type(amountInput, '15')
         fireEvent.change(screen.getByLabelText('Date'), { target: { value: '2026-11-05' } })
         await user.selectOptions(screen.getByRole('combobox'), '2')
-        await user.click(screen.getByRole('button', { name: 'Add' }))
+        await user.click(formAddButton())
 
         await waitFor(() => expect(transactionsApi.createTransaction).toHaveBeenCalled())
         await screen.findByText('November 2026')

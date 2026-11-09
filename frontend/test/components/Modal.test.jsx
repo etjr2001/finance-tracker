@@ -3,6 +3,20 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { Modal } from '@components/Modal'
 
 describe('Modal', () => {
+    // Like Sheet: screen readers announce it as a dialog and treat the page
+    // behind as inactive.
+    it('renders its content in a modal dialog', () => {
+        render(
+            <Modal onRequestClose={() => {}}>
+                <div>content</div>
+            </Modal>
+        )
+
+        const dialog = screen.getByRole('dialog')
+        expect(dialog).toHaveAttribute('aria-modal', 'true')
+        expect(dialog).toHaveTextContent('content')
+    })
+
     it('calls onRequestClose when the backdrop is clicked', () => {
         const onRequestClose = vi.fn()
         const { container } = render(

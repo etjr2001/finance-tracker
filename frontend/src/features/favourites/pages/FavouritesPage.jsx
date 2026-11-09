@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { PageTitle } from '@components/PageTitle'
-import { AddButton } from '@components/AddButton'
+import { PageToolbar } from '@components/PageToolbar'
 import { StatusMessage } from '@components/StatusMessage'
 import { ConfirmDialog } from '@components/ConfirmDialog'
 import { useCategories } from '@features/categories/hooks/useCategories'
@@ -25,10 +25,9 @@ export function FavouritesPage() {
     return (
         <div>
             <PageTitle>Favourites</PageTitle>
-            <div className="flex items-center justify-between gap-3 mb-6">
+            <PageToolbar onAdd={form.openCreate}>
                 <p className="text-sm text-ink-soft">Shortcuts for the Add transaction form.</p>
-                {!form.isOpen && <AddButton onClick={form.openCreate} />}
-            </div>
+            </PageToolbar>
 
             {/* While a form is open, its modal shows the error instead. */}
             {error && !form.isOpen && (

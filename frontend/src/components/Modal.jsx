@@ -21,7 +21,12 @@ export function Modal({ onRequestClose, children, contentClassName = 'max-w-md' 
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4"
             onMouseDown={handleBackdropMouseDown}
         >
-            <div ref={contentRef} className={`w-full ${contentClassName} rounded-[14px] bg-paper-raised p-6 shadow-xl`}>
+            <div
+                ref={contentRef}
+                role="dialog"
+                aria-modal="true"
+                className={`w-full ${contentClassName} rounded-[14px] bg-paper-raised p-6 shadow-xl`}
+            >
                 {children}
             </div>
         </div>

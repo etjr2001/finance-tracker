@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, within, waitFor } from '@testing-library/react'
+import { render, screen, within, waitFor, fireEvent } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { FavouritesPage } from '@features/favourites/pages/FavouritesPage'
@@ -35,6 +35,12 @@ function rowFor(text) {
 
 function getBackdrop(container) {
     return container.ownerDocument.querySelector('.fixed.inset-0')
+}
+
+// The open form's own Add (submit) button. The page's Add stays visible
+// behind the modal, so an unscoped query would find both.
+function formAddButton() {
+    return within(screen.getByRole('dialog')).getByRole('button', { name: 'Add' })
 }
 
 describe('FavouritesPage list', () => {
@@ -130,7 +136,7 @@ describe('FavouritesPage create and edit', () => {
         await user.type(screen.getByLabelText('Amount'), '25')
         await user.selectOptions(screen.getByLabelText('Category'), '1')
         await user.type(screen.getByLabelText('Note (optional)'), 'Refund')
-        await user.click(screen.getByRole('button', { name: 'Add' }))
+        await user.click(formAddButton())
 
         await waitFor(() =>
             expect(favouritesApi.createFavourite).toHaveBeenCalledWith(
@@ -139,6 +145,50 @@ describe('FavouritesPage create and edit', () => {
             )
         )
         await waitFor(() => expect(screen.queryByText('Add favourite')).not.toBeInTheDocument())
+    })
+
+    // The modal covers it anyway; hiding it shrank the header row, so the
+    // list behind the modal jumped up.
+    it("keeps the page's Add button in place while the form is open", async () => {
+        const user = userEvent.setup()
+        renderPage()
+
+        await screen.findByText('Rent')
+        await user.click(screen.getByRole('button', { name: 'Add' }))
+
+        // The page's Add, plus the form's own Add (submit) button.
+        expect(screen.getAllByRole('button', { name: 'Add' })).toHaveLength(2)
+    })
+
+    // The backdrop blocks clicks, but keyboard focus can still Tab out of
+    // the modal to the page's Add (no inert background yet; see backlog).
+    it("ignores the page's Add while an edit is open, keeping the edits", async () => {
+        const user = userEvent.setup()
+        renderPage()
+
+        await screen.findByText('Rent')
+        await user.click(within(rowFor('Rent')).getByRole('button', { name: 'Edit' }))
+        await user.type(screen.getByLabelText('Note (optional)'), ' edited')
+
+        fireEvent.click(screen.getByRole('button', { name: 'Add' }))
+
+        expect(screen.getByText('Edit favourite')).toBeInTheDocument()
+        expect(screen.getByLabelText('Note (optional)')).toHaveValue('Monthly edited')
+    })
+
+    it("ignores another row's Edit while an edit is open, keeping the edits", async () => {
+        favouritesApi.listFavourites.mockResolvedValue([rent, utilities])
+        const user = userEvent.setup()
+        renderPage()
+
+        await screen.findByText('Rent')
+        const utilitiesEdit = within(rowFor('Utilities')).getByRole('button', { name: 'Edit' })
+        await user.click(within(rowFor('Rent')).getByRole('button', { name: 'Edit' }))
+        await user.type(screen.getByLabelText('Note (optional)'), ' edited')
+
+        fireEvent.click(utilitiesEdit)
+
+        expect(screen.getByLabelText('Note (optional)')).toHaveValue('Monthly edited')
     })
 
     it('says a zero amount will start a Draft when used', async () => {
@@ -186,9 +236,9 @@ describe('FavouritesPage create and edit', () => {
         await screen.findByText('Rent')
         await user.click(screen.getByRole('button', { name: 'Add' }))
         await user.selectOptions(screen.getByLabelText('Category'), '1')
-        await user.click(screen.getByRole('button', { name: 'Add' }))
+        await user.click(formAddButton())
 
-        await waitFor(() => expect(screen.getByRole('button', { name: 'Add' })).toBeDisabled())
+        await waitFor(() => expect(formAddButton()).toBeDisabled())
     })
 
     it("keeps the form open and shows the server's error when saving fails", async () => {
@@ -199,7 +249,7 @@ describe('FavouritesPage create and edit', () => {
         await screen.findByText('Rent')
         await user.click(screen.getByRole('button', { name: 'Add' }))
         await user.selectOptions(screen.getByLabelText('Category'), '1')
-        await user.click(screen.getByRole('button', { name: 'Add' }))
+        await user.click(formAddButton())
 
         expect(await screen.findByText('Category not found')).toBeInTheDocument()
         expect(screen.getByText('Add favourite')).toBeInTheDocument()
