@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { resetDemoData } from '@features/demo/api/demoApi'
 import { queryKeys } from '@api/queryKeys'
 import { ConfirmDialog } from '@components/ConfirmDialog'
+import { ExitPresence } from '@components/ExitPresence'
 
 const DEMO_QUERY_KEYS = [
     queryKeys.transactions(true),
@@ -44,14 +45,16 @@ export function DemoBanner() {
                 Reset demo data
             </button>
 
-            {isConfirmingReset && (
-                <ConfirmDialog
-                    message="Reset demo data? This clears every demo Transaction, Category and Favourite you've added and restores the starter set."
-                    confirmLabel="Reset"
-                    onConfirm={handleReset}
-                    onCancel={() => setIsConfirmingReset(false)}
-                />
-            )}
+            <ExitPresence>
+                {isConfirmingReset && (
+                    <ConfirmDialog
+                        message="Reset demo data? This clears every demo Transaction, Category and Favourite you've added and restores the starter set."
+                        confirmLabel="Reset"
+                        onConfirm={handleReset}
+                        onCancel={() => setIsConfirmingReset(false)}
+                    />
+                )}
+            </ExitPresence>
         </div>
     )
 }

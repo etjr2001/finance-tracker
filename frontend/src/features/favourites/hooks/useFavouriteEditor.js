@@ -82,10 +82,18 @@ export function useFavouriteEditor() {
             favourite: editingFavourite,
             prefill: formTarget?.prefill ?? null,
             isSubmitting: activeMutation.isPending,
-            openCreate: () => openForm(null),
+            // No-ops while a form is open: the page's Add and the rows' Edit
+            // stay reachable by keyboard behind the modal, and would swap an
+            // open edit for another form, losing it. Remove once the
+            // background is inert (backlog).
+            openCreate: () => {
+                if (formTarget === null) openForm(null)
+            },
             // "Save as favourite": an Add form prefilled from a Transaction.
             openCreateFrom: (transaction) => openForm(null, transaction),
-            openEdit: (favourite) => openForm(favourite),
+            openEdit: (favourite) => {
+                if (formTarget === null) openForm(favourite)
+            },
             requestClose: requestCloseForm,
             submit: submitForm,
             setIsDirty,

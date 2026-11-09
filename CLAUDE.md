@@ -22,6 +22,7 @@ A personal finance tracker. Spring Boot (Java 25, Maven) serves a REST API under
 - Backend tests must not need a live Supabase connection. See `src/test/java/com/project/financetracker/README.md`.
 - Git: inspect freely (`status`, `diff`, `log`). Creating or switching branches, staging, and committing need my approval. **Never push, never create or merge PRs, never use `gh api`.** I publish everything.
 - Never read, print, or edit `.env*` files.
+- Ask me before launching any browser (including headless Chrome/Edge or a throwaway profile) or any other process that can reach the internet. Say what it is and why, and wait for a yes. Local test/build/lint commands are fine without asking.
 - If a change would contradict an ADR, say so and propose a new ADR instead of silently diverging.
 
 ## Commands

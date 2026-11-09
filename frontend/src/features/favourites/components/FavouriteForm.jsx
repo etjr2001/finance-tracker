@@ -2,6 +2,7 @@ import { Button } from '@components/Button'
 import { AddButton } from '@components/AddButton'
 import { SectionTitle } from '@components/SectionTitle'
 import { FormField } from '@components/FormField'
+import { ExitPresence } from '@components/ExitPresence'
 import { useAmountFormState } from '@features/transactions/hooks/useAmountFormState'
 import { useInlineCategoryCreate } from '@features/transactions/hooks/useInlineCategoryCreate'
 import { MAX_NOTE_LENGTH } from '@features/transactions/utils/transactionForm'
@@ -90,16 +91,18 @@ export function FavouriteForm({ categories, initial, prefill, onSubmit, onCancel
                 </div>
             </form>
 
-            {newCategory.isOpen && (
-                <NewCategoryModal
-                    name={newCategory.name}
-                    onNameChange={newCategory.setName}
-                    error={newCategory.error}
-                    isCreating={newCategory.isCreating}
-                    onCreate={newCategory.create}
-                    onCancel={newCategory.close}
-                />
-            )}
+            <ExitPresence>
+                {newCategory.isOpen && (
+                    <NewCategoryModal
+                        name={newCategory.name}
+                        onNameChange={newCategory.setName}
+                        error={newCategory.error}
+                        isCreating={newCategory.isCreating}
+                        onCreate={newCategory.create}
+                        onCancel={newCategory.close}
+                    />
+                )}
+            </ExitPresence>
         </>
     )
 }

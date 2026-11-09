@@ -10,6 +10,14 @@ describe('Card', () => {
         expect(screen.getByText('Content')).toHaveClass('bg-paper-raised', 'border-rule')
     })
 
+    // So a new month's cards (and any newly shown card) fade in rather than
+    // blink in; skipped under reduced motion.
+    it('fades in when it appears, unless reduced motion is on', () => {
+        render(<Card>Content</Card>)
+
+        expect(screen.getByText('Content')).toHaveClass('motion-safe:animate-fade-in')
+    })
+
     it('has no default padding, so callers set their own via className', () => {
         render(<Card className="p-8">Content</Card>)
 

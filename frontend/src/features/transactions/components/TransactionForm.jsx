@@ -13,6 +13,7 @@ import { DateField } from '@features/transactions/components/DateField'
 import { CategorySelect } from '@features/transactions/components/CategorySelect'
 import { NewCategoryModal } from '@features/transactions/components/NewCategoryModal'
 import { FavouritePicker } from '@features/favourites/components/FavouritePicker'
+import { ExitPresence } from '@components/ExitPresence'
 
 // Create/edit form for a Transaction. The parent must pass a `key` (e.g.
 // key={initial?.id ?? 'new'}) so switching targets remounts it.
@@ -95,18 +96,22 @@ export function TransactionForm({ categories, initial, onSubmit, onCancel, isSub
                 </div>
             </form>
 
-            {isPickerOpen && <FavouritePicker onPick={pickFavourite} onClose={() => setIsPickerOpen(false)} />}
+            <ExitPresence>
+                {isPickerOpen && <FavouritePicker onPick={pickFavourite} onClose={() => setIsPickerOpen(false)} />}
+            </ExitPresence>
 
-            {newCategory.isOpen && (
-                <NewCategoryModal
-                    name={newCategory.name}
-                    onNameChange={newCategory.setName}
-                    error={newCategory.error}
-                    isCreating={newCategory.isCreating}
-                    onCreate={newCategory.create}
-                    onCancel={newCategory.close}
-                />
-            )}
+            <ExitPresence>
+                {newCategory.isOpen && (
+                    <NewCategoryModal
+                        name={newCategory.name}
+                        onNameChange={newCategory.setName}
+                        error={newCategory.error}
+                        isCreating={newCategory.isCreating}
+                        onCreate={newCategory.create}
+                        onCancel={newCategory.close}
+                    />
+                )}
+            </ExitPresence>
         </>
     )
 }

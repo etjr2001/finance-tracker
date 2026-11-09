@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { PageTitle } from '@components/PageTitle'
-import { AddButton } from '@components/AddButton'
+import { PageToolbar } from '@components/PageToolbar'
 import { StatusMessage } from '@components/StatusMessage'
 import { ConfirmDialog } from '@components/ConfirmDialog'
 import { useCategories } from '@features/categories/hooks/useCategories'
@@ -9,6 +9,7 @@ import { useFavouriteEditor } from '@features/favourites/hooks/useFavouriteEdito
 import { FavouriteList } from '@features/favourites/components/FavouriteList'
 import { FavouriteFormModal } from '@features/favourites/components/FavouriteFormModal'
 import { describeFavourite, sortFavouritesByName } from '@features/favourites/utils/favouriteForm'
+import { ExitPresence } from '@components/ExitPresence'
 
 // Add, edit and delete Favourites. Nothing here creates a Transaction:
 // Favourites are only used from the Add transaction form (ADR0017).
@@ -25,10 +26,9 @@ export function FavouritesPage() {
     return (
         <div>
             <PageTitle>Favourites</PageTitle>
-            <div className="flex items-center justify-between gap-3 mb-6">
+            <PageToolbar onAdd={form.openCreate}>
                 <p className="text-sm text-ink-soft">Shortcuts for the Add transaction form.</p>
-                {!form.isOpen && <AddButton onClick={form.openCreate} />}
-            </div>
+            </PageToolbar>
 
             {/* While a form is open, its modal shows the error instead. */}
             {error && !form.isOpen && (
@@ -46,36 +46,42 @@ export function FavouritesPage() {
                 onDelete={remove.request}
             />
 
-            {form.isOpen && (
-                <FavouriteFormModal
-                    favourite={form.favourite}
-                    prefill={form.prefill}
-                    categories={categories}
-                    error={error}
-                    isSubmitting={form.isSubmitting}
-                    onSubmit={form.submit}
-                    onRequestClose={form.requestClose}
-                    onDirtyChange={form.setIsDirty}
-                />
-            )}
+            <ExitPresence>
+                {form.isOpen && (
+                    <FavouriteFormModal
+                        favourite={form.favourite}
+                        prefill={form.prefill}
+                        categories={categories}
+                        error={error}
+                        isSubmitting={form.isSubmitting}
+                        onSubmit={form.submit}
+                        onRequestClose={form.requestClose}
+                        onDirtyChange={form.setIsDirty}
+                    />
+                )}
+            </ExitPresence>
 
-            {discard.isOpen && (
-                <ConfirmDialog
-                    message="Discard unsaved changes?"
-                    confirmLabel="Discard"
-                    onConfirm={discard.confirm}
-                    onCancel={discard.cancel}
-                />
-            )}
+            <ExitPresence>
+                {discard.isOpen && (
+                    <ConfirmDialog
+                        message="Discard unsaved changes?"
+                        confirmLabel="Discard"
+                        onConfirm={discard.confirm}
+                        onCancel={discard.cancel}
+                    />
+                )}
+            </ExitPresence>
 
-            {remove.target && (
-                <ConfirmDialog
-                    message={`Delete favourite "${describeFavourite(remove.target)}"? This can't be undone.`}
-                    confirmLabel="Delete"
-                    onConfirm={remove.confirm}
-                    onCancel={remove.cancel}
-                />
-            )}
+            <ExitPresence>
+                {remove.target && (
+                    <ConfirmDialog
+                        message={`Delete favourite "${describeFavourite(remove.target)}"? This can't be undone.`}
+                        confirmLabel="Delete"
+                        onConfirm={remove.confirm}
+                        onCancel={remove.cancel}
+                    />
+                )}
+            </ExitPresence>
         </div>
     )
 }

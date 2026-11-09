@@ -43,19 +43,22 @@ export function SegmentedControl({ options, value, onChange, role = 'radiogroup'
             onKeyDown={handleKeyDown}
             className={`relative inline-flex h-11 cursor-pointer select-none rounded-xl p-1 transition-colors motion-reduce:transition-none focus:outline-none focus:ring-1 focus:ring-ink ${fillClassName}`}
         >
-            <span
-                aria-hidden="true"
-                className="absolute inset-y-1 rounded-lg bg-paper transition-[left] motion-reduce:transition-none"
-                style={{
-                    // `left`/`width` percentages resolve against the
-                    // container (the containing block), unlike a
-                    // `transform: translateX(%)`, which resolves against the
-                    // thumb's own box — using transform here previously threw
-                    // the slide distance off by the width of the 4px inset.
-                    left: `calc(${selectedIndex} / ${optionCount} * 100% + 4px)`,
-                    width: `calc(100% / ${optionCount} - 8px)`,
-                }}
-            />
+            {/* Track: the control's inner area (inset-1 = its p-1 padding),
+                the same box the options share. The thumb is exactly one
+                option wide, so translateX(index * 100%) — a percentage of
+                the thumb's own width — moves it exactly one option per
+                step. Plain percentages only: iPhone Safari won't animate
+                between calc() values that mix % and px (an earlier
+                `left: calc(…% + 4px)` jumped there instead of sliding). */}
+            <span aria-hidden="true" className="pointer-events-none absolute inset-1">
+                <span
+                    className="absolute inset-y-0 left-0 rounded-lg bg-paper transition-transform motion-reduce:transition-none"
+                    style={{
+                        width: `${100 / optionCount}%`,
+                        transform: `translateX(${selectedIndex * 100}%)`,
+                    }}
+                />
+            </span>
             {options.map((option) => {
                 const isSelected = option.value === value
                 return (

@@ -1,4 +1,5 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Route, Navigate, Outlet, createRoutesFromElements } from 'react-router-dom'
+import { AuthProvider } from '@features/auth/context/AuthProvider'
 import { ProtectedRoute } from '@features/auth/components/ProtectedRoute'
 import { LoginPage } from '@features/auth/pages/LoginPage'
 import { SignupPage } from '@features/auth/pages/SignupPage'
@@ -12,8 +13,8 @@ import { FavouritesPage } from '@features/favourites/pages/FavouritesPage'
 import { DemoProvider } from '@features/demo/components/DemoProvider'
 
 // The same app pages, mounted under both /demo and the protected
-// root. A function (not a component) because <Routes> only accepts
-// <Route> elements as children.
+// root. A function (not a component) because only <Route> elements
+// can be route children.
 function appPageRoutes() {
     return [
         <Route key="dashboard" index element={<DashboardPage />} />,
@@ -23,32 +24,40 @@ function appPageRoutes() {
     ]
 }
 
-export function App() {
-    return (
-        <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="/reset-password" element={<ResetPasswordPage />} />
+// Route objects for createBrowserRouter (main.jsx). Every route must be
+// registered with the data router itself, not rendered by a nested
+// <Routes>: React Router drops NavLink's `viewTransition` for links under
+// a nested <Routes>, so page transitions would never run.
+export const routes = createRoutesFromElements(
+    <Route
+        element={
+            <AuthProvider>
+                <Outlet />
+            </AuthProvider>
+        }
+    >
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-            <Route
-                path="/demo"
-                element={
-                    <DemoProvider>
-                        <AppLayout />
-                    </DemoProvider>
-                }
-            >
+        <Route
+            path="/demo"
+            element={
+                <DemoProvider>
+                    <AppLayout />
+                </DemoProvider>
+            }
+        >
+            {appPageRoutes()}
+        </Route>
+
+        <Route element={<ProtectedRoute />}>
+            <Route path="/" element={<AppLayout />}>
                 {appPageRoutes()}
             </Route>
+        </Route>
 
-            <Route element={<ProtectedRoute />}>
-                <Route path="/" element={<AppLayout />}>
-                    {appPageRoutes()}
-                </Route>
-            </Route>
-
-            <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-    )
-}
+        <Route path="*" element={<Navigate to="/" replace />} />
+    </Route>
+)
