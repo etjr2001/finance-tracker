@@ -47,3 +47,30 @@ body {
 .tabular {
   font-variant-numeric: tabular-nums;
 }
+
+/* Page transitions: NavLink's viewTransition. The page itself swaps
+   instantly (no crossfade): blending old and new content mid-fade caused
+   motion sickness when tapping through tabs. Only the nav highlight
+   slides, and the nav labels' colours fade, over a short fast-start,
+   soft-stop curve. The sidebar and tab bar have their own
+   view-transition-name, so they stay put. Browsers without the View
+   Transitions API just switch pages instantly. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+
+::view-transition-group(*),
+::view-transition-old(*),
+::view-transition-new(*) {
+  animation-duration: 150ms;
+  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none;
+  }
+}

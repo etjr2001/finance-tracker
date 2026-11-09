@@ -119,3 +119,44 @@ describe('Layout logout / exit-demo button', () => {
         expect(duplicateKeyWarning).toBe(false)
     })
 })
+
+// The sidebar styles the link itself; the tab bar styles a pill inside it.
+function isHighlighted(link) {
+    return link.classList.contains('bg-deposit') || link.querySelector('.bg-deposit') !== null
+}
+
+describe('Layout active nav item', () => {
+    it('marks the current page with aria-current in both the sidebar and the tab bar', () => {
+        renderLayout({ path: '/transactions' })
+
+        const links = screen.getAllByRole('link', { name: 'Transactions' })
+        expect(links).toHaveLength(2)
+        links.forEach((link) => expect(link).toHaveAttribute('aria-current', 'page'))
+    })
+
+    // The highlight is a separate decorative element (so it can slide between
+    // items in a view transition); screen readers shouldn't see it.
+    it('draws the highlight as a hidden decorative element in both navs', () => {
+        renderLayout({ path: '/transactions' })
+
+        screen.getAllByRole('link', { name: 'Transactions' }).forEach((link) => {
+            const highlight = link.querySelector('.bg-deposit')
+            expect(highlight).not.toBeNull()
+            expect(highlight).toHaveAttribute('aria-hidden', 'true')
+        })
+    })
+
+    it('highlights only the active item', () => {
+        renderLayout({ path: '/transactions' })
+
+        screen.getAllByRole('link', { name: 'Transactions' }).forEach((link) => {
+            expect(isHighlighted(link)).toBe(true)
+        })
+        ;['Dashboard', 'Categories'].forEach((name) => {
+            screen.getAllByRole('link', { name }).forEach((link) => {
+                expect(link).not.toHaveAttribute('aria-current')
+                expect(isHighlighted(link)).toBe(false)
+            })
+        })
+    })
+})
