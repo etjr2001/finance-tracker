@@ -15,6 +15,24 @@ describe('SegmentedControl', () => {
         expect(screen.getByText('Beta')).toBeInTheDocument()
     })
 
+    // Regression guard: positioning the thumb with `left: calc(% + px)`
+    // slid in Chrome but jumped on real iPhone Safari, which doesn't animate
+    // between calc() values mixing % and px. Plain-percentage transforms
+    // animate everywhere.
+    it('slides the thumb with a plain-percentage transform, not a calc() position', () => {
+        const { container, rerender } = render(<SegmentedControl options={OPTIONS} value="a" onChange={() => {}} />)
+        const thumb = container.querySelector('.bg-paper')
+
+        expect(thumb.style.transform).toBe('translateX(0%)')
+        expect(thumb.style.width).toBe('50%')
+        expect(thumb.getAttribute('style')).not.toContain('calc(')
+        expect(thumb).toHaveClass('transition-transform')
+
+        rerender(<SegmentedControl options={OPTIONS} value="b" onChange={() => {}} />)
+
+        expect(thumb.style.transform).toBe('translateX(100%)')
+    })
+
     it('clicking anywhere in the control toggles to the next option, regardless of which label was clicked', () => {
         const onChange = vi.fn()
         const { rerender } = render(<SegmentedControl options={OPTIONS} value="a" onChange={onChange} />)
