@@ -62,6 +62,7 @@ Living document. Not an ADR: this tracks *what's outstanding*, not *decisions ma
   - The Supabase token is attached by the axios interceptor, so a plain `<a href>` download would be unauthenticated. Fetch through axios as a blob, then save it.
 - ~~**Dashboard chart type toggle.**~~ Settled and scheduled into Sprint 4 (ADR0014): a bar/pie switch per breakdown card, inline SVG pie, no charting library.
 - **Search/filter on Transactions.** Moved out of Sprint 3's Bundle A. Next in line after Sprint 4. One constraint is already settled: search only covers the selected month (this is what lets pagination go). What it searches (note, Category, amount) and the UI are not yet designed; grill it when it's picked up.
+- **See what's using a Category that can't be deleted.** Found 2026-11-11. Deleting a Category in use is blocked ("…it has existing transactions/favourites"), but nothing shows *which* ones. They could be in any month, so finding them means paging month by month, and the Category stays stuck. Idea, not yet designed: list the Transactions (and Favourites, and Recurring items once built) that use a Category, e.g. a "Show N transactions" link in the blocked-delete message, backed by something like `GET /api/transactions?categoryId=` across all months. That endpoint goes beyond ADR0011's one-month list and the month-only search above, so it needs a decision (or an ADR) when picked up. Related: a "move everything to another Category, then delete" option.
 
 ## Sprint history
 
