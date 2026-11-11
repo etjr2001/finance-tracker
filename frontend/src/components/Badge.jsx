@@ -1,5 +1,5 @@
-// Small status pill, styled like the existing Draft badge
-// (TransactionsPage): a tint fill, a matching soft border, and text in the
+// Small status pill (DraftBadge is built on it): a tint fill, a matching
+// soft border, and text in the
 // -ink text variant for contrast (ADR0010: brass is fills/borders only).
 // Tones are written out in full so Tailwind's build can find the classes —
 // a template string built from `tone` at runtime would not be found.

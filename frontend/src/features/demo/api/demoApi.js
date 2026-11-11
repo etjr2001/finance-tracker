@@ -1,5 +1,6 @@
-// Same function names/signatures as api/transactions.js, api/categories.js,
-// and api/dashboard.js, backed by localStorage instead of the network. Every
+// Same function names/signatures as the real feature APIs
+// (features/*/api/*Api.js: transactions, categories, dashboard and
+// favourites), backed by localStorage instead of the network. Every
 // hook branches between this module and the real one, so the shapes here
 // must match the real API's responses exactly. See ADR0009.
 import { KEYS, readJSON, writeJSON, removeAll } from '@features/demo/utils/demoStorage'
