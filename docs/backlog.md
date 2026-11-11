@@ -29,12 +29,18 @@ Living document. Not an ADR: this tracks *what's outstanding*, not *decisions ma
   - Return focus to the opening button on close.
   - Tests that find the backdrop via the render `container` switch to `document`.
   - Then drop the `openCreate` guards.
+- **Page behind an open Modal/Sheet still scrolls.** Found on iPhone (2026-11-09); desktop wheel/trackpad does it too. The backdrop is `fixed`, but nothing stops the window scrolling underneath. Likely fix: a counted scroll-lock hook used by `Modal` and `Sheet` (`overflow: hidden` on `<html>` and `<body>` while any layer is open, so a stacked dialog closing doesn't unlock the page), checked on a real iPhone since older iOS Safari ignored `overflow: hidden` on body. Could fold into the inert fix above, which already adds a shared layer hook. Not started.
+- **Reduce Motion turns off every animation, not just movement.** Found on iPhone (2026-11-09): with Reduce Motion on, popups and sheets appear and vanish with no transition. Every entrance is `motion-safe:` and `ExitPresence` skips exits entirely. But Reduce Motion (Apple HIG, WCAG 2.3.3) is about *movement* (slides, zooms), not fades; iOS itself swaps zooms for crossfades. Decided (2026-11-09): under reduced motion, keep opacity fades and drop only movement. Backdrop and Card fades stay; Modal pop becomes a plain fade; Sheet's slide up/down becomes a fade (swipe-to-close still follows the finger, since the user drives it); the segmented-control thumb and nav highlight move instantly but keep their colour change. `ExitPresence` then keeps exits under reduced motion too. Own short branch (e.g. `feat/reduced-motion-fades`), about 1h with tests, ahead of Recurring; check on the user's iPhone, which has Reduce Motion on.
+- **Month bar: "This month" too small to tap, and month changes look out of sync.** Found 2026-11-09. Both on one branch (e.g. `fix/month-bar-tap-and-loading`), not started.
+  - *Tap target.* Below `sm:` `ThisMonthButton` (`MonthBar.jsx`) hides its text, leaving a 14px icon with no padding: about 14×20px, against the 44×44px minimum. It stands out more now that the arrows and Add are all 44px tall. Fix: same icon size, but a 44px tap area via `IconButton` like the arrows; the "This month" text stays at `sm:`+.
+  - *Loading on month change.* Against the real backend the month label updates at once, but `useTransactions` keeps the previous month's list on screen (`keepPreviousData`) until the new one arrives, so the new month's name sits over the old month's Transactions for a moment. `useDashboard` doesn't keep previous data, so the Dashboard flashes a loading state instead. Fix: give both `keepPreviousData` and dim the content while `isPlaceholderData`, so stale data never looks current and both pages behave the same; and prefetch the months either side of the selected one, so the arrows are usually instant (the month picker's longer jumps still show the dimmed state).
 
 ## Backlog (not yet scheduled into a sprint)
 
 - **Payment Method.** Explicitly deferred to v2 per `CONTEXT.md`. Not a candidate for any near-term sprint; it's a genuinely separate domain concept, not a bug or polish item.
 - **Installable PWA (manifest + service worker, offline support).** Out of scope for the pre-Sprint-3 hardening batch below, which only adds a minimal manifest to fix iOS storage persistence. A real installable PWA is a separate feature, not a bug fix.
-- **Duplicate transaction (clone action).** Pick an existing transaction, get a prefilled form to create a new one from it. Settled scope (grilled) — not yet scoped into a branch.
+- **Duplicate transaction (clone action).** Pick an existing transaction, get a prefilled form to create a new one from it. Settled scope (grilled) — not yet scoped into a branch. Next feature, ahead of Recurring (decided 2026-11-11: small and mostly frontend); also the way to backfill runs from before a Recurring item's start date, since Recurring never posts into the past.
+- **Pause/resume Recurring.** Left out of v1 (2026-11-11): Stop and Delete cover it for now. If built, decide whether resuming posts the runs missed while paused.
 - **Duplicate transaction detection.** Distinct from the clone action above — the app flagging likely-accidental double-entries (e.g. same amount/category/date entered twice). Parked as an idea to explore later; no definition yet of what counts as a match.
 - ~~**Favourite transactions.**~~ Scheduled: Phase 1 of "Favourites and Recurring" below (ADR0017).
 - ~~**Recurring transactions.**~~ Settled (grilled 2026-10-11) and scheduled: Phase 2 of "Favourites and Recurring" below.
@@ -126,14 +132,23 @@ Brought forward ahead of Sprint 4 so the app can show how much of the month bill
    - Demo: `demoApi.js` mirrors it, and Reset demo data clears Favourites (ADR0009).
    - Frontend: a Favourites nav tab for adding, editing and deleting; a Favourites button in the Add transaction form, opening an A–Z list that fills the form in place; and a star on each Transaction (row actions on desktop, the bottom-sheet detail card on mobile), outline or filled by whether it matches a Favourite, which opens Add or Edit favourite in place over the Transactions list.
    - Editing was first left out, then brought into this phase (2026-10-18).
-2. **Phase 2: Recurring (`feat/recurring`).** Settled (grilled 2026-10-11), not started. Gets its own ADR (0018) and `CONTEXT.md` entry when built.
-   - Its own table and a Recurring page (fifth nav item; check the bottom tab bar still fits on a phone). Created from scratch or with "Make recurring" on a Transaction. Only the job links a Transaction to a Recurring item.
+2. **Phase 2: Recurring (`feat/recurring`).** Settled (grilled 2026-10-11, details 2026-11-11), not started. Next: write ADR0018 and the `CONTEXT.md` entry, then build.
+   - Its own table and a Recurring page (fifth nav item, after Favourites; check the bottom tab bar still fits on a phone). Created from scratch or with "Make recurring" on a Transaction. Only the job links a Transaction to a Recurring item.
    - Schedule: a frequency (every N days, weeks, months or years) with two fixed anchors, one for when the entry is posted and one for the date the Transaction gets (e.g. posted on the 1st, dated the 21st). Editing either date re-anchors from the new dates; entries already posted stay as they are.
    - "Amount varies" posts Drafts (amount zero). ADR0008 is unchanged.
    - Runs as a scheduled job in the same Railway instance (ADR0001), plus a catch-up run at startup, so runs missed during a redeploy or while the app slept are posted with their correct dates. Assumes a single replica; a version column guards against double-posting.
    - "Left to avoid spending: $X + N unknown" next to the Drafts notice: Expense entries still to come this month, plus a count of varying-amount ones.
+   - Details settled 2026-11-11:
+     - *Month end.* Dates clamp to the month's last day, always computed from the original anchors (31st → Feb 28/29 → Mar 31; a yearly Feb 29 → Feb 28 in non-leap years), so they never drift.
+     - *First run.* The start date must be today or later; nothing is ever posted into the past. "Make recurring" on a Transaction defaults to the next cycle after its date. Backfilling past runs is left to the clone action (Backlog).
+     - *Stopping.* Stop (sets an end date; the item stays listed with "until") or Delete. Transactions already posted always stay (`recurring_id` set to null on delete). No pause/resume in v1 (Backlog).
+     - *Future-dated Transactions.* Intended ("spoken for"): shown in the list and counted on the Dashboard. The Transaction date is never before the post date.
+     - *Category delete guard.* Also blocked while a Recurring item uses the Category, like Favourites.
+     - *Demo (ADR0009).* Posting is mirrored in `demoApi.js` through one shared schedule util, tested against the same cases as the Java schedule tests.
+     - *"Left to avoid spending".* Current month only (hidden for other months). Expenses only. $X = Recurring Expenses dated after today this month, posted or not; N = varying-amount items with an occurrence still to come this month.
+     - *Catch-up.* Every missed run is posted with its correct date, capped at 366 runs per item per pass; anything past the cap is logged and posted on the next pass.
 
-### UI transitions: in review
+### UI transitions: complete (#47)
 A short polish pass between Favourites (Phase 1) and Recurring (Phase 2), on `feat/nav-active-state-and-page-transitions`. Frontend only, no API changes. Motion rule throughout: no content blending or sliding (a crossfade between pages caused motion sickness and was dropped); only small elements move, content only fades in; everything is off under `prefers-reduced-motion`.
 
 - **Router.** `App.jsx` exports `routes` for `createBrowserRouter` (`main.jsx`), with `AuthProvider` as a layout route. Routes must be registered with the data router itself: React Router drops NavLink's `viewTransition` for links under a nested `<Routes>`. `test/App.test.jsx` guards this.
@@ -143,6 +158,8 @@ A short polish pass between Favourites (Phase 1) and Recurring (Phase 2), on `fe
 - **Cards.** `Card` fades in on mount, so a new month's cards fade in rather than blink. Also fades cards on page switches; if that's too much, fall back to fading only on month change.
 - **Add button.** Transactions and Favourites share `PageToolbar`; Add no longer hides while its form is open (hiding it shifted the Favourites list). `openCreate`/`openEdit` are no-ops while a form is open (see the inert item in Tech debt).
 - **Segmented control.** The Expense/Income thumb now slides on iPhone Safari: it used `left: calc(% + px)`, which WebKit won't animate; now a plain-percentage `translateX`. Awaiting on-device confirmation.
+
+Still to check after merge: the segmented-control thumb sliding on a real iPhone, and whether the Card fade on page switches is too much (fallback: fade only on month change). Follow-ups found during review are in Tech debt (Reduce Motion fades, month bar, background scroll).
 
 ### Sprint 4: planned
 One bundle, **the Dashboard rework**, since everything in it changes the Dashboard response and `demoApi.js`'s copy of it, which should happen once. Reuses Sprint 3's `SegmentedControl`.
