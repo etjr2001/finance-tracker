@@ -3,12 +3,11 @@ import { PageTitle } from '@components/PageTitle'
 import { PageToolbar } from '@components/PageToolbar'
 import { StatusMessage } from '@components/StatusMessage'
 import { ConfirmDialog } from '@components/ConfirmDialog'
-import { DiscardChangesDialog } from '@components/DiscardChangesDialog'
 import { useCategories } from '@features/categories/hooks/useCategories'
 import { useFavourites } from '@features/favourites/hooks/useFavourites'
 import { useFavouriteEditor } from '@features/favourites/hooks/useFavouriteEditor'
 import { FavouriteList } from '@features/favourites/components/FavouriteList'
-import { FavouriteFormModal } from '@features/favourites/components/FavouriteFormModal'
+import { FavouriteFormDialogs } from '@features/favourites/components/FavouriteFormDialogs'
 import { describeFavourite, sortFavouritesByName } from '@features/favourites/utils/favouriteForm'
 import { ExitPresence } from '@components/ExitPresence'
 
@@ -22,7 +21,8 @@ export function FavouritesPage() {
         () => (favourites ? sortFavouritesByName(favourites) : favourites),
         [favourites]
     )
-    const { error, form, discard, remove } = useFavouriteEditor()
+    const editor = useFavouriteEditor()
+    const { error, form, remove } = editor
 
     return (
         <div>
@@ -47,24 +47,7 @@ export function FavouritesPage() {
                 onDelete={remove.request}
             />
 
-            <ExitPresence>
-                {form.isOpen && (
-                    <FavouriteFormModal
-                        favourite={form.favourite}
-                        prefill={form.prefill}
-                        categories={categories}
-                        error={error}
-                        isSubmitting={form.isSubmitting}
-                        onSubmit={form.submit}
-                        onRequestClose={form.requestClose}
-                        onDirtyChange={form.setIsDirty}
-                    />
-                )}
-            </ExitPresence>
-
-            <ExitPresence>
-                {discard.isOpen && <DiscardChangesDialog onConfirm={discard.confirm} onCancel={discard.cancel} />}
-            </ExitPresence>
+            <FavouriteFormDialogs editor={editor} categories={categories} />
 
             <ExitPresence>
                 {remove.target && (
