@@ -102,16 +102,10 @@ export function useTransactionEditor({ month, onMonthChange }) {
             isOpen: isFormOpen,
             transaction: editingTransaction,
             isSubmitting: activeMutation.isPending,
-            // No-ops while a form is open: the page's Add and the rows' Edit
-            // stay reachable by keyboard behind the modal, and would swap an
-            // open edit for another form, losing it. Remove once the
-            // background is inert (backlog).
-            openCreate: () => {
-                if (!isFormOpen) openForm(null)
-            },
-            openEdit: (transaction) => {
-                if (!isFormOpen) openForm(transaction)
-            },
+            // No "form already open" guard needed: while the form's modal is
+            // open, the page behind it (Add, the rows' Edit) is inert.
+            openCreate: () => openForm(null),
+            openEdit: (transaction) => openForm(transaction),
             requestClose: requestCloseForm,
             submit: submitForm,
             setIsDirty,

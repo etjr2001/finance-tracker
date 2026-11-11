@@ -55,10 +55,10 @@ beforeEach(() => {
     favouritesApi.listFavourites.mockResolvedValue([])
 })
 
-// Grabs the currently-open modal/dialog's backdrop, for simulating an
-// outside click. Assumes only one Modal is open at the time it's called.
-function getBackdrop(container) {
-    return container.querySelector('.fixed.inset-0')
+// Grabs the newest open modal/dialog's backdrop, for simulating an outside
+// click. Modal and Sheet portal into <body>, in the order they open.
+function getBackdrop() {
+    return [...document.querySelectorAll('.fixed.inset-0')].at(-1)
 }
 
 // The open form's own Add (submit) button. The page's Add stays visible
@@ -99,7 +99,7 @@ describe('TransactionsPage delete confirmation', () => {
         await user.click(within(dialog).getByRole('button', { name: 'Cancel' }))
 
         expect(transactionsApi.deleteTransaction).not.toHaveBeenCalled()
-        expect(screen.queryByText(/This can't be undone/)).not.toBeInTheDocument()
+        await waitFor(() => expect(screen.queryByText(/This can't be undone/)).not.toBeInTheDocument())
     })
 
     it('deletes when the confirmation is accepted', async () => {
@@ -173,23 +173,9 @@ describe('TransactionsPage stacked dialogs and Escape', () => {
         expect(screen.getAllByRole('button', { name: 'Add' })).toHaveLength(2)
     })
 
-    // The backdrop blocks clicks, but keyboard focus can still Tab out of
-    // the modal to the page's Add (no inert background yet; see backlog).
-    it("ignores the page's Add while an edit is open, keeping the edits", async () => {
-        const user = userEvent.setup()
-        renderPage()
-
-        await screen.findByText('Weekly shop')
-        await user.click(screen.getAllByRole('button', { name: 'Edit' })[0])
-        await user.type(screen.getByLabelText('Note (optional)'), ' edited')
-
-        fireEvent.click(screen.getByRole('button', { name: 'Add' }))
-
-        expect(screen.getByText('Edit transaction')).toBeInTheDocument()
-        expect(screen.getByLabelText('Note (optional)')).toHaveValue('Weekly shop edited')
-    })
-
-    it("ignores another row's Edit while an edit is open, keeping the edits", async () => {
+    // So the page's Add, other rows' Edit, the nav and the month bar can't
+    // be reached (by Tab or a screen reader) behind an open form.
+    it('makes the page behind inert while an edit is open, but not the form', async () => {
         transactionsApi.listTransactions.mockResolvedValue([
             sampleTransaction,
             { ...sampleTransaction, id: 2, note: 'Dinner' },
@@ -198,15 +184,12 @@ describe('TransactionsPage stacked dialogs and Escape', () => {
         renderPage()
 
         await screen.findByText('Weekly shop')
-        const [, dinnerRow] = screen.getAllByRole('button', { name: 'Edit' })
+        const [, dinnerEdit] = screen.getAllByRole('button', { name: 'Edit' })
         await user.click(screen.getAllByRole('button', { name: 'Edit' })[0])
-        const note = screen.getByLabelText('Note (optional)')
-        const editedNote = `${note.value} edited`
-        await user.type(note, ' edited')
 
-        fireEvent.click(dinnerRow)
-
-        expect(screen.getByLabelText('Note (optional)')).toHaveValue(editedNote)
+        expect(screen.getAllByRole('button', { name: 'Add' })[0].closest('[inert]')).not.toBeNull()
+        expect(dinnerEdit.closest('[inert]')).not.toBeNull()
+        expect(screen.getByRole('dialog').closest('[inert]')).toBeNull()
     })
 
     it('closes only the favourite picker on Escape, leaving the typed form open', async () => {
@@ -221,7 +204,7 @@ describe('TransactionsPage stacked dialogs and Escape', () => {
 
         await user.keyboard('{Escape}')
 
-        expect(screen.queryByRole('button', { name: /Kopi/ })).not.toBeInTheDocument()
+        await waitFor(() => expect(screen.queryByRole('button', { name: /Kopi/ })).not.toBeInTheDocument())
         expect(screen.queryByText('Discard unsaved changes?')).not.toBeInTheDocument()
         expect(screen.getByLabelText('Note (optional)')).toHaveValue('draft note')
     })
@@ -237,7 +220,7 @@ describe('TransactionsPage stacked dialogs and Escape', () => {
 
         await user.keyboard('{Escape}')
 
-        expect(screen.queryByText('New category name')).not.toBeInTheDocument()
+        await waitFor(() => expect(screen.queryByText('New category name')).not.toBeInTheDocument())
         expect(screen.getByLabelText('Amount')).toBeInTheDocument()
     })
 
@@ -251,9 +234,12 @@ describe('TransactionsPage stacked dialogs and Escape', () => {
         await screen.findByRole('button', { name: /Kopi/ })
 
         await user.keyboard('{Escape}')
+        // The picker stays the top layer while it fades out, so wait for it
+        // to go before the second Escape.
+        await waitFor(() => expect(screen.queryByRole('button', { name: /Kopi/ })).not.toBeInTheDocument())
         await user.keyboard('{Escape}')
 
-        expect(screen.queryByLabelText('Amount')).not.toBeInTheDocument()
+        await waitFor(() => expect(screen.queryByLabelText('Amount')).not.toBeInTheDocument())
     })
 })
 
@@ -317,7 +303,7 @@ describe('TransactionsPage add/edit modal', () => {
         await user.click(getBackdrop(container))
 
         expect(screen.queryByText('Discard unsaved changes?')).not.toBeInTheDocument()
-        expect(screen.queryByLabelText('Amount')).not.toBeInTheDocument()
+        await waitFor(() => expect(screen.queryByLabelText('Amount')).not.toBeInTheDocument())
     })
 
     it('shows a discard-confirmation on outside click when dirty, and keeps the form open on Cancel', async () => {
@@ -334,7 +320,7 @@ describe('TransactionsPage add/edit modal', () => {
         const dialog = screen.getByText('Discard unsaved changes?').closest('div')
         await user.click(within(dialog).getByRole('button', { name: 'Cancel' }))
 
-        expect(screen.queryByText('Discard unsaved changes?')).not.toBeInTheDocument()
+        await waitFor(() => expect(screen.queryByText('Discard unsaved changes?')).not.toBeInTheDocument())
         expect(screen.getByLabelText('Note (optional)')).toHaveValue('concert tickets')
     })
 
@@ -350,7 +336,7 @@ describe('TransactionsPage add/edit modal', () => {
         const dialog = screen.getByText('Discard unsaved changes?').closest('div')
         await user.click(within(dialog).getByRole('button', { name: 'Discard' }))
 
-        expect(screen.queryByText('Discard unsaved changes?')).not.toBeInTheDocument()
+        await waitFor(() => expect(screen.queryByText('Discard unsaved changes?')).not.toBeInTheDocument())
         expect(screen.queryByLabelText('Amount')).not.toBeInTheDocument()
     })
 
@@ -373,7 +359,7 @@ describe('TransactionsPage add/edit modal', () => {
         expect(transactionsApi.createTransaction.mock.calls[0][0]).toEqual(
             expect.objectContaining({ amount: 15, categoryId: 2 })
         )
-        expect(screen.queryByLabelText('Amount')).not.toBeInTheDocument()
+        await waitFor(() => expect(screen.queryByLabelText('Amount')).not.toBeInTheDocument())
     })
 
     it('stacks the add-category modal over the transaction modal, and an outside click closes only the inner one', async () => {
@@ -394,7 +380,7 @@ describe('TransactionsPage add/edit modal', () => {
         await user.click(backdrops[backdrops.length - 1])
 
         // The category modal closed, but the transaction form is still open.
-        expect(screen.queryByText('New category name')).not.toBeInTheDocument()
+        await waitFor(() => expect(screen.queryByText('New category name')).not.toBeInTheDocument())
         expect(screen.getByLabelText('Amount')).toBeInTheDocument()
     })
 })

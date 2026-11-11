@@ -14,8 +14,7 @@ import { TransactionFormModal } from '@features/transactions/components/Transact
 import { TransactionDialogs } from '@features/transactions/components/TransactionDialogs'
 import { useFavouriteMatcher } from '@features/favourites/hooks/useFavouriteMatcher'
 import { useFavouriteEditor } from '@features/favourites/hooks/useFavouriteEditor'
-import { FavouriteFormModal } from '@features/favourites/components/FavouriteFormModal'
-import { ConfirmDialog } from '@components/ConfirmDialog'
+import { FavouriteFormDialogs } from '@features/favourites/components/FavouriteFormDialogs'
 import { useIsMobile } from '@hooks/useIsMobile'
 import { useSelectedMonth } from '@hooks/useSelectedMonth'
 import { ExitPresence } from '@components/ExitPresence'
@@ -119,30 +118,7 @@ export function TransactionsPage() {
             />
 
             {/* Same form and unsaved-changes check as the Favourites page. */}
-            <ExitPresence>
-                {favouriteEditor.form.isOpen && (
-                    <FavouriteFormModal
-                        favourite={favouriteEditor.form.favourite}
-                        prefill={favouriteEditor.form.prefill}
-                        categories={categories}
-                        error={favouriteEditor.error}
-                        isSubmitting={favouriteEditor.form.isSubmitting}
-                        onSubmit={favouriteEditor.form.submit}
-                        onRequestClose={favouriteEditor.form.requestClose}
-                        onDirtyChange={favouriteEditor.form.setIsDirty}
-                    />
-                )}
-            </ExitPresence>
-            <ExitPresence>
-                {favouriteEditor.discard.isOpen && (
-                    <ConfirmDialog
-                        message="Discard unsaved changes?"
-                        confirmLabel="Discard"
-                        onConfirm={favouriteEditor.discard.confirm}
-                        onCancel={favouriteEditor.discard.cancel}
-                    />
-                )}
-            </ExitPresence>
+            <FavouriteFormDialogs editor={favouriteEditor} categories={categories} />
         </div>
     )
 }

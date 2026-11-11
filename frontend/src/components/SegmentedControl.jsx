@@ -41,7 +41,7 @@ export function SegmentedControl({ options, value, onChange, role = 'radiogroup'
             tabIndex={0}
             onClick={toggleToNext}
             onKeyDown={handleKeyDown}
-            className={`relative inline-flex h-11 cursor-pointer select-none rounded-xl p-1 transition-colors motion-reduce:transition-none focus:outline-none focus:ring-1 focus:ring-ink ${fillClassName}`}
+            className={`relative inline-flex h-11 cursor-pointer select-none rounded-xl p-1 transition-colors focus:outline-none focus:ring-1 focus:ring-ink ${fillClassName}`}
         >
             {/* Track: the control's inner area (inset-1 = its p-1 padding),
                 the same box the options share. The thumb is exactly one
@@ -49,7 +49,9 @@ export function SegmentedControl({ options, value, onChange, role = 'radiogroup'
                 the thumb's own width — moves it exactly one option per
                 step. Plain percentages only: iPhone Safari won't animate
                 between calc() values that mix % and px (an earlier
-                `left: calc(…% + 4px)` jumped there instead of sliding). */}
+                `left: calc(…% + 4px)` jumped there instead of sliding).
+                Under reduced motion the thumb jumps (no slide), while the
+                fill and label colours still fade. */}
             <span aria-hidden="true" className="pointer-events-none absolute inset-1">
                 <span
                     className="absolute inset-y-0 left-0 rounded-lg bg-paper transition-transform motion-reduce:transition-none"
@@ -67,7 +69,7 @@ export function SegmentedControl({ options, value, onChange, role = 'radiogroup'
                         role={itemRole}
                         aria-checked={role === 'radiogroup' ? isSelected : undefined}
                         aria-selected={role === 'tablist' ? isSelected : undefined}
-                        className={`relative z-10 flex flex-1 items-center justify-center rounded-lg px-4 text-sm font-medium transition-colors motion-reduce:transition-none ${
+                        className={`relative z-10 flex flex-1 items-center justify-center rounded-lg px-4 text-sm font-medium transition-colors ${
                             isSelected ? selectedTextClassName : 'text-paper'
                         }`}
                     >

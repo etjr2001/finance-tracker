@@ -1,4 +1,5 @@
 import { ConfirmDialog } from '@components/ConfirmDialog'
+import { DiscardChangesDialog } from '@components/DiscardChangesDialog'
 import { TransactionDetail } from '@features/transactions/components/TransactionDetail'
 import { describeTransaction } from '@features/transactions/utils/transaction'
 import { ExitPresence } from '@components/ExitPresence'
@@ -9,14 +10,7 @@ export function TransactionDialogs({ discard, remove, detail, findMatchingFavour
     return (
         <>
             <ExitPresence>
-                {discard.isOpen && (
-                    <ConfirmDialog
-                        message="Discard unsaved changes?"
-                        confirmLabel="Discard"
-                        onConfirm={discard.confirm}
-                        onCancel={discard.cancel}
-                    />
-                )}
+                {discard.isOpen && <DiscardChangesDialog onConfirm={discard.confirm} onCancel={discard.cancel} />}
             </ExitPresence>
 
             <ExitPresence>

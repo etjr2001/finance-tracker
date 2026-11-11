@@ -1,7 +1,9 @@
-import { useRef, useState } from 'react'
-import { useEscapeKey } from '@hooks/useEscapeKey'
+import { useState } from 'react'
+import { createPortal } from 'react-dom'
+import { useDismiss } from '@hooks/useDismiss'
 import { useIsMobile } from '@hooks/useIsMobile'
-import { EXIT_MS, useIsExiting } from '@hooks/useIsExiting'
+import { useReducedMotion } from '@hooks/useReducedMotion'
+import { EXIT_MS } from '@hooks/useIsExiting'
 
 // How far (px) a downward swipe must travel before letting go closes it.
 const SWIPE_CLOSE_DISTANCE = 80
@@ -11,7 +13,8 @@ const INTERACTIVE = 'button, a, input, select, textarea'
 // Below md: a bottom sheet that slides up, with a drag handle; closes on a
 // swipe down, a tap on the dimmed background, or Escape. md:+: the same
 // content as a centred modal that pops in, like Modal. Like Modal it only
-// reports a close *request*; the caller decides what closing means.
+// reports a close *request*; the caller decides what closing means, and it
+// renders into <body> with the page behind inert and not scrolling.
 //
 // Rendered inside ExitPresence it also animates out: slides back down on
 // mobile (from wherever a swipe let go), pops out on desktop, ignoring
@@ -22,21 +25,12 @@ const INTERACTIVE = 'button, a, input, select, textarea'
 // doesn't scroll.
 export function Sheet({ onRequestClose, children }) {
     const isMobile = useIsMobile()
-    const isExiting = useIsExiting()
-    const panelRef = useRef(null)
+    const isReducedMotion = useReducedMotion()
+    const { backdropRef, contentRef: panelRef, isExiting, handleBackdropMouseDown } = useDismiss(onRequestClose)
     // null when not dragging; otherwise where the swipe started.
     const [dragStartY, setDragStartY] = useState(null)
     const [dragOffset, setDragOffset] = useState(0)
     const isDragging = dragStartY !== null
-
-    useEscapeKey(() => {
-        if (!isExiting) onRequestClose()
-    })
-
-    function handleBackdropMouseDown(event) {
-        if (isExiting) return
-        if (panelRef.current && !panelRef.current.contains(event.target)) onRequestClose()
-    }
 
     function handlePointerDown(event) {
         if (!isMobile || isExiting || event.target.closest(INTERACTIVE)) return
@@ -60,7 +54,11 @@ export function Sheet({ onRequestClose, children }) {
         else setDragOffset(0)
     }
 
-    const isSlidingOut = isExiting && isMobile
+    // Under reduced motion the mobile sheet fades instead of sliding: it
+    // fades out in place (from wherever a swipe let go), and a short swipe
+    // snaps back instantly. The swipe itself still follows the finger,
+    // since the user is driving that movement.
+    const isSlidingOut = isExiting && isMobile && !isReducedMotion
 
     let transform
     if (isSlidingOut) transform = 'translateY(100%)'
@@ -69,20 +67,20 @@ export function Sheet({ onRequestClose, children }) {
     let transition = 'transform 150ms ease-out'
     if (isDragging) transition = 'none'
     else if (isSlidingOut) transition = `transform ${EXIT_MS}ms ease-in`
+    else if (isReducedMotion) transition = 'none'
 
-    const panelAnimation = isExiting
-        ? isMobile
-            ? ''
-            : 'animate-pop-out'
-        : 'motion-safe:animate-sheet-up md:motion-safe:animate-pop-in'
+    let panelAnimation = 'motion-safe:animate-sheet-up md:motion-safe:animate-pop-in motion-reduce:animate-fade-in'
+    if (isExiting && isMobile) panelAnimation = isReducedMotion ? 'animate-fade-out' : ''
+    else if (isExiting) panelAnimation = 'motion-safe:animate-pop-out motion-reduce:animate-fade-out'
 
     // Same backdrop as Modal: neutral black, shadow only on the floating
     // layer (ADR0010). Safe-area padding keeps the bottom actions clear of
     // the iPhone home indicator.
-    return (
+    return createPortal(
         <div
+            ref={backdropRef}
             className={`fixed inset-0 z-50 flex items-end justify-center bg-black/45 md:items-center md:p-4 ${
-                isExiting ? 'animate-fade-out pointer-events-none' : 'motion-safe:animate-fade-in'
+                isExiting ? 'animate-fade-out pointer-events-none' : 'animate-fade-in'
             }`}
             onMouseDown={handleBackdropMouseDown}
         >
@@ -90,16 +88,18 @@ export function Sheet({ onRequestClose, children }) {
                 ref={panelRef}
                 role="dialog"
                 aria-modal="true"
+                tabIndex={-1}
                 onPointerDown={handlePointerDown}
                 onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerEnd}
                 onPointerCancel={handlePointerEnd}
                 style={{ transform, transition }}
-                className={`w-full bg-paper-raised shadow-xl rounded-t-[14px] px-6 pt-2 pb-[calc(1.5rem+env(safe-area-inset-bottom))] touch-none md:max-w-md md:rounded-[14px] md:p-6 md:touch-auto ${panelAnimation}`}
+                className={`w-full bg-paper-raised shadow-xl outline-none rounded-t-[14px] px-6 pt-2 pb-[calc(1.5rem+env(safe-area-inset-bottom))] touch-none md:max-w-md md:rounded-[14px] md:p-6 md:touch-auto ${panelAnimation}`}
             >
                 <div aria-hidden="true" className="mx-auto mb-3 h-1 w-10 rounded-full bg-rule md:hidden" />
                 {children}
             </div>
-        </div>
+        </div>,
+        document.body
     )
 }

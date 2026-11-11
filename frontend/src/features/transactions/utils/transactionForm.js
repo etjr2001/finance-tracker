@@ -2,8 +2,8 @@ import { currentDate } from '@utils/date'
 import { TRANSACTION_TYPES } from '@features/transactions/utils/transaction'
 
 // Largest value numeric(12,2) can hold.
-export const MAX_AMOUNT = 9999999999.99
-export const MAX_AMOUNT_DECIMALS = 2
+const MAX_AMOUNT = 9999999999.99
+const MAX_AMOUNT_DECIMALS = 2
 export const MAX_NOTE_LENGTH = 256
 
 const AMOUNT_CHARS_RE = /^\d*\.?\d*$/

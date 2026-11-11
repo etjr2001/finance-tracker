@@ -11,11 +11,12 @@ describe('Card', () => {
     })
 
     // So a new month's cards (and any newly shown card) fade in rather than
-    // blink in; skipped under reduced motion.
-    it('fades in when it appears, unless reduced motion is on', () => {
+    // blink in. A fade isn't movement, so it stays under reduced motion.
+    it('fades in when it appears, even under reduced motion', () => {
         render(<Card>Content</Card>)
 
-        expect(screen.getByText('Content')).toHaveClass('motion-safe:animate-fade-in')
+        expect(screen.getByText('Content')).toHaveClass('animate-fade-in')
+        expect(screen.getByText('Content')).not.toHaveClass('motion-safe:animate-fade-in')
     })
 
     it('has no default padding, so callers set their own via className', () => {

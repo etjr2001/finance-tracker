@@ -163,7 +163,7 @@ describe('TransactionForm Favourites picker', () => {
         await user.click(screen.getByRole('button', { name: 'Favourites' }))
         await user.click(await screen.findByRole('button', { name: /Refund/ }))
 
-        expect(screen.queryByRole('heading', { name: 'Favourites' })).not.toBeInTheDocument()
+        await waitFor(() => expect(screen.queryByRole('heading', { name: 'Favourites' })).not.toBeInTheDocument())
         expect(screen.getByRole('radio', { name: 'Income' })).toHaveAttribute('aria-checked', 'true')
         expect(screen.getByLabelText('Amount')).toHaveValue('42.5')
         expect(screen.getByLabelText('Category')).toHaveValue('2')
@@ -616,7 +616,7 @@ describe('TransactionForm category creation', () => {
         await waitFor(() => expect(categoriesApi.createCategory).toHaveBeenCalled())
     })
 
-    it('reuses an existing category instead of creating a duplicate, case-insensitively', () => {
+    it('reuses an existing category instead of creating a duplicate, case-insensitively', async () => {
         renderForm()
 
         fireEvent.change(screen.getByRole('combobox'), { target: { value: '__new__' } })
@@ -626,11 +626,11 @@ describe('TransactionForm category creation', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Create' }))
 
         expect(categoriesApi.createCategory).not.toHaveBeenCalled()
-        expect(screen.queryByText('New category name')).not.toBeInTheDocument()
+        await waitFor(() => expect(screen.queryByText('New category name')).not.toBeInTheDocument())
         expect(screen.getByRole('combobox')).toHaveValue('1') // existing Groceries id
     })
 
-    it('closes without creating anything when Cancel is clicked', () => {
+    it('closes without creating anything when Cancel is clicked', async () => {
         renderForm()
 
         fireEvent.change(screen.getByRole('combobox'), { target: { value: '__new__' } })
@@ -640,11 +640,11 @@ describe('TransactionForm category creation', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
 
         expect(categoriesApi.createCategory).not.toHaveBeenCalled()
-        expect(screen.queryByText('New category name')).not.toBeInTheDocument()
+        await waitFor(() => expect(screen.queryByText('New category name')).not.toBeInTheDocument())
         expect(screen.getByRole('combobox')).toHaveValue('')
     })
 
-    it('closes without creating anything on outside click', () => {
+    it('closes without creating anything on outside click', async () => {
         renderForm()
 
         fireEvent.change(screen.getByRole('combobox'), { target: { value: '__new__' } })
@@ -652,7 +652,7 @@ describe('TransactionForm category creation', () => {
         fireEvent.mouseDown(backdrop)
 
         expect(categoriesApi.createCategory).not.toHaveBeenCalled()
-        expect(screen.queryByText('New category name')).not.toBeInTheDocument()
+        await waitFor(() => expect(screen.queryByText('New category name')).not.toBeInTheDocument())
     })
 
     it('shows an error and keeps the modal open when creation fails', async () => {

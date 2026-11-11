@@ -52,7 +52,7 @@ describe('CategoriesPage delete confirmation', () => {
         expect(categoriesApi.deleteCategory).not.toHaveBeenCalled()
         // The category is still on screen, since nothing was deleted.
         expect(screen.getByText('Groceries')).toBeInTheDocument()
-        expect(screen.queryByText(/This can't be undone/)).not.toBeInTheDocument()
+        await waitFor(() => expect(screen.queryByText(/This can't be undone/)).not.toBeInTheDocument())
     })
 
     it('deletes when the confirmation is accepted', async () => {
@@ -209,5 +209,19 @@ describe('CategoriesPage stale edit-error', () => {
         await user.click(screen.getAllByRole('button', { name: 'Edit' })[1])
 
         expect(screen.queryByText('boom')).not.toBeInTheDocument()
+    })
+
+    it('shows a failed edit\'s error inside the edit modal, not on the page behind it', async () => {
+        categoriesApi.updateCategory.mockRejectedValueOnce(new Error('boom'))
+        const user = userEvent.setup()
+        renderPage()
+
+        await screen.findByText('Groceries')
+        await user.click(screen.getAllByRole('button', { name: 'Edit' })[0])
+        await user.click(screen.getByRole('button', { name: 'Save' }))
+
+        const dialog = screen.getByRole('dialog')
+        expect(await within(dialog).findByText('boom')).toBeInTheDocument()
+        expect(screen.getAllByText('boom')).toHaveLength(1)
     })
 })

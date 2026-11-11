@@ -77,7 +77,9 @@ describe('ExitPresence', () => {
         expect(screen.getByText('Again')).toBeInTheDocument()
     })
 
-    it('removes children straight away when the device asks for reduced motion', () => {
+    // Reduced motion is about movement, not fades: popups still fade out, so
+    // they still need their exit time.
+    it('still keeps the last children for their exit when the device asks for reduced motion', () => {
         window.matchMedia = vi.fn().mockImplementation((query) => ({
             matches: query.includes('reduce'),
             addEventListener: vi.fn(),
@@ -86,7 +88,9 @@ describe('ExitPresence', () => {
         const { rerender } = renderPresence(true)
 
         rerender(<ExitPresence>{false}</ExitPresence>)
+        expect(screen.getByText('Popup (exiting)')).toBeInTheDocument()
 
+        act(() => vi.advanceTimersByTime(EXIT_MS))
         expect(screen.queryByText(/Popup/)).not.toBeInTheDocument()
     })
 })

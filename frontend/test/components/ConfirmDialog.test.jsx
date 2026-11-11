@@ -44,9 +44,10 @@ describe('ConfirmDialog', () => {
 
     it('calls onCancel when the backdrop is clicked, via the underlying Modal', () => {
         const onCancel = vi.fn()
-        const { container } = render(<ConfirmDialog message="Sure?" onConfirm={() => {}} onCancel={onCancel} />)
+        render(<ConfirmDialog message="Sure?" onConfirm={() => {}} onCancel={onCancel} />)
 
-        fireEvent.mouseDown(container.firstChild)
+        // Modal renders into <body>; the backdrop wraps the dialog.
+        fireEvent.mouseDown(screen.getByRole('dialog').parentElement)
 
         expect(onCancel).toHaveBeenCalledTimes(1)
     })

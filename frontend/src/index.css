@@ -28,18 +28,19 @@
   --font-serif: 'Source Serif 4', Georgia, serif;
   --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
 
-  /* Bottom sheet entrance (Sheet.jsx), used as motion-safe:animate-sheet-up
-     so it's skipped when the phone asks for reduced motion. */
+  /* Bottom sheet entrance (Sheet.jsx), used as motion-safe:animate-sheet-up;
+     under reduced motion the sheet fades in instead. */
   --animate-sheet-up: sheet-up 200ms ease-out;
   @keyframes sheet-up {
     from { transform: translateY(100%); }
     to { transform: translateY(0); }
   }
 
-  /* Open/close transitions. Entrances are used as motion-safe:animate-*;
-     exits only ever run inside ExitPresence, which skips them under
-     reduced motion. fade-out matches ExitPresence's EXIT_MS (200ms) so a
-     sliding Sheet's backdrop fades for the whole slide. */
+  /* Open/close transitions; exits only ever run inside ExitPresence.
+     Reduced motion drops movement but keeps fades: pops and slides are
+     motion-safe:, with a motion-reduce: fade in their place, and plain fades
+     (backdrops, Card) always run. fade-out matches ExitPresence's EXIT_MS
+     (200ms) so a sliding Sheet's backdrop fades for the whole slide. */
   --animate-fade-in: fade-in 150ms ease-out;
   --animate-fade-out: fade-out 200ms ease-in forwards;
   --animate-pop-in: pop-in 150ms ease-out;
@@ -88,10 +89,12 @@ body {
   animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
 }
 
+/* Reduced motion: the group animation is what moves the nav highlight
+   from one item to the next, so drop it. The old/new crossfade stays, so
+   the highlight fades from the old item to the new one and the labels'
+   colours still fade, without anything sliding. */
 @media (prefers-reduced-motion: reduce) {
-  ::view-transition-group(*),
-  ::view-transition-old(*),
-  ::view-transition-new(*) {
+  ::view-transition-group(*) {
     animation: none;
   }
 }

@@ -1,6 +1,6 @@
 import { FormField } from '@components/FormField'
 
-export const MIN_PASSWORD_LENGTH = 8
+const MIN_PASSWORD_LENGTH = 8
 
 export function PasswordField({ id = 'password', label = 'Password', value, onChange, hasMinLength = false }) {
     return (
