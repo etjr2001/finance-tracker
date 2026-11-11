@@ -1,7 +1,7 @@
-import { useRef, useState } from 'react'
-import { useEscapeKey } from '@hooks/useEscapeKey'
+import { useState } from 'react'
+import { useDismiss } from '@hooks/useDismiss'
 import { useIsMobile } from '@hooks/useIsMobile'
-import { EXIT_MS, useIsExiting } from '@hooks/useIsExiting'
+import { EXIT_MS } from '@hooks/useIsExiting'
 
 // How far (px) a downward swipe must travel before letting go closes it.
 const SWIPE_CLOSE_DISTANCE = 80
@@ -22,21 +22,11 @@ const INTERACTIVE = 'button, a, input, select, textarea'
 // doesn't scroll.
 export function Sheet({ onRequestClose, children }) {
     const isMobile = useIsMobile()
-    const isExiting = useIsExiting()
-    const panelRef = useRef(null)
+    const { contentRef: panelRef, isExiting, handleBackdropMouseDown } = useDismiss(onRequestClose)
     // null when not dragging; otherwise where the swipe started.
     const [dragStartY, setDragStartY] = useState(null)
     const [dragOffset, setDragOffset] = useState(0)
     const isDragging = dragStartY !== null
-
-    useEscapeKey(() => {
-        if (!isExiting) onRequestClose()
-    })
-
-    function handleBackdropMouseDown(event) {
-        if (isExiting) return
-        if (panelRef.current && !panelRef.current.contains(event.target)) onRequestClose()
-    }
 
     function handlePointerDown(event) {
         if (!isMobile || isExiting || event.target.closest(INTERACTIVE)) return

@@ -15,7 +15,7 @@ import { TransactionDialogs } from '@features/transactions/components/Transactio
 import { useFavouriteMatcher } from '@features/favourites/hooks/useFavouriteMatcher'
 import { useFavouriteEditor } from '@features/favourites/hooks/useFavouriteEditor'
 import { FavouriteFormModal } from '@features/favourites/components/FavouriteFormModal'
-import { ConfirmDialog } from '@components/ConfirmDialog'
+import { DiscardChangesDialog } from '@components/DiscardChangesDialog'
 import { useIsMobile } from '@hooks/useIsMobile'
 import { useSelectedMonth } from '@hooks/useSelectedMonth'
 import { ExitPresence } from '@components/ExitPresence'
@@ -135,12 +135,7 @@ export function TransactionsPage() {
             </ExitPresence>
             <ExitPresence>
                 {favouriteEditor.discard.isOpen && (
-                    <ConfirmDialog
-                        message="Discard unsaved changes?"
-                        confirmLabel="Discard"
-                        onConfirm={favouriteEditor.discard.confirm}
-                        onCancel={favouriteEditor.discard.cancel}
-                    />
+                    <DiscardChangesDialog onConfirm={favouriteEditor.discard.confirm} onCancel={favouriteEditor.discard.cancel} />
                 )}
             </ExitPresence>
         </div>

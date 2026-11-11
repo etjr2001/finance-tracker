@@ -1,6 +1,4 @@
-import { useRef } from 'react'
-import { useEscapeKey } from '@hooks/useEscapeKey'
-import { useIsExiting } from '@hooks/useIsExiting'
+import { useDismiss } from '@hooks/useDismiss'
 
 // Generic modal shell. It never decides whether closing is safe — it only
 // reports a close *request* (outside click or Escape) via onRequestClose,
@@ -9,18 +7,7 @@ import { useIsExiting } from '@hooks/useIsExiting'
 // Fades and pops in on open. Rendered inside ExitPresence it also animates
 // out, ignoring clicks and Escape while it does.
 export function Modal({ onRequestClose, children, contentClassName = 'max-w-md' }) {
-    const contentRef = useRef(null)
-    const isExiting = useIsExiting()
-    useEscapeKey(() => {
-        if (!isExiting) onRequestClose()
-    })
-
-    function handleBackdropMouseDown(event) {
-        if (isExiting) return
-        if (contentRef.current && !contentRef.current.contains(event.target)) {
-            onRequestClose()
-        }
-    }
+    const { contentRef, isExiting, handleBackdropMouseDown } = useDismiss(onRequestClose)
 
     // Neutral black backdrop, not bg-ink/40: ink's green cast reads as a
     // murky olive tint at low opacity. Shadow only on floating layers (ADR0010).

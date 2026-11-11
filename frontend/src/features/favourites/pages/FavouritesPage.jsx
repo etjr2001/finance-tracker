@@ -3,6 +3,7 @@ import { PageTitle } from '@components/PageTitle'
 import { PageToolbar } from '@components/PageToolbar'
 import { StatusMessage } from '@components/StatusMessage'
 import { ConfirmDialog } from '@components/ConfirmDialog'
+import { DiscardChangesDialog } from '@components/DiscardChangesDialog'
 import { useCategories } from '@features/categories/hooks/useCategories'
 import { useFavourites } from '@features/favourites/hooks/useFavourites'
 import { useFavouriteEditor } from '@features/favourites/hooks/useFavouriteEditor'
@@ -62,14 +63,7 @@ export function FavouritesPage() {
             </ExitPresence>
 
             <ExitPresence>
-                {discard.isOpen && (
-                    <ConfirmDialog
-                        message="Discard unsaved changes?"
-                        confirmLabel="Discard"
-                        onConfirm={discard.confirm}
-                        onCancel={discard.cancel}
-                    />
-                )}
+                {discard.isOpen && <DiscardChangesDialog onConfirm={discard.confirm} onCancel={discard.cancel} />}
             </ExitPresence>
 
             <ExitPresence>
