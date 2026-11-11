@@ -30,7 +30,10 @@ function MonthPopover({ onClose, children }) {
     function requestClose() {
         if (!isExiting) onClose()
     }
-    useEscapeKey(requestClose)
+    // Leaves the Escape stack while animating out, like Modal and Sheet.
+    // Not a modal layer: the page stays usable, and a click anywhere outside
+    // closes it.
+    useEscapeKey(requestClose, !isExiting)
 
     return (
         <>

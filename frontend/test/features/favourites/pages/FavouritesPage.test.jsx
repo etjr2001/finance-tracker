@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, within, waitFor, fireEvent } from '@testing-library/react'
+import { render, screen, within, waitFor } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { FavouritesPage } from '@features/favourites/pages/FavouritesPage'
@@ -160,23 +160,9 @@ describe('FavouritesPage create and edit', () => {
         expect(screen.getAllByRole('button', { name: 'Add' })).toHaveLength(2)
     })
 
-    // The backdrop blocks clicks, but keyboard focus can still Tab out of
-    // the modal to the page's Add (no inert background yet; see backlog).
-    it("ignores the page's Add while an edit is open, keeping the edits", async () => {
-        const user = userEvent.setup()
-        renderPage()
-
-        await screen.findByText('Rent')
-        await user.click(within(rowFor('Rent')).getByRole('button', { name: 'Edit' }))
-        await user.type(screen.getByLabelText('Note (optional)'), ' edited')
-
-        fireEvent.click(screen.getByRole('button', { name: 'Add' }))
-
-        expect(screen.getByText('Edit favourite')).toBeInTheDocument()
-        expect(screen.getByLabelText('Note (optional)')).toHaveValue('Monthly edited')
-    })
-
-    it("ignores another row's Edit while an edit is open, keeping the edits", async () => {
+    // So the page's Add and other rows' Edit can't be reached (by Tab or a
+    // screen reader) and swap out an open edit.
+    it('makes the page behind inert while an edit is open, but not the form', async () => {
         favouritesApi.listFavourites.mockResolvedValue([rent, utilities])
         const user = userEvent.setup()
         renderPage()
@@ -184,11 +170,10 @@ describe('FavouritesPage create and edit', () => {
         await screen.findByText('Rent')
         const utilitiesEdit = within(rowFor('Utilities')).getByRole('button', { name: 'Edit' })
         await user.click(within(rowFor('Rent')).getByRole('button', { name: 'Edit' }))
-        await user.type(screen.getByLabelText('Note (optional)'), ' edited')
 
-        fireEvent.click(utilitiesEdit)
-
-        expect(screen.getByLabelText('Note (optional)')).toHaveValue('Monthly edited')
+        expect(screen.getAllByRole('button', { name: 'Add' })[0].closest('[inert]')).not.toBeNull()
+        expect(utilitiesEdit.closest('[inert]')).not.toBeNull()
+        expect(screen.getByRole('dialog').closest('[inert]')).toBeNull()
     })
 
     it('says a zero amount will start a Draft when used', async () => {

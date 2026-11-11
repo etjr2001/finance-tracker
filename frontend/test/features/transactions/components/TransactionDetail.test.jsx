@@ -115,10 +115,11 @@ describe('TransactionDetail actions', () => {
 
     it('calls onClose from the ✕ button and from the backdrop', () => {
         const onClose = vi.fn()
-        const { container } = renderDetail({ onClose })
+        renderDetail({ onClose })
 
         fireEvent.click(screen.getByRole('button', { name: 'Close' }))
-        fireEvent.mouseDown(container.firstChild)
+        // Sheet renders into <body>; the backdrop wraps the dialog.
+        fireEvent.mouseDown(screen.getByRole('dialog').parentElement)
 
         expect(onClose).toHaveBeenCalledTimes(2)
     })

@@ -55,10 +55,10 @@ beforeEach(() => {
     favouritesApi.listFavourites.mockResolvedValue([])
 })
 
-// Grabs the currently-open modal/dialog's backdrop, for simulating an
-// outside click. Assumes only one Modal is open at the time it's called.
-function getBackdrop(container) {
-    return container.querySelector('.fixed.inset-0')
+// Grabs the newest open modal/dialog's backdrop, for simulating an outside
+// click. Modal and Sheet portal into <body>, in the order they open.
+function getBackdrop() {
+    return [...document.querySelectorAll('.fixed.inset-0')].at(-1)
 }
 
 // The open form's own Add (submit) button. The page's Add stays visible
@@ -173,23 +173,9 @@ describe('TransactionsPage stacked dialogs and Escape', () => {
         expect(screen.getAllByRole('button', { name: 'Add' })).toHaveLength(2)
     })
 
-    // The backdrop blocks clicks, but keyboard focus can still Tab out of
-    // the modal to the page's Add (no inert background yet; see backlog).
-    it("ignores the page's Add while an edit is open, keeping the edits", async () => {
-        const user = userEvent.setup()
-        renderPage()
-
-        await screen.findByText('Weekly shop')
-        await user.click(screen.getAllByRole('button', { name: 'Edit' })[0])
-        await user.type(screen.getByLabelText('Note (optional)'), ' edited')
-
-        fireEvent.click(screen.getByRole('button', { name: 'Add' }))
-
-        expect(screen.getByText('Edit transaction')).toBeInTheDocument()
-        expect(screen.getByLabelText('Note (optional)')).toHaveValue('Weekly shop edited')
-    })
-
-    it("ignores another row's Edit while an edit is open, keeping the edits", async () => {
+    // So the page's Add, other rows' Edit, the nav and the month bar can't
+    // be reached (by Tab or a screen reader) behind an open form.
+    it('makes the page behind inert while an edit is open, but not the form', async () => {
         transactionsApi.listTransactions.mockResolvedValue([
             sampleTransaction,
             { ...sampleTransaction, id: 2, note: 'Dinner' },
@@ -198,15 +184,12 @@ describe('TransactionsPage stacked dialogs and Escape', () => {
         renderPage()
 
         await screen.findByText('Weekly shop')
-        const [, dinnerRow] = screen.getAllByRole('button', { name: 'Edit' })
+        const [, dinnerEdit] = screen.getAllByRole('button', { name: 'Edit' })
         await user.click(screen.getAllByRole('button', { name: 'Edit' })[0])
-        const note = screen.getByLabelText('Note (optional)')
-        const editedNote = `${note.value} edited`
-        await user.type(note, ' edited')
 
-        fireEvent.click(dinnerRow)
-
-        expect(screen.getByLabelText('Note (optional)')).toHaveValue(editedNote)
+        expect(screen.getAllByRole('button', { name: 'Add' })[0].closest('[inert]')).not.toBeNull()
+        expect(dinnerEdit.closest('[inert]')).not.toBeNull()
+        expect(screen.getByRole('dialog').closest('[inert]')).toBeNull()
     })
 
     it('closes only the favourite picker on Escape, leaving the typed form open', async () => {
