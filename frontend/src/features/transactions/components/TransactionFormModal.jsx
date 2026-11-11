@@ -1,15 +1,9 @@
-import { Modal } from '@components/Modal'
-import { StatusMessage } from '@components/StatusMessage'
+import { FormModal } from '@components/FormModal'
 import { TransactionForm } from '@features/transactions/components/TransactionForm'
 
 export function TransactionFormModal({ transaction, categories, error, isSubmitting, onSubmit, onRequestClose, onDirtyChange }) {
     return (
-        <Modal onRequestClose={onRequestClose}>
-            {error && (
-                <StatusMessage tone="error" className="mb-3">
-                    {error}
-                </StatusMessage>
-            )}
+        <FormModal error={error} onRequestClose={onRequestClose}>
             <TransactionForm
                 key={transaction?.id ?? 'new'}
                 categories={categories}
@@ -19,6 +13,6 @@ export function TransactionFormModal({ transaction, categories, error, isSubmitt
                 onDirtyChange={onDirtyChange}
                 isSubmitting={isSubmitting}
             />
-        </Modal>
+        </FormModal>
     )
 }

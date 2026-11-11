@@ -1,15 +1,9 @@
-import { Modal } from '@components/Modal'
-import { StatusMessage } from '@components/StatusMessage'
+import { FormModal } from '@components/FormModal'
 import { FavouriteForm } from '@features/favourites/components/FavouriteForm'
 
 export function FavouriteFormModal({ favourite, prefill, categories, error, isSubmitting, onSubmit, onRequestClose, onDirtyChange }) {
     return (
-        <Modal onRequestClose={onRequestClose}>
-            {error && (
-                <StatusMessage tone="error" className="mb-3">
-                    {error}
-                </StatusMessage>
-            )}
+        <FormModal error={error} onRequestClose={onRequestClose}>
             <FavouriteForm
                 key={favourite?.id ?? 'new'}
                 categories={categories}
@@ -20,6 +14,6 @@ export function FavouriteFormModal({ favourite, prefill, categories, error, isSu
                 onDirtyChange={onDirtyChange}
                 isSubmitting={isSubmitting}
             />
-        </Modal>
+        </FormModal>
     )
 }
