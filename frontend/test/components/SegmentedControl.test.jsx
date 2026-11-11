@@ -33,6 +33,21 @@ describe('SegmentedControl', () => {
         expect(thumb.style.transform).toBe('translateX(100%)')
     })
 
+    // Reduced motion: the thumb (movement) jumps, but colour changes still
+    // fade, since a fade isn't movement.
+    it('stops the thumb sliding under reduced motion but keeps the colour fades', () => {
+        const { container } = render(<SegmentedControl options={OPTIONS} value="a" onChange={() => {}} />)
+        const thumb = container.querySelector('.bg-paper')
+
+        expect(thumb).toHaveClass('motion-reduce:transition-none')
+        expect(screen.getByRole('radiogroup')).toHaveClass('transition-colors')
+        expect(screen.getByRole('radiogroup')).not.toHaveClass('motion-reduce:transition-none')
+        for (const option of screen.getAllByRole('radio')) {
+            expect(option).toHaveClass('transition-colors')
+            expect(option).not.toHaveClass('motion-reduce:transition-none')
+        }
+    })
+
     it('clicking anywhere in the control toggles to the next option, regardless of which label was clicked', () => {
         const onChange = vi.fn()
         const { rerender } = render(<SegmentedControl options={OPTIONS} value="a" onChange={onChange} />)

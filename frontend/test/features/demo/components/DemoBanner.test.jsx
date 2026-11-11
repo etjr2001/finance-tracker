@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -58,7 +58,7 @@ describe('DemoBanner reset', () => {
         await user.click(screen.getByRole('button', { name: 'Cancel' }))
 
         expect(demoApi.resetDemoData).not.toHaveBeenCalled()
-        expect(screen.queryByRole('button', { name: 'Reset' })).not.toBeInTheDocument()
+        await waitFor(() => expect(screen.queryByRole('button', { name: 'Reset' })).not.toBeInTheDocument())
     })
 
     it('links to /login and /signup', () => {

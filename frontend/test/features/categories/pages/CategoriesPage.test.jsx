@@ -52,7 +52,7 @@ describe('CategoriesPage delete confirmation', () => {
         expect(categoriesApi.deleteCategory).not.toHaveBeenCalled()
         // The category is still on screen, since nothing was deleted.
         expect(screen.getByText('Groceries')).toBeInTheDocument()
-        expect(screen.queryByText(/This can't be undone/)).not.toBeInTheDocument()
+        await waitFor(() => expect(screen.queryByText(/This can't be undone/)).not.toBeInTheDocument())
     })
 
     it('deletes when the confirmation is accepted', async () => {

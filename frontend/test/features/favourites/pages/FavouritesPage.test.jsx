@@ -291,7 +291,7 @@ describe('FavouritesPage create and edit', () => {
         await user.click(getBackdrop(container))
 
         expect(screen.queryByText('Discard unsaved changes?')).not.toBeInTheDocument()
-        expect(screen.queryByText('Add favourite')).not.toBeInTheDocument()
+        await waitFor(() => expect(screen.queryByText('Add favourite')).not.toBeInTheDocument())
     })
 
     it('asks before discarding unsaved changes, and keeps them on Cancel', async () => {

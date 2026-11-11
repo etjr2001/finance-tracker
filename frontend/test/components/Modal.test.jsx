@@ -12,15 +12,16 @@ describe('Modal transitions', () => {
         vi.useRealTimers()
     })
 
-    it('fades and pops in when it opens', () => {
+    // Reduced motion drops the pop (a zoom) but keeps the fades.
+    it('fades in its backdrop and pops in, or only fades in under reduced motion', () => {
         const { container } = render(
             <Modal onRequestClose={() => {}}>
                 <div>content</div>
             </Modal>
         )
 
-        expect(container.firstChild).toHaveClass('motion-safe:animate-fade-in')
-        expect(screen.getByRole('dialog')).toHaveClass('motion-safe:animate-pop-in')
+        expect(container.firstChild).toHaveClass('animate-fade-in')
+        expect(screen.getByRole('dialog')).toHaveClass('motion-safe:animate-pop-in', 'motion-reduce:animate-fade-in')
     })
 
     // Inside ExitPresence, a closed Modal lingers briefly to animate out.
@@ -42,7 +43,7 @@ describe('Modal transitions', () => {
         rerender(<ExitPresence>{false}</ExitPresence>)
 
         const dialog = screen.getByRole('dialog')
-        expect(dialog).toHaveClass('animate-pop-out')
+        expect(dialog).toHaveClass('motion-safe:animate-pop-out', 'motion-reduce:animate-fade-out')
         expect(container.firstChild).toHaveClass('animate-fade-out', 'pointer-events-none')
 
         fireEvent.mouseDown(container.firstChild)

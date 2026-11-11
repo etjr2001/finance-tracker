@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useDismiss } from '@hooks/useDismiss'
 import { useIsMobile } from '@hooks/useIsMobile'
+import { useReducedMotion } from '@hooks/useReducedMotion'
 import { EXIT_MS } from '@hooks/useIsExiting'
 
 // How far (px) a downward swipe must travel before letting go closes it.
@@ -22,6 +23,7 @@ const INTERACTIVE = 'button, a, input, select, textarea'
 // doesn't scroll.
 export function Sheet({ onRequestClose, children }) {
     const isMobile = useIsMobile()
+    const isReducedMotion = useReducedMotion()
     const { contentRef: panelRef, isExiting, handleBackdropMouseDown } = useDismiss(onRequestClose)
     // null when not dragging; otherwise where the swipe started.
     const [dragStartY, setDragStartY] = useState(null)
@@ -50,7 +52,11 @@ export function Sheet({ onRequestClose, children }) {
         else setDragOffset(0)
     }
 
-    const isSlidingOut = isExiting && isMobile
+    // Under reduced motion the mobile sheet fades instead of sliding: it
+    // fades out in place (from wherever a swipe let go), and a short swipe
+    // snaps back instantly. The swipe itself still follows the finger,
+    // since the user is driving that movement.
+    const isSlidingOut = isExiting && isMobile && !isReducedMotion
 
     let transform
     if (isSlidingOut) transform = 'translateY(100%)'
@@ -59,12 +65,11 @@ export function Sheet({ onRequestClose, children }) {
     let transition = 'transform 150ms ease-out'
     if (isDragging) transition = 'none'
     else if (isSlidingOut) transition = `transform ${EXIT_MS}ms ease-in`
+    else if (isReducedMotion) transition = 'none'
 
-    const panelAnimation = isExiting
-        ? isMobile
-            ? ''
-            : 'animate-pop-out'
-        : 'motion-safe:animate-sheet-up md:motion-safe:animate-pop-in'
+    let panelAnimation = 'motion-safe:animate-sheet-up md:motion-safe:animate-pop-in motion-reduce:animate-fade-in'
+    if (isExiting && isMobile) panelAnimation = isReducedMotion ? 'animate-fade-out' : ''
+    else if (isExiting) panelAnimation = 'motion-safe:animate-pop-out motion-reduce:animate-fade-out'
 
     // Same backdrop as Modal: neutral black, shadow only on the floating
     // layer (ADR0010). Safe-area padding keeps the bottom actions clear of
@@ -72,7 +77,7 @@ export function Sheet({ onRequestClose, children }) {
     return (
         <div
             className={`fixed inset-0 z-50 flex items-end justify-center bg-black/45 md:items-center md:p-4 ${
-                isExiting ? 'animate-fade-out pointer-events-none' : 'motion-safe:animate-fade-in'
+                isExiting ? 'animate-fade-out pointer-events-none' : 'animate-fade-in'
             }`}
             onMouseDown={handleBackdropMouseDown}
         >

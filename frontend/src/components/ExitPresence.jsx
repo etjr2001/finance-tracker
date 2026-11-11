@@ -1,10 +1,6 @@
 import { useEffect, useState } from 'react'
 import { EXIT_MS, ExitingContext } from '@hooks/useIsExiting'
 
-function prefersReducedMotion() {
-    return window.matchMedia('(prefers-reduced-motion: reduce)').matches
-}
-
 // Keeps a conditionally rendered popup on screen for EXIT_MS after its
 // condition turns false, so Modal/Sheet can animate out instead of
 // vanishing:
@@ -13,8 +9,9 @@ function prefersReducedMotion() {
 //
 // While exiting it renders the last children it was given (their data,
 // e.g. a delete target, may already be gone) with useIsExiting() true.
-// Instant under reduced motion. Reopening mid-exit shows the new children
-// straight away.
+// Same under reduced motion: popups then fade out instead of moving, but
+// still need the time. Reopening mid-exit shows the new children straight
+// away.
 export function ExitPresence({ children }) {
     // "Store previous props in state": lets a render see what was shown
     // last time without reading a ref during render.
@@ -24,7 +21,7 @@ export function ExitPresence({ children }) {
     if (children !== previousChildren) {
         setPreviousChildren(children)
         if (children) setExitingChildren(null)
-        else if (previousChildren && !prefersReducedMotion()) setExitingChildren(previousChildren)
+        else if (previousChildren) setExitingChildren(previousChildren)
     }
 
     useEffect(() => {

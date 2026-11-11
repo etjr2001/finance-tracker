@@ -5,7 +5,8 @@ import { useDismiss } from '@hooks/useDismiss'
 // and the caller decides whether to close silently or confirm first.
 //
 // Fades and pops in on open. Rendered inside ExitPresence it also animates
-// out, ignoring clicks and Escape while it does.
+// out, ignoring clicks and Escape while it does. Under reduced motion the
+// pop (a zoom) becomes a plain fade; the backdrop fades either way.
 export function Modal({ onRequestClose, children, contentClassName = 'max-w-md' }) {
     const { contentRef, isExiting, handleBackdropMouseDown } = useDismiss(onRequestClose)
 
@@ -14,7 +15,7 @@ export function Modal({ onRequestClose, children, contentClassName = 'max-w-md' 
     return (
         <div
             className={`fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4 ${
-                isExiting ? 'animate-fade-out pointer-events-none' : 'motion-safe:animate-fade-in'
+                isExiting ? 'animate-fade-out pointer-events-none' : 'animate-fade-in'
             }`}
             onMouseDown={handleBackdropMouseDown}
         >
@@ -23,7 +24,9 @@ export function Modal({ onRequestClose, children, contentClassName = 'max-w-md' 
                 role="dialog"
                 aria-modal="true"
                 className={`w-full ${contentClassName} rounded-[14px] bg-paper-raised p-6 shadow-xl ${
-                    isExiting ? 'animate-pop-out' : 'motion-safe:animate-pop-in'
+                    isExiting
+                        ? 'motion-safe:animate-pop-out motion-reduce:animate-fade-out'
+                        : 'motion-safe:animate-pop-in motion-reduce:animate-fade-in'
                 }`}
             >
                 {children}

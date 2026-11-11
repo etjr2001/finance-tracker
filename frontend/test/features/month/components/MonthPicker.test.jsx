@@ -88,10 +88,14 @@ describe('MonthPicker', () => {
             expect(popover).not.toHaveClass('right-0')
         })
 
-        it('pops in from its top-left corner', () => {
+        it('pops in from its top-left corner, or only fades in under reduced motion', () => {
             render(<MonthPicker month="2026-09" onSelect={() => {}} onClose={() => {}} />)
 
-            expect(screen.getByRole('dialog')).toHaveClass('motion-safe:animate-pop-in', 'origin-top-left')
+            expect(screen.getByRole('dialog')).toHaveClass(
+                'motion-safe:animate-pop-in',
+                'motion-reduce:animate-fade-in',
+                'origin-top-left'
+            )
         })
     })
 

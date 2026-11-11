@@ -41,7 +41,9 @@ function MonthPopover({ onClose, children }) {
             <div
                 role="dialog"
                 className={`absolute left-0 top-full z-50 mt-2 w-72 origin-top-left rounded-[14px] bg-paper-raised p-5 shadow-xl ${
-                    isExiting ? 'animate-pop-out pointer-events-none' : 'motion-safe:animate-pop-in'
+                    isExiting
+                        ? 'motion-safe:animate-pop-out motion-reduce:animate-fade-out pointer-events-none'
+                        : 'motion-safe:animate-pop-in motion-reduce:animate-fade-in'
                 }`}
             >
                 {children}

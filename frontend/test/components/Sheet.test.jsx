@@ -7,11 +7,11 @@ import { EXIT_MS } from '@hooks/useIsExiting'
 
 // The global test/setup.js matchMedia polyfill matches every query: desktop,
 // with reduced motion on. Sheet's swipe-to-close is mobile-only, so these
-// tests switch to a mobile viewport with motion on.
+// tests switch to a mobile viewport with motion on (or off, when asked).
 const defaultMatchMedia = window.matchMedia
-function mockViewport({ isDesktop = false } = {}) {
+function mockViewport({ isDesktop = false, isReducedMotion = false } = {}) {
     window.matchMedia = vi.fn().mockImplementation((query) => ({
-        matches: isDesktop && query.includes('min-width'),
+        matches: query.includes('min-width') ? isDesktop : query.includes('reduce') && isReducedMotion,
         addEventListener: vi.fn(),
         removeEventListener: vi.fn(),
     }))
@@ -99,10 +99,48 @@ describe('Sheet', () => {
         expect(panel.className).toContain('env(safe-area-inset-bottom)')
     })
 
-    it('slides up on mobile and pops in on desktop', () => {
+    it('slides up on mobile and pops in on desktop, or only fades in under reduced motion', () => {
         const { panel } = renderSheet()
 
-        expect(panel).toHaveClass('motion-safe:animate-sheet-up', 'md:motion-safe:animate-pop-in')
+        expect(panel).toHaveClass('motion-safe:animate-sheet-up', 'md:motion-safe:animate-pop-in', 'motion-reduce:animate-fade-in')
+        expect(panel.parentElement).toHaveClass('animate-fade-in')
+    })
+
+    describe('on mobile, under reduced motion', () => {
+        it('fades out in place instead of sliding down', () => {
+            vi.useFakeTimers()
+            mockViewport({ isReducedMotion: true })
+            const { panel } = renderClosableSheet()
+
+            fireEvent.keyDown(document, { key: 'Escape' })
+
+            expect(panel).toHaveClass('animate-fade-out')
+            expect(panel.style.transform).toBe('')
+            finishExit()
+            expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+        })
+
+        it('still follows the finger, then fades out from where it let go', () => {
+            vi.useFakeTimers()
+            mockViewport({ isReducedMotion: true })
+            const { onRequestClose, panel } = renderClosableSheet()
+
+            swipe(panel, 100, 220)
+
+            expect(onRequestClose).toHaveBeenCalledTimes(1)
+            expect(panel.style.transform).toBe('translateY(120px)')
+            expect(panel).toHaveClass('animate-fade-out')
+        })
+
+        it('snaps back instantly on a short swipe', () => {
+            mockViewport({ isReducedMotion: true })
+            const { panel } = renderSheet()
+
+            swipe(panel, 100, 140)
+
+            expect(panel.style.transform).toBe('')
+            expect(panel.style.transition).toBe('none')
+        })
     })
 
     describe('on mobile', () => {
@@ -197,7 +235,7 @@ describe('Sheet', () => {
 
             fireEvent.keyDown(document, { key: 'Escape' })
 
-            expect(panel).toHaveClass('animate-pop-out')
+            expect(panel).toHaveClass('motion-safe:animate-pop-out', 'motion-reduce:animate-fade-out')
             expect(panel.style.transform).toBe('')
             finishExit()
             expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
