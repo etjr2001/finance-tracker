@@ -7,6 +7,7 @@ import { useCategoryManager } from '@features/categories/hooks/useCategoryManage
 import { sortCategoriesByName } from '@features/categories/utils/categoryName'
 import { NewCategoryForm } from '@features/categories/components/NewCategoryForm'
 import { CategoryGrid } from '@features/categories/components/CategoryGrid'
+import { CategoryEditModal } from '@features/categories/components/CategoryEditModal'
 import { ExitPresence } from '@components/ExitPresence'
 
 export function CategoriesPage() {
@@ -32,20 +33,26 @@ export function CategoriesPage() {
                 categories={sortedCategories}
                 isLoading={isLoading}
                 hasError={isError}
-                editingId={manager.editingId}
-                editingName={manager.editingName}
-                onEditingNameChange={manager.setEditingName}
-                editingColorKey={manager.editingColorKey}
-                onEditingColorKeyChange={manager.setEditingColorKey}
-                editingIconKey={manager.editingIconKey}
-                onEditingIconKeyChange={manager.setEditingIconKey}
                 onStartEdit={manager.startEdit}
-                onSaveEdit={manager.saveEdit}
-                isSaving={manager.isSaving}
-                onCancelEdit={manager.cancelEdit}
                 onDelete={manager.requestDelete}
                 isDeleting={manager.isDeleting}
             />
+
+            <ExitPresence>
+                {manager.editingId != null && (
+                    <CategoryEditModal
+                        name={manager.editingName}
+                        onNameChange={manager.setEditingName}
+                        colorKey={manager.editingColorKey}
+                        onColorKeyChange={manager.setEditingColorKey}
+                        iconKey={manager.editingIconKey}
+                        onIconKeyChange={manager.setEditingIconKey}
+                        isSaving={manager.isSaving}
+                        onSave={manager.saveEdit}
+                        onCancel={manager.cancelEdit}
+                    />
+                )}
+            </ExitPresence>
 
             <ExitPresence>
                 {manager.deleteTarget && (

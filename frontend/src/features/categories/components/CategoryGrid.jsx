@@ -1,28 +1,8 @@
 import { Card } from '@components/Card'
 import { StatusMessage } from '@components/StatusMessage'
 import { CategoryRow } from '@features/categories/components/CategoryRow'
-import { CategoryEditModal } from '@features/categories/components/CategoryEditModal'
-import { ExitPresence } from '@components/ExitPresence'
 
-export function CategoryGrid({
-    categories,
-    isLoading,
-    hasError,
-    editingId,
-    editingName,
-    onEditingNameChange,
-    editingColorKey,
-    onEditingColorKeyChange,
-    editingIconKey,
-    onEditingIconKeyChange,
-    onStartEdit,
-    onSaveEdit,
-    isSaving,
-    onCancelEdit,
-    editError,
-    onDelete,
-    isDeleting,
-}) {
+export function CategoryGrid({ categories, isLoading, hasError, onStartEdit, onDelete, isDeleting }) {
     if (isLoading) return <StatusMessage>Loading categories…</StatusMessage>
     if (hasError) return <StatusMessage tone="error">Could not load categories.</StatusMessage>
     if (!categories?.length) return <StatusMessage>No categories yet.</StatusMessage>
@@ -34,23 +14,6 @@ export function CategoryGrid({
                     <CategoryRow category={category} isDeleting={isDeleting(category.id)} onEdit={onStartEdit} onDelete={onDelete} />
                 </Card>
             ))}
-
-            <ExitPresence>
-                {editingId != null && (
-                    <CategoryEditModal
-                        name={editingName}
-                        onNameChange={onEditingNameChange}
-                        colorKey={editingColorKey}
-                        onColorKeyChange={onEditingColorKeyChange}
-                        iconKey={editingIconKey}
-                        onIconKeyChange={onEditingIconKeyChange}
-                        error={editError}
-                        isSaving={isSaving}
-                        onSave={onSaveEdit}
-                        onCancel={onCancelEdit}
-                    />
-                )}
-            </ExitPresence>
         </div>
     )
 }
