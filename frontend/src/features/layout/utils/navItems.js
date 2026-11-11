@@ -2,7 +2,7 @@ import { LayoutDashboard, Receipt, Star, Tags } from 'lucide-react'
 
 // isMonthScoped: Dashboard and Transactions show the selected month;
 // Favourites and Categories don't and never carry ?month= (ADR0011).
-export const NAV_ITEMS = [
+const NAV_ITEMS = [
     { to: '/', label: 'Dashboard', isEnd: true, icon: LayoutDashboard, isMonthScoped: true },
     { to: '/transactions', label: 'Transactions', icon: Receipt, isMonthScoped: true },
     { to: '/favourites', label: 'Favourites', icon: Star },

@@ -6,7 +6,7 @@
 // ambient locale isn't fixed and doesn't reliably produce these formats
 // (e.g. en-SG gives "Wed, 23 Sept").
 
-export const MONTH_NAMES = [
+const MONTH_NAMES = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December',
 ]
