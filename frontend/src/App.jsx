@@ -11,16 +11,19 @@ import { TransactionsPage } from '@features/transactions/pages/TransactionsPage'
 import { CategoriesPage } from '@features/categories/pages/CategoriesPage'
 import { FavouritesPage } from '@features/favourites/pages/FavouritesPage'
 import { DemoProvider } from '@features/demo/components/DemoProvider'
+import { RouteError } from '@features/layout/components/RouteError'
 
 // The same app pages, mounted under both /demo and the protected
 // root. A function (not a component) because only <Route> elements
-// can be route children.
+// can be route children. Each page's errorElement renders inside
+// AppLayout's <Outlet />, so a crashed page keeps the nav.
 function appPageRoutes() {
+    const pageError = <RouteError />
     return [
-        <Route key="dashboard" index element={<DashboardPage />} />,
-        <Route key="transactions" path="transactions" element={<TransactionsPage />} />,
-        <Route key="favourites" path="favourites" element={<FavouritesPage />} />,
-        <Route key="categories" path="categories" element={<CategoriesPage />} />,
+        <Route key="dashboard" index element={<DashboardPage />} errorElement={pageError} />,
+        <Route key="transactions" path="transactions" element={<TransactionsPage />} errorElement={pageError} />,
+        <Route key="favourites" path="favourites" element={<FavouritesPage />} errorElement={pageError} />,
+        <Route key="categories" path="categories" element={<CategoriesPage />} errorElement={pageError} />,
     ]
 }
 
@@ -28,6 +31,8 @@ function appPageRoutes() {
 // registered with the data router itself, not rendered by a nested
 // <Routes>: React Router drops NavLink's `viewTransition` for links under
 // a nested <Routes>, so page transitions would never run.
+// The root errorElement is the fallback for anything outside a page (the
+// layout, auth pages, AuthProvider itself); it takes the whole screen.
 export const routes = createRoutesFromElements(
     <Route
         element={
@@ -35,6 +40,7 @@ export const routes = createRoutesFromElements(
                 <Outlet />
             </AuthProvider>
         }
+        errorElement={<RouteError isFullPage />}
     >
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
