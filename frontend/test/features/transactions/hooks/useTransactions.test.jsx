@@ -55,9 +55,33 @@ describe('useTransactions demo branching', () => {
 
         rerender({ month: '2026-10' })
 
-        expect(transactionsApi.listTransactions).toHaveBeenLastCalledWith('2026-10')
+        // CalledWith, not LastCalledWith: prefetching the months either
+        // side also calls the API, so 2026-10 needn't be the last call.
+        expect(transactionsApi.listTransactions).toHaveBeenCalledWith('2026-10')
         expect(result.current.data).toEqual([{ id: 1 }])
         expect(result.current.isPlaceholderData).toBe(true)
+    })
+})
+
+describe('useTransactions prefetching', () => {
+    afterEach(() => {
+        vi.restoreAllMocks()
+    })
+
+    it('also loads the months either side, so the arrows are usually instant', async () => {
+        transactionsApi.listTransactions.mockResolvedValue([])
+        renderHook(() => useTransactions('2026-09'), { wrapper: wrapper(false) })
+
+        await waitFor(() => expect(transactionsApi.listTransactions).toHaveBeenCalledWith('2026-08'))
+        expect(transactionsApi.listTransactions).toHaveBeenCalledWith('2026-10')
+    })
+
+    it('prefetches from demoApi in demo mode', async () => {
+        demoApi.listTransactions.mockResolvedValue([])
+        renderHook(() => useTransactions('2026-09'), { wrapper: wrapper(true) })
+
+        await waitFor(() => expect(demoApi.listTransactions).toHaveBeenCalledWith('2026-10'))
+        expect(transactionsApi.listTransactions).not.toHaveBeenCalled()
     })
 })
 

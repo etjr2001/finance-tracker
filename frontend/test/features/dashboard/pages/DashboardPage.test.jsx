@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -52,6 +52,33 @@ describe('DashboardPage month scope', () => {
 
         await screen.findByText('October 2026')
         expect(dashboardApi.getDashboard).toHaveBeenCalledWith('2026-10')
+    })
+
+    // Regression guard: the Dashboard used to drop to "Loading dashboard…"
+    // on every month change. It now keeps the previous month's figures,
+    // dimmed and aria-busy so they never pass for the new month's.
+    it('keeps the previous month on screen, dimmed, while the next month loads', async () => {
+        let resolveOctober
+        dashboardApi.getDashboard.mockImplementation((month) =>
+            month === '2026-10'
+                ? new Promise((resolve) => { resolveOctober = resolve })
+                : Promise.resolve({ totalIncome: 0, totalExpenses: 0, net: 0, byCategory: [] })
+        )
+        const user = userEvent.setup()
+        renderPage('/?month=2026-09')
+
+        await screen.findByText('Net this month')
+        await user.click(screen.getByRole('button', { name: 'Next month' }))
+        await screen.findByText('October 2026')
+
+        expect(screen.queryByText('Loading dashboard…')).not.toBeInTheDocument()
+        const content = screen.getByText('Net this month').closest('[aria-busy]')
+        expect(content).toHaveAttribute('aria-busy', 'true')
+        expect(content).toHaveClass('opacity-50')
+
+        resolveOctober({ totalIncome: 0, totalExpenses: 0, net: 0, byCategory: [] })
+        await waitFor(() => expect(content).toHaveAttribute('aria-busy', 'false'))
+        expect(content).not.toHaveClass('opacity-50')
     })
 
     it('opens the month picker from the month label', async () => {

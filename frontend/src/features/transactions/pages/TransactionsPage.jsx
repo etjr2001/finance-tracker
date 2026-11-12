@@ -23,7 +23,7 @@ export function TransactionsPage() {
     const [month, setMonth] = useSelectedMonth()
     const isMobile = useIsMobile()
     const { data: categories } = useCategories()
-    const { dayGroups, isLoading, hasError } = useMonthTransactions(month)
+    const { dayGroups, isLoading, isStale, hasError } = useMonthTransactions(month)
     const { data: drafts = [] } = useDrafts()
     const [isDraftsSheetOpen, setIsDraftsSheetOpen] = useState(false)
     const { error, form, discard, remove, detail } = useTransactionEditor({ month, onMonthChange: setMonth })
@@ -99,6 +99,7 @@ export function TransactionsPage() {
                 dayGroups={dayGroups}
                 month={month}
                 isLoading={isLoading}
+                isStale={isStale}
                 hasError={hasError}
                 isMobile={isMobile}
                 isDeleting={remove.isDeleting}

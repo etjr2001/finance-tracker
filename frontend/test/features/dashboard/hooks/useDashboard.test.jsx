@@ -44,6 +44,53 @@ describe('useDashboard demo branching', () => {
     })
 })
 
+describe('useDashboard month change', () => {
+    afterEach(() => {
+        vi.restoreAllMocks()
+    })
+
+    it('keeps the previous month as placeholder data while the next month loads', async () => {
+        const september = { totalIncome: 100, totalExpenses: 0, net: 100, byCategory: [] }
+        dashboardApi.getDashboard.mockImplementation((month) =>
+            month === '2026-09' ? Promise.resolve(september) : new Promise(() => {})
+        )
+        const { result, rerender } = renderHook(({ month }) => useDashboard(month), {
+            wrapper: wrapper(false),
+            initialProps: { month: '2026-09' },
+        })
+        await waitFor(() => expect(result.current.isSuccess).toBe(true))
+
+        rerender({ month: '2026-10' })
+
+        await waitFor(() => expect(dashboardApi.getDashboard).toHaveBeenCalledWith('2026-10'))
+        expect(result.current.data).toEqual(september)
+        expect(result.current.isPlaceholderData).toBe(true)
+        expect(result.current.isLoading).toBe(false)
+    })
+})
+
+describe('useDashboard prefetching', () => {
+    afterEach(() => {
+        vi.restoreAllMocks()
+    })
+
+    it('also loads the months either side, so the arrows are usually instant', async () => {
+        dashboardApi.getDashboard.mockResolvedValue({ totalIncome: 0, totalExpenses: 0, net: 0, byCategory: [] })
+        renderHook(() => useDashboard('2026-09'), { wrapper: wrapper(false) })
+
+        await waitFor(() => expect(dashboardApi.getDashboard).toHaveBeenCalledWith('2026-08'))
+        expect(dashboardApi.getDashboard).toHaveBeenCalledWith('2026-10')
+    })
+
+    it('prefetches from demoApi in demo mode', async () => {
+        demoApi.getDashboard.mockResolvedValue({ totalIncome: 0, totalExpenses: 0, net: 0, byCategory: [] })
+        renderHook(() => useDashboard('2026-09'), { wrapper: wrapper(true) })
+
+        await waitFor(() => expect(demoApi.getDashboard).toHaveBeenCalledWith('2026-10'))
+        expect(dashboardApi.getDashboard).not.toHaveBeenCalled()
+    })
+})
+
 describe('useDashboard while offline', () => {
     beforeEach(() => {
         onlineManager.setOnline(false)

@@ -590,6 +590,34 @@ describe('TransactionsPage month scope', () => {
         expect(screen.getAllByRole('button', { name: 'Add' })).toHaveLength(1)
     })
 
+    // The previous month's list stays up while the next loads
+    // (keepPreviousData), but dimmed and aria-busy so it never looks like
+    // the new month's Transactions.
+    it('dims the previous month\'s list while the next month loads', async () => {
+        let resolveOctober
+        transactionsApi.listTransactions.mockImplementation((month) =>
+            month === '2026-10'
+                ? new Promise((resolve) => { resolveOctober = resolve })
+                : Promise.resolve([sampleTransaction])
+        )
+        categoriesApi.listCategories.mockResolvedValue([{ id: 1, name: 'Groceries' }])
+        const user = userEvent.setup()
+        renderPage('/transactions?month=2026-09')
+
+        await screen.findByText('Weekly shop')
+        await user.click(screen.getByRole('button', { name: 'Next month' }))
+        await screen.findByText('October 2026')
+
+        expect(screen.queryByText('Loading transactions…')).not.toBeInTheDocument()
+        const list = screen.getByText('Weekly shop').closest('[aria-busy]')
+        expect(list).toHaveAttribute('aria-busy', 'true')
+        expect(list).toHaveClass('opacity-50')
+
+        resolveOctober([])
+        expect(await screen.findByText('No transactions in October 2026.')).toBeInTheDocument()
+        expect(screen.getByText('No transactions in October 2026.').closest('[aria-busy]')).toHaveAttribute('aria-busy', 'false')
+    })
+
     it('switches to the saved transaction\'s month when it falls outside the viewed month', async () => {
         transactionsApi.listTransactions.mockResolvedValue([])
         transactionsApi.createTransaction.mockResolvedValue({ ...sampleTransaction, date: '2026-11-05' })

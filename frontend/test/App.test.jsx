@@ -12,6 +12,19 @@ vi.mock('@features/auth/context/AuthProvider', () => ({
 }))
 vi.mock('@features/auth/hooks/useAuth')
 
+// Lets a test make the Dashboard page throw while rendering; otherwise it's
+// the real page.
+const dashboardCrash = vi.hoisted(() => ({ isOn: false }))
+vi.mock('@features/dashboard/pages/DashboardPage', async (importOriginal) => {
+    const actual = await importOriginal()
+    return {
+        DashboardPage: (props) => {
+            if (dashboardCrash.isOn) throw new Error('boom')
+            return <actual.DashboardPage {...props} />
+        },
+    }
+})
+
 function renderApp(path) {
     const router = createMemoryRouter(routes, { initialEntries: [path] })
     render(
@@ -34,6 +47,8 @@ describe('App routes', () => {
 
     afterEach(() => {
         delete document.startViewTransition
+        dashboardCrash.isOn = false
+        vi.restoreAllMocks()
     })
 
     // Regression guard: pages used to live in a descendant <Routes> under a
@@ -48,6 +63,21 @@ describe('App routes', () => {
 
         expect(document.startViewTransition).toHaveBeenCalled()
         await vi.waitFor(() => expect(router.state.location.pathname).toBe('/demo/categories'))
+    })
+
+    // Regression guard: with no errorElement, a crash showed React Router's
+    // bare "Unexpected Application Error" page with no way out. A page that
+    // throws now shows a proper error screen inside the layout, so the nav
+    // stays usable.
+    it('shows an error screen inside the layout when a page crashes, keeping the nav', async () => {
+        vi.spyOn(console, 'error').mockImplementation(() => {})
+        dashboardCrash.isOn = true
+
+        renderApp('/demo')
+
+        expect(await screen.findByRole('heading', { name: 'Something went wrong' })).toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'Reload' })).toBeInTheDocument()
+        expect(screen.getAllByRole('link', { name: 'Categories' }).length).toBeGreaterThan(0)
     })
 
     it('redirects unknown paths to /', async () => {
