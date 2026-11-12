@@ -44,6 +44,31 @@ describe('useDashboard demo branching', () => {
     })
 })
 
+describe('useDashboard month change', () => {
+    afterEach(() => {
+        vi.restoreAllMocks()
+    })
+
+    it('keeps the previous month as placeholder data while the next month loads', async () => {
+        const september = { totalIncome: 100, totalExpenses: 0, net: 100, byCategory: [] }
+        dashboardApi.getDashboard.mockImplementation((month) =>
+            month === '2026-09' ? Promise.resolve(september) : new Promise(() => {})
+        )
+        const { result, rerender } = renderHook(({ month }) => useDashboard(month), {
+            wrapper: wrapper(false),
+            initialProps: { month: '2026-09' },
+        })
+        await waitFor(() => expect(result.current.isSuccess).toBe(true))
+
+        rerender({ month: '2026-10' })
+
+        await waitFor(() => expect(dashboardApi.getDashboard).toHaveBeenCalledWith('2026-10'))
+        expect(result.current.data).toEqual(september)
+        expect(result.current.isPlaceholderData).toBe(true)
+        expect(result.current.isLoading).toBe(false)
+    })
+})
+
 describe('useDashboard while offline', () => {
     beforeEach(() => {
         onlineManager.setOnline(false)
