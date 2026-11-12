@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { AuthContext } from '@features/auth/context/AuthContext'
 import { supabase } from '@api/supabaseClient'
 import { bootstrapUser } from '@features/auth/api/usersApi'
@@ -11,6 +12,7 @@ function throwIfError(error) {
 // Session state + Supabase subscription. Kept separate from the action
 // functions below so the provider only wires the two together.
 function useSupabaseSession() {
+    const queryClient = useQueryClient()
     const [session, setSession] = useState(null)
     const [isLoading, setIsLoading] = useState(true)
     const [isPasswordRecovery, setIsPasswordRecovery] = useState(false)
@@ -28,13 +30,18 @@ function useSupabaseSession() {
             setSession(newSession)
             if (event === 'SIGNED_IN') bootstrapUser().catch(() => {})
             if (event === 'PASSWORD_RECOVERY') setIsPasswordRecovery(true)
+            // Query keys aren't scoped by User, so empty the cache on every
+            // sign-out (a manual logout, an expired session, or another
+            // tab): otherwise the next User on this tab could briefly see
+            // the previous User's cached data.
+            if (event === 'SIGNED_OUT') queryClient.clear()
         })
 
         return () => {
             isActive = false
             listener.subscription.unsubscribe()
         }
-    }, [])
+    }, [queryClient])
 
     return { session, setSession, isLoading, isPasswordRecovery, setIsPasswordRecovery }
 }
