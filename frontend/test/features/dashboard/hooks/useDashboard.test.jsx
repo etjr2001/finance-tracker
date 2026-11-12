@@ -69,6 +69,28 @@ describe('useDashboard month change', () => {
     })
 })
 
+describe('useDashboard prefetching', () => {
+    afterEach(() => {
+        vi.restoreAllMocks()
+    })
+
+    it('also loads the months either side, so the arrows are usually instant', async () => {
+        dashboardApi.getDashboard.mockResolvedValue({ totalIncome: 0, totalExpenses: 0, net: 0, byCategory: [] })
+        renderHook(() => useDashboard('2026-09'), { wrapper: wrapper(false) })
+
+        await waitFor(() => expect(dashboardApi.getDashboard).toHaveBeenCalledWith('2026-08'))
+        expect(dashboardApi.getDashboard).toHaveBeenCalledWith('2026-10')
+    })
+
+    it('prefetches from demoApi in demo mode', async () => {
+        demoApi.getDashboard.mockResolvedValue({ totalIncome: 0, totalExpenses: 0, net: 0, byCategory: [] })
+        renderHook(() => useDashboard('2026-09'), { wrapper: wrapper(true) })
+
+        await waitFor(() => expect(demoApi.getDashboard).toHaveBeenCalledWith('2026-10'))
+        expect(dashboardApi.getDashboard).not.toHaveBeenCalled()
+    })
+})
+
 describe('useDashboard while offline', () => {
     beforeEach(() => {
         onlineManager.setOnline(false)
