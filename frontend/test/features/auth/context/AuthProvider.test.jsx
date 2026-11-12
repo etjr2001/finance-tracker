@@ -61,6 +61,30 @@ describe('AuthProvider query cache', () => {
         expect(queryClient.getQueryData(queryKeys.dashboardForMonth(false, '2026-09'))).toBeUndefined()
     })
 
+    // Signing in as User B over User A's session (e.g. A's tab goes straight
+    // to /login) swaps the session with SIGNED_IN only, no SIGNED_OUT first.
+    it('empties the cache when a different User signs in over the current one', async () => {
+        const queryClient = queryClientWithCachedData()
+        renderProvider(queryClient)
+        await waitFor(() => expect(supabase.auth.onAuthStateChange).toHaveBeenCalled())
+        act(() => emitAuthEvent('INITIAL_SESSION', { user: { id: 'a' } }))
+
+        act(() => emitAuthEvent('SIGNED_IN', { user: { id: 'b' } }))
+
+        expect(queryClient.getQueryData(queryKeys.transactionsForMonth(false, '2026-09'))).toBeUndefined()
+    })
+
+    it('keeps the cache when the same User signs in again', async () => {
+        const queryClient = queryClientWithCachedData()
+        renderProvider(queryClient)
+        await waitFor(() => expect(supabase.auth.onAuthStateChange).toHaveBeenCalled())
+        act(() => emitAuthEvent('INITIAL_SESSION', { user: { id: 'a' } }))
+
+        act(() => emitAuthEvent('SIGNED_IN', { user: { id: 'a' } }))
+
+        expect(queryClient.getQueryData(queryKeys.transactionsForMonth(false, '2026-09'))).toEqual([{ id: 1 }])
+    })
+
     it('keeps the cache on other auth events, like a token refresh', async () => {
         const queryClient = queryClientWithCachedData()
         renderProvider(queryClient)

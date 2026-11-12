@@ -19,9 +19,12 @@ function useSupabaseSession() {
 
     useEffect(() => {
         let isActive = true
+        // Who the cache currently belongs to, for spotting a User swap below.
+        let cachedUserId = null
 
         supabase.auth.getSession().then(({ data }) => {
             if (!isActive) return
+            cachedUserId = data.session?.user?.id ?? null
             setSession(data.session)
             setIsLoading(false)
         })
@@ -30,11 +33,19 @@ function useSupabaseSession() {
             setSession(newSession)
             if (event === 'SIGNED_IN') bootstrapUser().catch(() => {})
             if (event === 'PASSWORD_RECOVERY') setIsPasswordRecovery(true)
-            // Query keys aren't scoped by User, so empty the cache on every
-            // sign-out (a manual logout, an expired session, or another
-            // tab): otherwise the next User on this tab could briefly see
-            // the previous User's cached data.
-            if (event === 'SIGNED_OUT') queryClient.clear()
+
+            // Query keys aren't scoped by User, so empty the cache whenever
+            // it might hold someone else's data, or the next User on this
+            // tab could briefly see the previous User's cached data:
+            // - every sign-out (a manual logout, an expired session, or
+            //   another tab);
+            // - a different User signing in over the current one (e.g. a
+            //   signed-in tab going straight to /login), which Supabase
+            //   reports as SIGNED_IN only, with no SIGNED_OUT first.
+            const newUserId = newSession?.user?.id ?? null
+            const isUserSwap = cachedUserId !== null && newUserId !== null && newUserId !== cachedUserId
+            if (event === 'SIGNED_OUT' || isUserSwap) queryClient.clear()
+            cachedUserId = newUserId
         })
 
         return () => {
