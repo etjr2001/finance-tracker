@@ -69,6 +69,20 @@ describe('MonthBar', () => {
         expect(onChange).toHaveBeenCalledWith('2026-09')
     })
 
+    // Regression guard: below sm: the text hides, and the bare 14px icon was
+    // only about 14×20px to tap. It needs a 44×44 hit area: 44px tall, and
+    // a 28px button plus an 8px ::before each side (a full 44px-wide button
+    // pushed Add off narrow phones). jsdom can't lay out, so lock the classes.
+    it('gives "This month" a 44px tap target even when its text is hidden', () => {
+        vi.useFakeTimers()
+        vi.setSystemTime(new Date(2026, 8, 15))
+
+        render(<MonthBar month="2026-03" onChange={() => {}} />)
+
+        const resetButton = screen.getByRole('button', { name: 'This month' })
+        expect(resetButton).toHaveClass('relative', 'h-11', 'w-7', 'before:absolute', 'before:-inset-x-2')
+    })
+
     it('opens the month picker when the label is clicked', () => {
         render(<MonthBar month="2026-09" onChange={() => {}} />)
 

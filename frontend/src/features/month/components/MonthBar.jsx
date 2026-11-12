@@ -8,12 +8,18 @@ import { currentMonth, formatMonth, shiftMonth } from '@utils/date'
 // "This month" reset, only shown when viewing another month (ADR0011).
 // Its text hides below sm: to leave room for whatever shares the row; the
 // icon plus aria-label keeps it usable.
+// Tap target: a full 44px-wide button pushed Add off narrow phones, so
+// below sm: the button is only w-7 (28px) and an invisible ::before
+// stretches the hit area 8px each side to 44×44. 8px is exactly the
+// bar's gap-2, so it never overlaps the Next arrow. sm:+ has room: the
+// text shows and the button sizes to it.
 function ThisMonthButton({ onClick }) {
     return (
         <button
+            type="button"
             onClick={onClick}
             aria-label="This month"
-            className="inline-flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink shrink-0"
+            className="relative inline-flex h-11 w-7 sm:w-auto items-center justify-center gap-1.5 sm:px-2 text-sm text-ink-soft hover:text-ink shrink-0 before:absolute before:inset-y-0 before:-inset-x-2 sm:before:hidden"
         >
             <RotateCcw aria-hidden="true" strokeWidth={1.7} className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">This month</span>
@@ -42,7 +48,10 @@ export function MonthBar({ month, onChange }) {
                 elsewhere; a ring is a box-shadow and doesn't affect layout size. */}
             <div className="flex items-center ring-1 ring-inset ring-rule-strong bg-white rounded-xl overflow-hidden">
                 <IconButton icon={ChevronLeft} label="Previous month" onClick={() => onChange(shiftMonth(month, -1))} />
-                <button onClick={() => setIsPickerOpen(true)} className="h-11 px-2 min-w-36 text-sm font-medium text-center">
+                {/* min-w keeps the arrows still as the label changes. 8rem
+                    below sm: still fits the widest label ("September 2026")
+                    and pays back the extra width "This month" needs. */}
+                <button onClick={() => setIsPickerOpen(true)} className="h-11 px-2 min-w-32 sm:min-w-36 text-sm font-medium text-center">
                     {formatMonth(month)}
                 </button>
                 <IconButton icon={ChevronRight} label="Next month" onClick={() => onChange(shiftMonth(month, 1))} />
