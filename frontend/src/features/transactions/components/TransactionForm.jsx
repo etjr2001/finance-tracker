@@ -67,6 +67,7 @@ export function TransactionForm({ categories, initial, onSubmit, onCancel, isSub
                     onChange={changeAmount}
                     hint={amountHint}
                     helper={isDraftAmount ? '0 shows as a Draft' : null}
+                    help="Not sure yet? Enter 0 to save a Draft and fill it in later. Drafts don't count on the Dashboard."
                 />
                 <DateField value={form.date} onChange={(date) => updateField('date', date)} />
                 <FormField

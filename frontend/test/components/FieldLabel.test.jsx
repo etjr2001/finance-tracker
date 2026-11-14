@@ -14,43 +14,40 @@ describe('FieldLabel', () => {
         expect(screen.getByLabelText('Amount')).toBeInTheDocument()
     })
 
-    it('shows no (i) button without help', () => {
+    it('shows no (i) button without onToggleHelp', () => {
         render(<FieldLabel label="Amount" htmlFor="amount" />)
 
         expect(screen.queryByRole('button')).not.toBeInTheDocument()
     })
 
-    it('hides the help at first, shows it on tap, and hides it on a second tap', () => {
-        render(<FieldLabel label="Amount" htmlFor="amount" help="Enter 0 for a Draft." />)
-        const button = screen.getByRole('button', { name: 'About Amount' })
+    it('calls onToggleHelp when the (i) is tapped', () => {
+        const onToggleHelp = vi.fn()
+        render(<FieldLabel label="Amount" htmlFor="amount" helpId="amount-help" onToggleHelp={onToggleHelp} />)
 
-        expect(screen.queryByText('Enter 0 for a Draft.')).not.toBeInTheDocument()
+        fireEvent.click(screen.getByRole('button', { name: 'About Amount' }))
 
-        fireEvent.click(button)
-        expect(screen.getByText('Enter 0 for a Draft.')).toBeInTheDocument()
-
-        fireEvent.click(button)
-        expect(screen.queryByText('Enter 0 for a Draft.')).not.toBeInTheDocument()
+        expect(onToggleHelp).toHaveBeenCalledTimes(1)
     })
 
-    it('reflects the open state in aria-expanded and points aria-controls at the help text', () => {
-        render(<FieldLabel label="Amount" htmlFor="amount" help="Enter 0 for a Draft." />)
+    it('reflects isHelpOpen in aria-expanded and points aria-controls at helpId', () => {
+        const { rerender } = render(
+            <FieldLabel label="Amount" htmlFor="amount" helpId="amount-help" onToggleHelp={() => {}} />
+        )
         const button = screen.getByRole('button', { name: 'About Amount' })
 
         expect(button).toHaveAttribute('aria-expanded', 'false')
         expect(button).toHaveAttribute('aria-controls', 'amount-help')
 
-        fireEvent.click(button)
+        rerender(<FieldLabel label="Amount" htmlFor="amount" helpId="amount-help" isHelpOpen onToggleHelp={() => {}} />)
 
         expect(button).toHaveAttribute('aria-expanded', 'true')
-        expect(screen.getByText('Enter 0 for a Draft.')).toHaveAttribute('id', 'amount-help')
     })
 
     it('does not submit the surrounding form when the (i) is tapped', () => {
         const onSubmit = vi.fn((event) => event.preventDefault())
         render(
             <form onSubmit={onSubmit}>
-                <FieldLabel label="Amount" htmlFor="amount" help="Enter 0 for a Draft." />
+                <FieldLabel label="Amount" htmlFor="amount" helpId="amount-help" onToggleHelp={() => {}} />
             </form>
         )
 

@@ -59,6 +59,7 @@ export function FavouriteForm({ categories, initial, prefill, onSubmit, onCancel
                     onChange={changeAmount}
                     hint={amountHint}
                     helper={isZeroAmount ? '0 starts a Draft' : null}
+                    help="Leave at 0 if it changes each time. Using it then starts a Draft."
                 />
                 <FormField
                     label="Note (optional)"
@@ -68,7 +69,7 @@ export function FavouriteForm({ categories, initial, prefill, onSubmit, onCancel
                     maxLength={MAX_NOTE_LENGTH}
                     value={form.note}
                     onChange={(event) => updateField('note', event.target.value)}
-                    helper="Names the favourite; copied to each transaction"
+                    help="Names the favourite. Copied to each transaction made from it."
                 />
 
                 <div className="md:col-span-2 flex gap-4 pt-1">

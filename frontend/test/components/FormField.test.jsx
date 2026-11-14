@@ -51,14 +51,43 @@ describe('FormField', () => {
         expect(screen.getByText('0/10')).toBeInTheDocument()
     })
 
-    it('shows an (i) that reveals the help text when help is given', () => {
+    it('toggles help text under the input with the (i)', () => {
         render(<FormField label="Note" htmlFor="note" help="Names the favourite." />)
+        const button = screen.getByRole('button', { name: 'About Note' })
 
         expect(screen.queryByText('Names the favourite.')).not.toBeInTheDocument()
 
+        fireEvent.click(button)
+        const help = screen.getByText('Names the favourite.')
+        expect(screen.getByLabelText('Note').compareDocumentPosition(help) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+
+        fireEvent.click(button)
+        expect(screen.queryByText('Names the favourite.')).not.toBeInTheDocument()
+    })
+
+    it('links the open help to the input and the (i)', () => {
+        render(<FormField label="Note" htmlFor="note" help="Names the favourite." />)
+        const button = screen.getByRole('button', { name: 'About Note' })
+        const input = screen.getByLabelText('Note')
+
+        expect(input).not.toHaveAttribute('aria-describedby')
+
+        fireEvent.click(button)
+
+        expect(screen.getByText('Names the favourite.')).toHaveAttribute('id', 'note-help')
+        expect(button).toHaveAttribute('aria-controls', 'note-help')
+        expect(input).toHaveAttribute('aria-describedby', 'note-help')
+    })
+
+    it('shows help in place of helper while open', () => {
+        render(<FormField label="Note" htmlFor="note" helper="Short" help="The full explanation." />)
+
+        expect(screen.getByText('Short')).toBeInTheDocument()
+
         fireEvent.click(screen.getByRole('button', { name: 'About Note' }))
 
-        expect(screen.getByText('Names the favourite.')).toBeInTheDocument()
+        expect(screen.queryByText('Short')).not.toBeInTheDocument()
+        expect(screen.getByText('The full explanation.')).toBeInTheDocument()
     })
 
     it('shows no counter when maxLength is not set', () => {
