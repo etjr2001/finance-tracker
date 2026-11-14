@@ -1,6 +1,6 @@
-import { useState } from 'react'
 import { inputClass } from '@components/formStyles'
-import { FieldLabel } from '@components/FieldLabel'
+import { FieldLabel, FieldNote } from '@components/FieldLabel'
+import { useFieldHelp } from '@hooks/useFieldHelp'
 
 // Label + control wrapper. Renders its own <input> by default; pass
 // `children` to supply a different control (e.g. a <select>). Remaining
@@ -14,35 +14,15 @@ import { FieldLabel } from '@components/FieldLabel'
 // is up to the caller.
 export function FormField({ label, htmlFor, help, helper, className = '', children, ...inputProps }) {
     const { maxLength, value } = inputProps
-    const [isHelpOpen, setIsHelpOpen] = useState(false)
-    const helpId = `${htmlFor}-help`
-    const isShowingHelp = Boolean(help) && isHelpOpen
-    const note = isShowingHelp ? help : helper
+    const fieldHelp = useFieldHelp({ id: htmlFor, help, helper })
 
     return (
         <div className={className}>
-            <FieldLabel
-                label={label}
-                htmlFor={htmlFor}
-                helpId={helpId}
-                isHelpOpen={isHelpOpen}
-                onToggleHelp={help ? () => setIsHelpOpen((open) => !open) : undefined}
-                maxLength={maxLength}
-                value={value}
-            />
+            <FieldLabel label={label} htmlFor={htmlFor} maxLength={maxLength} value={value} {...fieldHelp.labelProps} />
             {children ?? (
-                <input
-                    id={htmlFor}
-                    className={inputClass}
-                    aria-describedby={isShowingHelp ? helpId : undefined}
-                    {...inputProps}
-                />
+                <input id={htmlFor} className={inputClass} aria-describedby={fieldHelp.describedBy} {...inputProps} />
             )}
-            {note && (
-                <p id={isShowingHelp ? helpId : undefined} className="mt-1 text-xs text-ink-soft">
-                    {note}
-                </p>
-            )}
+            <FieldNote id={fieldHelp.noteId}>{fieldHelp.note}</FieldNote>
         </div>
     )
 }

@@ -1,11 +1,10 @@
 import { inputClass, nativeSelectResetClass } from '@components/formStyles'
+import { FieldLabel } from '@components/FieldLabel'
 
 export function DateField({ value, onChange }) {
     return (
         <div>
-            <label className="block text-sm text-ink-soft mb-1" htmlFor="date">
-                Date
-            </label>
+            <FieldLabel label="Date" htmlFor="date" labelClassName="text-ink-soft" />
             <input
                 id="date"
                 type="date"

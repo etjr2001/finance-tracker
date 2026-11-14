@@ -1,5 +1,6 @@
 import { ChevronDown } from 'lucide-react'
 import { inputClass, nativeSelectResetClass } from '@components/formStyles'
+import { FieldLabel } from '@components/FieldLabel'
 
 const NEW_CATEGORY_VALUE = '__new__'
 
@@ -15,9 +16,7 @@ export function CategorySelect({ categories, value, onChange, onRequestNew }) {
 
     return (
         <div>
-            <label className="block text-sm text-ink-soft mb-1" htmlFor="categoryId">
-                Category
-            </label>
+            <FieldLabel label="Category" htmlFor="categoryId" labelClassName="text-ink-soft" />
             <div className="relative">
                 <select
                     id="categoryId"

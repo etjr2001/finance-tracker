@@ -1,6 +1,6 @@
-import { useState } from 'react'
 import { inputClass } from '@components/formStyles'
-import { FieldLabel } from '@components/FieldLabel'
+import { FieldLabel, FieldNote } from '@components/FieldLabel'
+import { useFieldHelp } from '@hooks/useFieldHelp'
 
 const HINTS = {
     overMax: 'Max amount is 9,999,999,999.99',
@@ -14,21 +14,11 @@ const HINTS = {
 // label; tapping it shows `help` under the input, in place of `helper`.
 export function AmountField({ value, onChange, hint, helper, help }) {
     const isZero = Number(value) === 0
-    const [isHelpOpen, setIsHelpOpen] = useState(false)
-    const helpId = 'amount-help'
-    const isShowingHelp = Boolean(help) && isHelpOpen
-    const note = isShowingHelp ? help : helper
+    const fieldHelp = useFieldHelp({ id: 'amount', help, helper })
 
     return (
         <div>
-            <FieldLabel
-                label="Amount"
-                htmlFor="amount"
-                helpId={helpId}
-                isHelpOpen={isHelpOpen}
-                onToggleHelp={help ? () => setIsHelpOpen((open) => !open) : undefined}
-                labelClassName="text-ink-soft"
-            />
+            <FieldLabel label="Amount" htmlFor="amount" labelClassName="text-ink-soft" {...fieldHelp.labelProps} />
             <input
                 id="amount"
                 type="text"
@@ -37,15 +27,11 @@ export function AmountField({ value, onChange, hint, helper, help }) {
                 value={value}
                 onChange={(event) => onChange(event.target.value)}
                 onFocus={(event) => event.target.select()}
-                aria-describedby={isShowingHelp ? helpId : undefined}
+                aria-describedby={fieldHelp.describedBy}
                 className={`${inputClass} ${isZero ? 'text-ink-soft' : ''}`}
             />
             {hint && <p className="mt-1 text-xs text-withdrawal">{HINTS[hint]}</p>}
-            {note && (
-                <p id={isShowingHelp ? helpId : undefined} className="mt-1 text-xs text-ink-soft">
-                    {note}
-                </p>
-            )}
+            <FieldNote id={fieldHelp.noteId}>{fieldHelp.note}</FieldNote>
         </div>
     )
 }
