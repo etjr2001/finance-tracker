@@ -134,15 +134,17 @@ Also shipped in the same working session, neither part of the planned Sprint 3 i
 
 All Sprint 3 work follows ADR0007: tests land with each item, not as a separate pass.
 
-### Favourites and Recurring: in progress
+### Favourites and Recurring: closed early (2026-11-14)
 Brought forward ahead of Sprint 4 so the app can show how much of the month bills have already spoken for. Two phases, each on its own branch; Phase 2 starts after Phase 1 merges. Favourite and Recurring stay two terms and two tables (ADR0017).
+
+**Closed early by the Product Owner on 2026-11-14.** Phase 1 shipped (#46). Phase 2 never started: six unplanned PRs (#47, #49–#52) were pulled in after the sprint began. Recurring is still fully designed (below) and goes into a new sprint plan, with the clone action first. See `docs/sprints/favourites-and-recurring-review.md`. From now on, sprint scope is fixed once a sprint starts (CLAUDE.md working rules).
 
 1. **Phase 1: Favourites (`feat/favourites`, ADR0017).** Done (#46).
    - Backend: `V6__favourites.sql` and `GET`/`POST`/`PUT`/`DELETE /api/favourites`. The Category delete guard also checks Favourites.
    - Demo: `demoApi.js` mirrors it, and Reset demo data clears Favourites (ADR0009).
    - Frontend: a Favourites nav tab for adding, editing and deleting; a Favourites button in the Add transaction form, opening an A–Z list that fills the form in place; and a star on each Transaction (row actions on desktop, the bottom-sheet detail card on mobile), outline or filled by whether it matches a Favourite, which opens Add or Edit favourite in place over the Transactions list.
    - Editing was first left out, then brought into this phase (2026-10-18).
-2. **Phase 2: Recurring (`feat/recurring`).** Settled (grilled 2026-10-11, details 2026-11-11), not started. Next: write ADR0018 and the `CONTEXT.md` entry, then build.
+2. **Phase 2: Recurring (`feat/recurring`).** Settled (grilled 2026-10-11, details 2026-11-11). **Not started; carried over** when the sprint closed early. To be planned into a new sprint: the clone action first (Backlog), then ADR0018 and the `CONTEXT.md` entry, then build.
    - Its own table and a Recurring page (fifth nav item, after Favourites; check the bottom tab bar still fits on a phone). Created from scratch or with "Make recurring" on a Transaction. Only the job links a Transaction to a Recurring item.
    - Schedule: a frequency (every N days, weeks, months or years) with two fixed anchors, one for when the entry is posted and one for the date the Transaction gets (e.g. posted on the 1st, dated the 21st). Editing either date re-anchors from the new dates; entries already posted stay as they are.
    - "Amount varies" posts Drafts (amount zero). ADR0008 is unchanged.
@@ -159,7 +161,7 @@ Brought forward ahead of Sprint 4 so the app can show how much of the month bill
      - *Catch-up.* Every missed run is posted with its correct date, capped at 366 runs per item per pass; anything past the cap is logged and posted on the next pass.
 
 ### UI transitions: complete (#47)
-A short polish pass between Favourites (Phase 1) and Recurring (Phase 2), on `feat/nav-active-state-and-page-transitions`. Frontend only, no API changes. Motion rule throughout: no content blending or sliding (a crossfade between pages caused motion sickness and was dropped); only small elements move, content only fades in; everything is off under `prefers-reduced-motion`.
+A short polish pass between Favourites (Phase 1) and Recurring (Phase 2), on `feat/nav-active-state-and-page-transitions`. Added after the Favourites and Recurring sprint had started. It was one of the unplanned additions that led to closing that sprint early. Frontend only, no API changes. Motion rule throughout: no content blending or sliding (a crossfade between pages caused motion sickness and was dropped); only small elements move, content only fades in; everything is off under `prefers-reduced-motion`.
 
 - **Router.** `App.jsx` exports `routes` for `createBrowserRouter` (`main.jsx`), with `AuthProvider` as a layout route. Routes must be registered with the data router itself: React Router drops NavLink's `viewTransition` for links under a nested `<Routes>`. `test/App.test.jsx` guards this.
 - **Nav.** The active nav item gets a filled `deposit` highlight (full cell in the tab bar, a rounded fill in the sidebar) that slides to the new item via a View Transition; pages themselves swap instantly. The tab bar has 0.375rem padding above and below its labels. Its bottom padding never actually used the safe-area inset: `index.html` has no `viewport-fit=cover`, so iOS reports the inset as 0 (see the tab bar item in Tech debt).
@@ -170,6 +172,9 @@ A short polish pass between Favourites (Phase 1) and Recurring (Phase 2), on `fe
 - **Segmented control.** The Expense/Income thumb now slides on iPhone Safari: it used `left: calc(% + px)`, which WebKit won't animate; now a plain-percentage `translateX`. Confirmed on iPhone 2026-11-12. Under Reduce Motion it jumps instead of sliding, which is intended, and the user chose to keep it.
 
 All device checks were confirmed 2026-11-12, including the Card fade on page switches, which is fine as is. Follow-ups found during review are in Tech debt (Reduce Motion fades, month bar, background scroll).
+
+### Next sprint: to be planned
+Pick between Recurring (carried over above, with the clone action first) and the Sprint 4 Dashboard rework below, then write the plan here before any branch starts.
 
 ### Sprint 4: planned
 One bundle, **the Dashboard rework**, since everything in it changes the Dashboard response and `demoApi.js`'s copy of it, which should happen once. Reuses Sprint 3's `SegmentedControl`.
