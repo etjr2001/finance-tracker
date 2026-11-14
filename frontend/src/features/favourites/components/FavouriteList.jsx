@@ -4,10 +4,14 @@ import { IconButton } from '@components/IconButton'
 import { StatusMessage } from '@components/StatusMessage'
 import { FavouriteSummary } from '@features/favourites/components/FavouriteSummary'
 
-// Every Favourite, in the order given (the page sorts A–Z). Edit and Delete stay
-// inline at every width: unlike a Transaction row there's no detail card
-// to hand off to, and the row is short enough to fit both on a phone.
-export function FavouriteList({ favourites, isLoading, hasError, isDeleting, onEdit, onDelete }) {
+const ROW_CLASS = 'flex items-center gap-3 py-3 pl-4'
+
+// Every Favourite, in the order given (the page sorts A–Z). Same pattern as
+// a Transaction row: below md: the whole row is a button opening the
+// FavouriteDetail card, with no inline actions, so the name gets the full
+// width (two 44px icon buttons truncated it on a phone). At md:+ the row
+// keeps inline Edit and Delete.
+export function FavouriteList({ favourites, isLoading, hasError, isMobile, isDeleting, onOpenDetail, onEdit, onDelete }) {
     if (isLoading) return <StatusMessage>Loading favourites…</StatusMessage>
     if (hasError) return <StatusMessage tone="error">Could not load favourites.</StatusMessage>
     if (!favourites?.length) {
@@ -20,21 +24,31 @@ export function FavouriteList({ favourites, isLoading, hasError, isDeleting, onE
 
     return (
         <Card className="divide-y divide-rule-soft">
-            {favourites.map((favourite) => (
-                <div key={favourite.id} className="flex items-center gap-3 py-3 pl-4 pr-2">
-                    <FavouriteSummary favourite={favourite} />
-                    <div className="flex shrink-0 items-center">
-                        <IconButton icon={Pencil} label="Edit" onClick={() => onEdit(favourite)} />
-                        <IconButton
-                            icon={Trash2}
-                            label="Delete"
-                            tone="danger"
-                            isDisabled={isDeleting(favourite.id)}
-                            onClick={() => onDelete(favourite)}
-                        />
+            {favourites.map((favourite) =>
+                isMobile ? (
+                    <button
+                        key={favourite.id}
+                        onClick={() => onOpenDetail(favourite)}
+                        className={`w-full text-left pr-4 ${ROW_CLASS}`}
+                    >
+                        <FavouriteSummary favourite={favourite} />
+                    </button>
+                ) : (
+                    <div key={favourite.id} className={`pr-2 ${ROW_CLASS}`}>
+                        <FavouriteSummary favourite={favourite} />
+                        <div className="flex shrink-0 items-center">
+                            <IconButton icon={Pencil} label="Edit" onClick={() => onEdit(favourite)} />
+                            <IconButton
+                                icon={Trash2}
+                                label="Delete"
+                                tone="danger"
+                                isDisabled={isDeleting(favourite.id)}
+                                onClick={() => onDelete(favourite)}
+                            />
+                        </div>
                     </div>
-                </div>
-            ))}
+                )
+            )}
         </Card>
     )
 }

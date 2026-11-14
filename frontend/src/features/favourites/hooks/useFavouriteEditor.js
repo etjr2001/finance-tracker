@@ -1,11 +1,12 @@
 import { useCallback, useState } from 'react'
 import { useCreateFavourite, useUpdateFavourite, useDeleteFavourite } from '@features/favourites/hooks/useFavourites'
 import { apiErrorMessage } from '@api/httpClient'
+import { useDetailCard } from '@hooks/useDetailCard'
 
 // UI state machine for the Favourites page: which form (if any) is open,
-// whether closing it needs a discard confirmation, the pending delete, and
-// the shared error line. Same shape as useTransactionEditor, minus the
-// month handling and detail card a Favourite doesn't have.
+// whether closing it needs a discard confirmation, the pending delete, the
+// mobile detail card, and the shared error line. Same shape as
+// useTransactionEditor, minus the month handling a Favourite doesn't have.
 //
 // Used by the Favourites page, and by the Transactions page for a
 // Transaction's star (ADR0017), which opens the form in place.
@@ -64,6 +65,9 @@ export function useFavouriteEditor() {
         }
     }
 
+    // Detail card (mobile) hands off to the same edit/delete flows.
+    const detail = useDetailCard({ onEdit: (favourite) => openForm(favourite), onDelete: setDeleteTarget })
+
     async function confirmDelete() {
         const { id } = deleteTarget
         setDeleteTarget(null)
@@ -104,5 +108,6 @@ export function useFavouriteEditor() {
             cancel: () => setDeleteTarget(null),
             isDeleting: (id) => deleteFavourite.isPending && deleteFavourite.variables === id,
         },
+        detail,
     }
 }

@@ -372,3 +372,76 @@ describe('FavouritesPage delete', () => {
         expect(await screen.findByText('Could not delete favourite.')).toBeInTheDocument()
     })
 })
+
+// The global test/setup.js polyfill always "matches" (desktop), so the tests
+// above cover the desktop row. These override matchMedia for a phone, same
+// pattern as TransactionsPage.test.jsx.
+function mockMobileViewport() {
+    window.matchMedia = vi.fn().mockImplementation(() => ({
+        matches: false,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+    }))
+}
+
+describe('FavouritesPage mobile row', () => {
+    beforeEach(() => {
+        mockMobileViewport()
+        categoriesApi.listCategories.mockResolvedValue(categories)
+        favouritesApi.listFavourites.mockResolvedValue([rent])
+        favouritesApi.deleteFavourite.mockResolvedValue(undefined)
+    })
+
+    afterEach(() => {
+        vi.restoreAllMocks()
+    })
+
+    it('does not show inline Edit/Delete on the row', async () => {
+        renderPage()
+
+        await screen.findByText('Monthly')
+
+        expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument()
+    })
+
+    it('opens the detail card when the row is tapped', async () => {
+        const user = userEvent.setup()
+        renderPage()
+
+        await user.click(await screen.findByText('Monthly'))
+
+        const card = screen.getByRole('dialog')
+        expect(within(card).getByText('Monthly')).toBeInTheDocument()
+        expect(within(card).getByText('Rent · Expense')).toBeInTheDocument()
+        expect(within(card).getByRole('button', { name: 'Edit' })).toBeInTheDocument()
+    })
+
+    it('hands off to the edit form and closes the detail card', async () => {
+        const user = userEvent.setup()
+        renderPage()
+
+        await user.click(await screen.findByText('Monthly'))
+        await user.click(screen.getByRole('button', { name: 'Edit' }))
+
+        expect(screen.getByRole('heading', { name: 'Edit favourite' })).toBeInTheDocument()
+        expect(screen.getByLabelText('Note (optional)')).toHaveValue('Monthly')
+        await waitFor(() => expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument())
+    })
+
+    it('hands off to the delete confirmation and deletes on confirm', async () => {
+        const user = userEvent.setup()
+        renderPage()
+
+        await user.click(await screen.findByText('Monthly'))
+        await user.click(screen.getByRole('button', { name: 'Delete' }))
+
+        expect(screen.getByText('Delete favourite "Rent — Monthly"? This can\'t be undone.')).toBeInTheDocument()
+        // Wait for the detail card (and its own Delete) to finish animating out.
+        await waitFor(() => expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument())
+
+        await user.click(screen.getByRole('button', { name: 'Delete' }))
+
+        await waitFor(() => expect(favouritesApi.deleteFavourite).toHaveBeenCalledWith(10, expect.anything()))
+    })
+})

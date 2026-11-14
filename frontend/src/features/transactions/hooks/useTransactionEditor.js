@@ -5,6 +5,7 @@ import {
     useDeleteTransaction,
 } from '@features/transactions/hooks/useTransactions'
 import { apiErrorMessage } from '@api/httpClient'
+import { useDetailCard } from '@hooks/useDetailCard'
 import { monthOf } from '@utils/date'
 
 // UI state machine for the Transactions page: which form (if any) is open,
@@ -21,7 +22,6 @@ export function useTransactionEditor({ month, onMonthChange }) {
     const [isDirty, setIsDirty] = useState(false)
     const [isDiscardConfirmOpen, setIsDiscardConfirmOpen] = useState(false)
     const [deleteTarget, setDeleteTarget] = useState(null)
-    const [detailTarget, setDetailTarget] = useState(null)
     const [error, setError] = useState(null)
 
     const isFormOpen = formTarget !== null
@@ -86,15 +86,7 @@ export function useTransactionEditor({ month, onMonthChange }) {
     }
 
     // Detail card (mobile) hands off to the same edit/delete flows.
-    function editFromDetail() {
-        setDetailTarget(null)
-        openForm(detailTarget)
-    }
-
-    function deleteFromDetail() {
-        setDetailTarget(null)
-        setDeleteTarget(detailTarget)
-    }
+    const detail = useDetailCard({ onEdit: openForm, onDelete: setDeleteTarget })
 
     return {
         error,
@@ -122,12 +114,6 @@ export function useTransactionEditor({ month, onMonthChange }) {
             cancel: () => setDeleteTarget(null),
             isDeleting: (id) => deleteTransaction.isPending && deleteTransaction.variables === id,
         },
-        detail: {
-            target: detailTarget,
-            open: setDetailTarget,
-            close: () => setDetailTarget(null),
-            edit: editFromDetail,
-            delete: deleteFromDetail,
-        },
+        detail,
     }
 }

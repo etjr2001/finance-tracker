@@ -8,7 +8,9 @@ import { useFavourites } from '@features/favourites/hooks/useFavourites'
 import { useFavouriteEditor } from '@features/favourites/hooks/useFavouriteEditor'
 import { FavouriteList } from '@features/favourites/components/FavouriteList'
 import { FavouriteFormDialogs } from '@features/favourites/components/FavouriteFormDialogs'
+import { FavouriteDetail } from '@features/favourites/components/FavouriteDetail'
 import { describeFavourite, sortFavouritesByName } from '@features/favourites/utils/favouriteForm'
+import { useIsMobile } from '@hooks/useIsMobile'
 import { ExitPresence } from '@components/ExitPresence'
 
 // Add, edit and delete Favourites. Nothing here creates a Transaction:
@@ -21,8 +23,9 @@ export function FavouritesPage() {
         () => (favourites ? sortFavouritesByName(favourites) : favourites),
         [favourites]
     )
+    const isMobile = useIsMobile()
     const editor = useFavouriteEditor()
-    const { error, form, remove } = editor
+    const { error, form, remove, detail } = editor
 
     return (
         <div>
@@ -42,12 +45,25 @@ export function FavouritesPage() {
                 favourites={sortedFavourites}
                 isLoading={isLoading}
                 hasError={isError}
+                isMobile={isMobile}
                 isDeleting={remove.isDeleting}
+                onOpenDetail={detail.open}
                 onEdit={form.openEdit}
                 onDelete={remove.request}
             />
 
             <FavouriteFormDialogs editor={editor} categories={categories} />
+
+            <ExitPresence>
+                {detail.target && (
+                    <FavouriteDetail
+                        favourite={detail.target}
+                        onClose={detail.close}
+                        onEdit={detail.edit}
+                        onDelete={detail.delete}
+                    />
+                )}
+            </ExitPresence>
 
             <ExitPresence>
                 {remove.target && (
