@@ -24,6 +24,11 @@ A personal finance tracker. Spring Boot (Java 25, Maven) serves a REST API under
 - Never read, print, or edit `.env*` files.
 - Ask me before launching any browser (including headless Chrome/Edge or a throwaway profile) or any other process that can reach the internet. Say what it is and why, and wait for a yes. Local test/build/lint commands are fine without asking.
 - If a change would contradict an ADR, say so and propose a new ADR instead of silently diverging.
+- Sprint scope is fixed once a sprint starts (see "Sprint history" in `docs/backlog.md`):
+  - New bugs, ideas and review findings, including pasted review reports, go into `docs/backlog.md`, not onto a branch, unless I explicitly say to build now.
+  - "What's next" always comes from the current sprint plan.
+  - Only an urgent bug that affects prod or User data can come in mid-sprint, and you must say it's an exception.
+  - Only I can cancel or close a sprint early.
 
 ## Commands
 - Backend tests: `./mvnw -B verify`
