@@ -65,6 +65,21 @@ describe('TransactionForm date picker', () => {
     })
 })
 
+describe('TransactionForm amount help', () => {
+    it('explains Drafts behind the (i) next to Amount', async () => {
+        const user = userEvent.setup()
+        renderForm()
+        const help = /Enter 0 to save a Draft and fill it in later/
+
+        expect(screen.queryByText(help)).not.toBeInTheDocument()
+
+        await user.click(screen.getByRole('button', { name: 'About Amount' }))
+
+        expect(screen.getByText(help)).toBeInTheDocument()
+        expect(screen.queryByText('0 shows as a Draft')).not.toBeInTheDocument()
+    })
+})
+
 describe('TransactionForm draft hint', () => {
     it('shows the Draft hint by default for a new transaction (defaults to $0)', () => {
         renderForm()
@@ -126,6 +141,8 @@ describe('TransactionForm layout', () => {
         renderForm()
 
         screen.getByLabelText('Category').focus()
+        await user.tab()
+        expect(screen.getByRole('button', { name: 'About Amount' })).toHaveFocus()
         await user.tab()
         expect(screen.getByLabelText('Amount')).toHaveFocus()
         await user.tab()

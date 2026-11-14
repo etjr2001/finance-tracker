@@ -189,14 +189,36 @@ describe('FavouritesPage create and edit', () => {
         expect(screen.queryByText('0 starts a Draft')).not.toBeInTheDocument()
     })
 
-    it('explains under the note that it names the Favourite and is copied to each Transaction', async () => {
+    it('explains behind the (i) on Amount that a zero amount starts a Draft', async () => {
         const user = userEvent.setup()
         renderPage()
+        const help = 'Leave at 0 if it changes each time. Using it then starts a Draft.'
+
+        await screen.findByText('Rent')
+        await user.click(screen.getByRole('button', { name: 'Add' }))
+
+        expect(screen.queryByText(help)).not.toBeInTheDocument()
+
+        await user.click(screen.getByRole('button', { name: 'About Amount' }))
+
+        expect(screen.getByText(help)).toBeInTheDocument()
+        expect(screen.queryByText('0 starts a Draft')).not.toBeInTheDocument()
+    })
+
+    it('explains behind the (i) on Note that it names the Favourite and is copied to each Transaction', async () => {
+        const user = userEvent.setup()
+        renderPage()
+        const help = 'Names the favourite. Copied to each transaction made from it.'
 
         await screen.findByText('Monthly')
         await user.click(screen.getByRole('button', { name: 'Add' }))
 
-        expect(screen.getByText('Names the favourite; copied to each transaction')).toBeInTheDocument()
+        expect(screen.queryByText(help)).not.toBeInTheDocument()
+        expect(screen.queryByText('Names the favourite; copied to each transaction')).not.toBeInTheDocument()
+
+        await user.click(screen.getByRole('button', { name: 'About Note (optional)' }))
+
+        expect(screen.getByText(help)).toBeInTheDocument()
     })
 
     it('orders the fields Category, Amount, Note, so tabbing follows the layout', async () => {
@@ -208,7 +230,11 @@ describe('FavouritesPage create and edit', () => {
 
         screen.getByLabelText('Category').focus()
         await user.tab()
+        expect(screen.getByRole('button', { name: 'About Amount' })).toHaveFocus()
+        await user.tab()
         expect(screen.getByLabelText('Amount')).toHaveFocus()
+        await user.tab()
+        expect(screen.getByRole('button', { name: 'About Note (optional)' })).toHaveFocus()
         await user.tab()
         expect(screen.getByLabelText('Note (optional)')).toHaveFocus()
     })
