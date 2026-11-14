@@ -51,6 +51,16 @@ describe('FormField', () => {
         expect(screen.getByText('0/10')).toBeInTheDocument()
     })
 
+    it('shows an (i) that reveals the help text when help is given', () => {
+        render(<FormField label="Note" htmlFor="note" help="Names the favourite." />)
+
+        expect(screen.queryByText('Names the favourite.')).not.toBeInTheDocument()
+
+        fireEvent.click(screen.getByRole('button', { name: 'About Note' }))
+
+        expect(screen.getByText('Names the favourite.')).toBeInTheDocument()
+    })
+
     it('shows no counter when maxLength is not set', () => {
         render(<FormField label="Email" htmlFor="email" value="" onChange={() => {}} />)
 

@@ -1,4 +1,5 @@
 import { inputClass } from '@components/formStyles'
+import { FieldLabel } from '@components/FieldLabel'
 
 const HINTS = {
     overMax: 'Max amount is 9,999,999,999.99',
@@ -7,15 +8,14 @@ const HINTS = {
 
 // type="text" + inputMode="decimal" gives the clean 0-9 + dot keypad on
 // both iOS and Android; filtering happens in the form-state hook.
-// `hint` is a blocked-keystroke warning; `helper` is muted guidance text.
-export function AmountField({ value, onChange, hint, helper }) {
+// `hint` is a blocked-keystroke warning; `helper` is muted guidance text;
+// `help` sits behind an (i) by the label.
+export function AmountField({ value, onChange, hint, helper, help }) {
     const isZero = Number(value) === 0
 
     return (
         <div>
-            <label className="block text-sm text-ink-soft mb-1" htmlFor="amount">
-                Amount
-            </label>
+            <FieldLabel label="Amount" htmlFor="amount" help={help} labelClassName="text-ink-soft" />
             <input
                 id="amount"
                 type="text"
