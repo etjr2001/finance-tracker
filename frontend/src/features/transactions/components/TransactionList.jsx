@@ -16,6 +16,7 @@ export function TransactionList({
     findMatchingFavourite,
     onOpenDetail,
     onFavouriteClick,
+    onCopy,
     onEdit,
     onDelete,
 }) {
@@ -51,6 +52,7 @@ export function TransactionList({
                                 isSavedAsFavourite={Boolean(findMatchingFavourite(transaction))}
                                 onOpenDetail={onOpenDetail}
                                 onFavouriteClick={onFavouriteClick}
+                                onCopy={onCopy}
                                 onEdit={onEdit}
                                 onDelete={onDelete}
                             />

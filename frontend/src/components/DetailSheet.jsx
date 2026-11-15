@@ -8,9 +8,9 @@ import { IconButton } from '@components/IconButton'
 // TransactionDetail and FavouriteDetail so the two can't drift apart.
 // Feature-specific pieces come in as elements: `tile` (the Category tile),
 // `headerActions` (e.g. a star, placed before ✕) and `amount`.
-// Edit and Delete hand off to the page's existing flows — no mutation
-// logic lives here.
-export function DetailSheet({ tile, headerActions, title, amount, meta, note, onClose, onEdit, onDelete }) {
+// Edit, Copy and Delete hand off to the page's existing flows — no mutation
+// logic lives here. Copy (outlined, under Edit) shows only with `onCopy`.
+export function DetailSheet({ tile, headerActions, title, amount, meta, note, onClose, onEdit, onCopy = null, onDelete }) {
     return (
         <Sheet onRequestClose={onClose}>
             <div className="flex items-start justify-between gap-3 mb-4">
@@ -32,6 +32,11 @@ export function DetailSheet({ tile, headerActions, title, amount, meta, note, on
             <Button isFullWidth onClick={onEdit}>
                 Edit
             </Button>
+            {onCopy && (
+                <Button variant="secondary" isFullWidth className="mt-3" onClick={onCopy}>
+                    Copy
+                </Button>
+            )}
             <Button variant="dangerGhost" isFullWidth className="mt-4" onClick={onDelete}>
                 Delete
             </Button>

@@ -7,6 +7,7 @@ import { TransactionsPage } from '@features/transactions/pages/TransactionsPage'
 import * as transactionsApi from '@features/transactions/api/transactionsApi'
 import * as categoriesApi from '@features/categories/api/categoriesApi'
 import * as favouritesApi from '@features/favourites/api/favouritesApi'
+import { currentDate } from '@utils/date'
 
 vi.mock('@features/transactions/api/transactionsApi')
 vi.mock('@features/categories/api/categoriesApi')
@@ -484,6 +485,115 @@ describe('TransactionsPage star (desktop row)', () => {
     })
 })
 
+describe('TransactionsPage copy (desktop row)', () => {
+    beforeEach(() => {
+        transactionsApi.listTransactions.mockResolvedValue([sampleTransaction])
+        transactionsApi.createTransaction.mockResolvedValue({ ...sampleTransaction, id: 99, date: currentDate() })
+        categoriesApi.listCategories.mockResolvedValue([{ id: 1, name: 'Groceries' }])
+    })
+
+    afterEach(() => {
+        vi.restoreAllMocks()
+    })
+
+    it('shows a Copy button with a tooltip between the star and Edit', async () => {
+        renderPage()
+
+        await screen.findByText('Weekly shop')
+        const star = screen.getByRole('button', { name: 'Save as favourite' })
+        const copy = screen.getByRole('button', { name: 'Copy' })
+        const edit = screen.getByRole('button', { name: 'Edit' })
+        expect(copy).toHaveAttribute('title', 'Copy')
+        expect(star.compareDocumentPosition(copy) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+        expect(copy.compareDocumentPosition(edit) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    })
+
+    it('opens Copy transaction prefilled from the Transaction, dated today', async () => {
+        const user = userEvent.setup()
+        renderPage()
+
+        await screen.findByText('Weekly shop')
+        await user.click(screen.getByRole('button', { name: 'Copy' }))
+
+        expect(screen.getByRole('heading', { name: 'Copy transaction' })).toBeInTheDocument()
+        expect(screen.getByLabelText('Amount')).toHaveValue('12.5')
+        expect(screen.getByLabelText('Category')).toHaveValue('1')
+        expect(screen.getByLabelText('Note (optional)')).toHaveValue('Weekly shop')
+        expect(screen.getByLabelText('Date')).toHaveValue(currentDate())
+    })
+
+    it('offers no Favourites picker on a copy, only on a blank Add', async () => {
+        const user = userEvent.setup()
+        renderPage()
+
+        await screen.findByText('Weekly shop')
+        await user.click(screen.getByRole('button', { name: 'Copy' }))
+        expect(screen.queryByRole('button', { name: 'Favourites' })).not.toBeInTheDocument()
+
+        await user.click(getBackdrop())
+        await waitFor(() => expect(screen.queryByRole('heading', { name: 'Copy transaction' })).not.toBeInTheDocument())
+        await user.click(screen.getByRole('button', { name: 'Add' }))
+        expect(screen.getByRole('button', { name: 'Favourites' })).toBeInTheDocument()
+    })
+
+    it('saves the copy as a new Transaction, leaving the original alone', async () => {
+        const user = userEvent.setup()
+        renderPage()
+
+        await screen.findByText('Weekly shop')
+        await user.click(screen.getByRole('button', { name: 'Copy' }))
+        await user.click(formAddButton())
+
+        await waitFor(() =>
+            expect(transactionsApi.createTransaction).toHaveBeenCalledWith(
+                { type: 'EXPENSE', amount: 12.5, date: currentDate(), note: 'Weekly shop', categoryId: 1 },
+                expect.anything()
+            )
+        )
+        expect(transactionsApi.updateTransaction).not.toHaveBeenCalled()
+        await waitFor(() => expect(screen.queryByRole('heading', { name: 'Copy transaction' })).not.toBeInTheDocument())
+    })
+
+    it('closes an untouched copy without asking', async () => {
+        const user = userEvent.setup()
+        renderPage()
+
+        await screen.findByText('Weekly shop')
+        await user.click(screen.getByRole('button', { name: 'Copy' }))
+        await user.click(getBackdrop())
+
+        expect(screen.queryByText('Discard unsaved changes?')).not.toBeInTheDocument()
+        await waitFor(() => expect(screen.queryByRole('heading', { name: 'Copy transaction' })).not.toBeInTheDocument())
+    })
+
+    it('asks before discarding a copy that was changed', async () => {
+        const user = userEvent.setup()
+        renderPage()
+
+        await screen.findByText('Weekly shop')
+        await user.click(screen.getByRole('button', { name: 'Copy' }))
+        await user.type(screen.getByLabelText('Note (optional)'), '!')
+        await user.click(getBackdrop())
+
+        expect(screen.getByText('Discard unsaved changes?')).toBeInTheDocument()
+    })
+
+    it('opens a blank Add form after a copy is closed', async () => {
+        const user = userEvent.setup()
+        renderPage()
+
+        await screen.findByText('Weekly shop')
+        await user.click(screen.getByRole('button', { name: 'Copy' }))
+        await user.click(getBackdrop())
+        await waitFor(() => expect(screen.queryByRole('heading', { name: 'Copy transaction' })).not.toBeInTheDocument())
+
+        await user.click(screen.getByRole('button', { name: 'Add' }))
+
+        expect(screen.getByRole('heading', { name: 'Add transaction' })).toBeInTheDocument()
+        expect(screen.getByLabelText('Note (optional)')).toHaveValue('')
+    })
+})
+
 describe('TransactionsPage mobile row', () => {
     beforeEach(() => {
         mockMobileViewport()
@@ -543,6 +653,27 @@ describe('TransactionsPage mobile row', () => {
 
         expect(screen.getByLabelText('Amount')).toBeInTheDocument()
         await waitFor(() => expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument())
+    })
+
+    it('does not show Copy on the row', async () => {
+        renderPage()
+
+        await screen.findByText('Weekly shop')
+
+        expect(screen.queryByRole('button', { name: 'Copy' })).not.toBeInTheDocument()
+    })
+
+    it("hands off to Copy transaction from the card's Copy and closes the card", async () => {
+        const user = userEvent.setup()
+        renderPage()
+
+        await user.click(await screen.findByText('Weekly shop'))
+        await user.click(screen.getByRole('button', { name: 'Copy' }))
+
+        await waitFor(() => expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument())
+        expect(screen.getByRole('heading', { name: 'Copy transaction' })).toBeInTheDocument()
+        expect(screen.getByLabelText('Note (optional)')).toHaveValue('Weekly shop')
+        expect(screen.getByLabelText('Date')).toHaveValue(currentDate())
     })
 
     it('hands off to the delete confirmation and closes the detail card', async () => {
