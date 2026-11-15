@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { checkAmountInput, isFormDirty, toFormShape, toPayload } from '@features/transactions/utils/transactionForm'
+import {
+    checkAmountInput,
+    isFormDirty,
+    toCopyFormShape,
+    toFormShape,
+    toPayload,
+} from '@features/transactions/utils/transactionForm'
+import { currentDate } from '@utils/date'
 
 describe('checkAmountInput', () => {
     it.each([
@@ -29,5 +36,19 @@ describe('form shape round-trip', () => {
         const form = toFormShape(transaction)
         expect(isFormDirty({ ...form }, form)).toBe(false)
         expect(isFormDirty({ ...form, note: 'x' }, form)).toBe(true)
+    })
+})
+
+describe('toCopyFormShape', () => {
+    const transaction = { id: 9, type: 'EXPENSE', amount: 0, date: '2026-01-31', note: 'Phone bill', category: { id: 4 } }
+
+    it('copies every field except the date, which starts as today', () => {
+        expect(toCopyFormShape(transaction)).toEqual({
+            type: 'EXPENSE',
+            amount: '0',
+            date: currentDate(),
+            note: 'Phone bill',
+            categoryId: '4',
+        })
     })
 })

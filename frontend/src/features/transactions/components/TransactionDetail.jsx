@@ -14,7 +14,7 @@ import { categoryNameOf, isDraft, isIncome } from '@features/transactions/utils/
 // `isSavedAsFavourite`: the Transaction matches one of the User's
 // Favourites (favouriteMatch.js), so the star is filled. What tapping it
 // does in each state is up to the page.
-export function TransactionDetail({ transaction, isSavedAsFavourite = false, onClose, onFavouriteClick, onEdit, onDelete }) {
+export function TransactionDetail({ transaction, isSavedAsFavourite = false, onClose, onFavouriteClick, onEdit, onCopy, onDelete }) {
     const { formatted: formattedDate } = dayGroupLabel(transaction.date)
     const typeLabel = isIncome(transaction) ? 'Income' : 'Expense'
 
@@ -44,6 +44,7 @@ export function TransactionDetail({ transaction, isSavedAsFavourite = false, onC
             note={transaction.note}
             onClose={onClose}
             onEdit={onEdit}
+            onCopy={onCopy}
             onDelete={onDelete}
         />
     )

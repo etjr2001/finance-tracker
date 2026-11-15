@@ -85,6 +85,7 @@ export function TransactionsPage() {
                 {form.isOpen && (
                     <TransactionFormModal
                         transaction={form.transaction}
+                        copyFrom={form.copyFrom}
                         categories={categories}
                         error={error}
                         isSubmitting={form.isSubmitting}
@@ -106,6 +107,7 @@ export function TransactionsPage() {
                 onOpenDetail={detail.open}
                 findMatchingFavourite={findMatchingFavourite}
                 onFavouriteClick={handleFavouriteClick}
+                onCopy={form.openCopy}
                 onEdit={form.openEdit}
                 onDelete={remove.request}
             />

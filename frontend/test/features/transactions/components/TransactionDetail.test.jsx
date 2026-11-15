@@ -113,6 +113,15 @@ describe('TransactionDetail actions', () => {
         expect(onDelete).toHaveBeenCalledTimes(1)
     })
 
+    it('calls onCopy from its Copy button', () => {
+        const onCopy = vi.fn()
+        renderDetail({ onCopy })
+
+        fireEvent.click(screen.getByRole('button', { name: 'Copy' }))
+
+        expect(onCopy).toHaveBeenCalledTimes(1)
+    })
+
     it('calls onClose from the ✕ button and from the backdrop', () => {
         const onClose = vi.fn()
         renderDetail({ onClose })

@@ -32,6 +32,7 @@ export function TransactionDialogs({ discard, remove, detail, findMatchingFavour
                         isSavedAsFavourite={Boolean(findMatchingFavourite(detail.target))}
                         onFavouriteClick={() => onFavouriteClick(detail.target)}
                         onEdit={detail.edit}
+                        onCopy={detail.copy}
                         onDelete={detail.delete}
                     />
                 )}

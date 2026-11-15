@@ -38,6 +38,23 @@ describe('useDetailCard', () => {
         expect(onEdit).toHaveBeenCalledWith(item)
     })
 
+    it('copy closes the card and hands the item to onCopy', () => {
+        const onCopy = vi.fn()
+        const { result } = renderHook(() => useDetailCard({ onEdit: vi.fn(), onCopy, onDelete: vi.fn() }))
+
+        act(() => result.current.open(item))
+        act(() => result.current.copy())
+
+        expect(result.current.target).toBeNull()
+        expect(onCopy).toHaveBeenCalledWith(item)
+    })
+
+    it('has no copy without onCopy', () => {
+        const { result } = renderDetailCard()
+
+        expect(result.current.copy).toBeNull()
+    })
+
     it('delete closes the card and hands the item to onDelete', () => {
         const { result, onDelete } = renderDetailCard()
 

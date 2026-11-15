@@ -66,6 +66,27 @@ describe('DetailSheet actions', () => {
         expect(onDelete).toHaveBeenCalledTimes(1)
     })
 
+    it('shows no Copy button without onCopy', () => {
+        renderSheet()
+
+        expect(screen.queryByRole('button', { name: 'Copy' })).not.toBeInTheDocument()
+    })
+
+    it('puts a full-width Copy between Edit and Delete, and calls onCopy', () => {
+        const onCopy = vi.fn()
+        renderSheet({ onCopy })
+
+        const edit = screen.getByRole('button', { name: 'Edit' })
+        const copy = screen.getByRole('button', { name: 'Copy' })
+        const remove = screen.getByRole('button', { name: 'Delete' })
+        expect(copy).toHaveClass('w-full')
+        expect(edit.compareDocumentPosition(copy) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+        expect(copy.compareDocumentPosition(remove) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+
+        fireEvent.click(copy)
+        expect(onCopy).toHaveBeenCalledTimes(1)
+    })
+
     it('calls onClose from the ✕ button and from the backdrop', () => {
         const onClose = vi.fn()
         renderSheet({ onClose })

@@ -15,12 +15,19 @@ import { NewCategoryModal } from '@features/transactions/components/NewCategoryM
 import { FavouritePicker } from '@features/favourites/components/FavouritePicker'
 import { ExitPresence } from '@components/ExitPresence'
 
+function titleFor(isEditing, isCopy) {
+    if (isEditing) return 'Edit transaction'
+    return isCopy ? 'Copy transaction' : 'Add transaction'
+}
+
 // Create/edit form for a Transaction. The parent must pass a `key` (e.g.
 // key={initial?.id ?? 'new'}) so switching targets remounts it.
 // `onDirtyChange` should be stable (e.g. a useState setter).
-export function TransactionForm({ categories, initial, onSubmit, onCancel, isSubmitting, onDirtyChange }) {
+// `copyFrom`: a Transaction to prefill a new one from ("Copy"); it's still a
+// create, so it saves as a new Transaction.
+export function TransactionForm({ categories, initial, copyFrom = null, onSubmit, onCancel, isSubmitting, onDirtyChange }) {
     const { form, updateField, changeAmount, amountHint, isDraftAmount, applyFavourite, toPayload } =
-        useTransactionFormState(initial, onDirtyChange)
+        useTransactionFormState(initial, onDirtyChange, copyFrom)
     const newCategory = useInlineCategoryCreate({
         categories,
         onSelect: (categoryId) => updateField('categoryId', categoryId),
@@ -41,10 +48,12 @@ export function TransactionForm({ categories, initial, onSubmit, onCancel, isSub
     return (
         <>
             <div className="mb-4 flex items-center justify-between gap-3">
-                <SectionTitle>{isEditing ? 'Edit transaction' : 'Add transaction'}</SectionTitle>
-                {/* Only when adding: a Favourite prefills a new Transaction
-                    (ADR0017), it doesn't overwrite one being edited. */}
-                {!isEditing && (
+                <SectionTitle>{titleFor(isEditing, Boolean(copyFrom))}</SectionTitle>
+                {/* Only on a blank Add: a Favourite prefills a new
+                    Transaction (ADR0017). Not when editing, and not on a
+                    copy, which already starts from a Transaction; picking a
+                    Favourite there would overwrite what "Copy" says. */}
+                {!isEditing && !copyFrom && (
                     <Button variant="secondary" onClick={() => setIsPickerOpen(true)}>
                         <Star aria-hidden="true" strokeWidth={1.7} className="h-4 w-4 -ml-1 mr-1.5" />
                         Favourites

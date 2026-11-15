@@ -17,7 +17,8 @@ export function useTransactionEditor({ month, onMonthChange }) {
     const updateTransaction = useUpdateTransaction()
     const deleteTransaction = useDeleteTransaction()
 
-    // null (closed) | { transaction: null } (create) | { transaction } (edit)
+    // null (closed) | { transaction: null, copyFrom } (create; copyFrom is a
+    // Transaction to prefill from, or null) | { transaction } (edit)
     const [formTarget, setFormTarget] = useState(null)
     const [isDirty, setIsDirty] = useState(false)
     const [isDiscardConfirmOpen, setIsDiscardConfirmOpen] = useState(false)
@@ -28,10 +29,13 @@ export function useTransactionEditor({ month, onMonthChange }) {
     const editingTransaction = formTarget?.transaction ?? null
     const activeMutation = editingTransaction ? updateTransaction : createTransaction
 
-    function openForm(transaction) {
+    function openForm(transaction, copyFrom = null) {
         setIsDirty(false)
-        setFormTarget({ transaction })
+        setFormTarget({ transaction, copyFrom })
     }
+
+    // "Copy": an Add form prefilled from an existing Transaction.
+    const openCopy = (transaction) => openForm(null, transaction)
 
     function closeForm() {
         setFormTarget(null)
@@ -85,19 +89,25 @@ export function useTransactionEditor({ month, onMonthChange }) {
         }
     }
 
-    // Detail card (mobile) hands off to the same edit/delete flows.
-    const detail = useDetailCard({ onEdit: openForm, onDelete: setDeleteTarget })
+    // Detail card (mobile) hands off to the same edit/copy/delete flows.
+    const detail = useDetailCard({
+        onEdit: (transaction) => openForm(transaction),
+        onCopy: openCopy,
+        onDelete: setDeleteTarget,
+    })
 
     return {
         error,
         form: {
             isOpen: isFormOpen,
             transaction: editingTransaction,
+            copyFrom: formTarget?.copyFrom ?? null,
             isSubmitting: activeMutation.isPending,
             // No "form already open" guard needed: while the form's modal is
             // open, the page behind it (Add, the rows' Edit) is inert.
             openCreate: () => openForm(null),
             openEdit: (transaction) => openForm(transaction),
+            openCopy,
             requestClose: requestCloseForm,
             submit: submitForm,
             setIsDirty,

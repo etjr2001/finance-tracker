@@ -31,6 +31,13 @@ export function toFormShape(transaction) {
     }
 }
 
+// "Copy": a new Transaction prefilled from an existing one. Every field is
+// copied except the date, which starts as today, like using a Favourite
+// (ADR0017); the User changes it to backfill a past date.
+export function toCopyFormShape(transaction) {
+    return { ...toFormShape(transaction), date: currentDate() }
+}
+
 export function toPayload(form) {
     return {
         type: form.type,
