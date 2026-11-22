@@ -144,3 +144,9 @@ a new Category's colour is hashed from its *name* (`assignColorKey` in
 `features/categories/utils/categorySwatch.js`), and a Category with no colour set falls
 back to a fixed default (`slate`), not a guess. See ADR0013's and ADR0014's Consequences
 for where this matters.
+
+**Update (2026-11-22):** Where a Category gets its colour and icon, moved here from
+`CONTEXT.md` (UI detail, not domain vocabulary). A Category created on the Categories page
+gets both auto-assigned so it never looks blank. A Category created inline from the
+Transaction form gets neither (both unset) to keep that flow to one step. Either kind can
+be changed afterwards on the Categories page.
