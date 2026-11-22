@@ -59,6 +59,51 @@ describe('Modal transitions', () => {
     })
 })
 
+// jsdom has no layout, so these check the classes that do the work: a
+// dialog capped at the backdrop's height, a body that scrolls, a footer
+// that doesn't, and backdrop padding that clears the safe areas.
+describe('Modal sizing', () => {
+    it('caps the dialog at the screen height and scrolls its body', () => {
+        const { dialog } = renderModal()
+        const body = screen.getByText('content').parentElement
+
+        expect(dialog).toHaveClass('max-h-full', 'flex', 'flex-col', 'overflow-hidden')
+        expect(body.parentElement).toBe(dialog)
+        expect(body).toHaveClass('min-h-0', 'overflow-y-auto')
+    })
+
+    it('pads the backdrop by at least 1rem or the safe-area inset', () => {
+        const { backdrop } = renderModal()
+
+        expect(backdrop).toHaveClass(
+            'pt-[max(1rem,env(safe-area-inset-top))]',
+            'pb-[max(1rem,env(safe-area-inset-bottom))]',
+        )
+    })
+
+    it('pins the footer outside the scrolling body', () => {
+        render(
+            <Modal onRequestClose={() => {}} footer={<button>Save</button>}>
+                <div>content</div>
+            </Modal>
+        )
+        const dialog = screen.getByRole('dialog')
+        const body = screen.getByText('content').parentElement
+        const footer = screen.getByRole('button', { name: 'Save' }).parentElement
+
+        expect(body).not.toContainElement(footer)
+        expect(footer.parentElement).toBe(dialog)
+        expect(footer).toHaveClass('shrink-0')
+        expect(footer).not.toHaveClass('overflow-y-auto')
+    })
+
+    it('renders no footer when none is given', () => {
+        const { dialog } = renderModal()
+
+        expect(dialog.children).toHaveLength(1)
+    })
+})
+
 describe('Modal', () => {
     // Like Sheet: screen readers announce it as a dialog and treat the page
     // behind as inactive.

@@ -26,8 +26,25 @@ export function CategoryEditModal({
     onSave,
     onCancel,
 }) {
+    // Save/Cancel (and a save error) sit in the Modal's pinned footer: the
+    // colour and icon grids make this modal taller than a small phone, and
+    // Save must stay reachable without scrolling.
+    const footer = (
+        <>
+            {error && <p className="mb-4 text-xs text-withdrawal">{error}</p>}
+            <div className="flex gap-4">
+                <Button onClick={onSave} disabled={isSaving}>
+                    Save
+                </Button>
+                <Button variant="ghost" onClick={onCancel}>
+                    Cancel
+                </Button>
+            </div>
+        </>
+    )
+
     return (
-        <Modal onRequestClose={onCancel}>
+        <Modal onRequestClose={onCancel} footer={footer}>
             <div className="flex items-center justify-between mb-4">
                 <SectionTitle>Edit category</SectionTitle>
                 <IconButton icon={X} label="Close" onClick={onCancel} />
@@ -76,7 +93,7 @@ export function CategoryEditModal({
                 </div>
             </div>
 
-            <div className="mb-5">
+            <div>
                 <span className="block text-sm mb-2">Icon</span>
                 {/* 6 columns of 44px buttons (ADR0010's touch-target minimum)
                     fit the modal's fixed max-w-md content width at any
@@ -101,17 +118,6 @@ export function CategoryEditModal({
                         </button>
                     ))}
                 </div>
-            </div>
-
-            {error && <p className="mb-4 text-xs text-withdrawal">{error}</p>}
-
-            <div className="flex gap-4">
-                <Button onClick={onSave} disabled={isSaving}>
-                    Save
-                </Button>
-                <Button variant="ghost" onClick={onCancel}>
-                    Cancel
-                </Button>
             </div>
         </Modal>
     )

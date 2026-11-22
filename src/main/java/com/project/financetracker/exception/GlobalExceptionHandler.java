@@ -7,9 +7,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -79,6 +81,26 @@ public class GlobalExceptionHandler {
         log.error("Data integrity violation", ex);
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(Map.of("error", "This change conflicts with existing data."));
+    }
+
+    // A body that can't be parsed: malformed JSON, an unknown enum value, a
+    // bad date, or no body at all. Client error, so 400 rather than the
+    // catch-all's 500. The parser's message names internal types, so only
+    // the log gets it.
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, String>> handleUnreadableBody(HttpMessageNotReadableException ex) {
+        log.warn("Unreadable request body: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("error", "Request body is missing or malformed."));
+    }
+
+    // A path or query value of the wrong type, e.g. /api/transactions/abc.
+    // Names the parameter; the value itself is not echoed back.
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Map<String, String>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        log.warn("Type mismatch on '{}': {}", ex.getName(), ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("error", "Invalid value for '" + ex.getName() + "'."));
     }
 
     @ExceptionHandler(RuntimeException.class)

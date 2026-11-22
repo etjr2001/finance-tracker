@@ -24,6 +24,7 @@ A personal finance tracker. Spring Boot (Java 25, Maven) serves a REST API under
 - Backend tests must not need a live Supabase connection. See `src/test/java/com/project/financetracker/README.md`.
 - Git: inspect freely (`status`, `diff`, `log`). Creating or switching branches, staging, and committing need my approval. **Never push, never create or merge PRs, never use `gh api`.** I publish everything.
 - Never read, print, or edit `.env*` files.
+- The repo is public. Never describe an unfixed security weakness (what's exposed, to whom, or how to reach it) in a commit message, branch name, PR text, code comment, migration, or tracked doc, `docs/backlog.md` included. Log it in the backlog as a vague pointer only (e.g. "DB hardening (DATA-H1), details kept privately") and keep the details outside the repo. Name a fix by what it adds, not the hole it closes. Details can be published once the fix is deployed. Don't edit an applied migration to remove a hint: it breaks Flyway's checksum.
 - Ask me before launching any browser (including headless Chrome/Edge or a throwaway profile) or any other process that can reach the internet. Say what it is and why, and wait for a yes. Local test/build/lint commands are fine without asking.
 - If a change would contradict an ADR, say so and propose a new ADR instead of silently diverging.
 - Sprint scope is fixed once a sprint starts (see `docs/current-sprint.md`):
