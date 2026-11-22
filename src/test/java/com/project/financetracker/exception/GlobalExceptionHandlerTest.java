@@ -12,11 +12,14 @@ import jakarta.validation.ConstraintViolationException;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.MethodParameter;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpInputMessage;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.List;
 import java.util.Map;
@@ -154,5 +157,35 @@ class GlobalExceptionHandlerTest {
                 .anyMatch(event -> event.getLevel() == Level.ERROR
                         && event.getThrowableProxy() != null
                         && event.getThrowableProxy().getMessage().equals("NullPointerException at line 42"));
+    }
+
+    // API-M1: a body that can't be parsed (malformed JSON, an unknown enum
+    // value, a bad date) is the client's fault: 400, not the catch-all's
+    // 500. The parser's message names internal types, so it stays in the logs.
+    @Test
+    void unreadableBodyReturnsAGeneric400AndLogsAtWarn() {
+        ResponseEntity<Map<String, String>> response = handler.handleUnreadableBody(
+                new HttpMessageNotReadableException(
+                        "JSON parse error: Cannot deserialize value of type Transaction$Type",
+                        mock(HttpInputMessage.class)));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).containsEntry("error", "Request body is missing or malformed.");
+        assertThat(logAppender.list).anyMatch(event -> event.getLevel() == Level.WARN);
+    }
+
+    // API-M1: a path or query value of the wrong type (e.g. /api/transactions/abc).
+    // Names the parameter but doesn't echo the value back.
+    @Test
+    void typeMismatchReturns400NamingTheParameterAndLogsAtWarn() {
+        ResponseEntity<Map<String, String>> response = handler.handleTypeMismatch(
+                new MethodArgumentTypeMismatchException(
+                        "<script>", Long.class, "id", mock(MethodParameter.class),
+                        new NumberFormatException("For input string: \"<script>\"")));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).containsEntry("error", "Invalid value for 'id'.");
+        assertThat(response.getBody().get("error")).doesNotContain("<script>");
+        assertThat(logAppender.list).anyMatch(event -> event.getLevel() == Level.WARN);
     }
 }
