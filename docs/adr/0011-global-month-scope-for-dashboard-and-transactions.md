@@ -76,7 +76,7 @@ The selected month is global and month-only. There are no date ranges.
 - The Drafts-in-other-months notice described above was never built. Sprint 3 Bundle A
   plans a different one instead ("N Drafts to finish", shown whenever any Draft exists,
   including in the viewed month) — a deviation from this ADR's Decision, flagged in
-  `docs/backlog.md`. That deviation is formalised in ADR0016.
+  `docs/sprints/sprint-history.md`. That deviation is formalised in ADR0016.
 
 **Update (2026-09-30):** The month filter is now server-side (`GET /api/transactions?month=YYYY-MM`,
 ADR0016, #42), so the "starts client-side" bullet above is history. The Transactions page no

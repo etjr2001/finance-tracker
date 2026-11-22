@@ -9,8 +9,10 @@ A personal finance tracker. Spring Boot (Java 25, Maven) serves a REST API under
 | Path | Read when |
 |---|---|
 | `docs/adr/README.md` | Before changing auth, data, deployment, branching, testing, or anything that might contradict a past decision. It's a one-line index; open only the ADRs that apply. |
-| `docs/backlog.md` | Picking up new work, or when a change touches a known debt item. |
-| `docs/sprints/` | You need the history of why something was built the way it was. |
+| `docs/current-sprint.md` | Starting a session, or deciding what's next. Holds only the current sprint and the next one. |
+| `docs/plans/` | Resuming work on a feature branch. A plan exists on that branch only and is removed from history before push. |
+| `docs/backlog.md` | Filing or picking up a bug, idea or debt item, or when a change touches a known debt item. |
+| `docs/sprints/` | You need the history of why something was built the way it was (`sprint-history.md` plus one review per sprint). |
 | `docs/commit-message-format.md` | Writing any commit message. |
 
 ## Working rules
@@ -24,9 +26,9 @@ A personal finance tracker. Spring Boot (Java 25, Maven) serves a REST API under
 - Never read, print, or edit `.env*` files.
 - Ask me before launching any browser (including headless Chrome/Edge or a throwaway profile) or any other process that can reach the internet. Say what it is and why, and wait for a yes. Local test/build/lint commands are fine without asking.
 - If a change would contradict an ADR, say so and propose a new ADR instead of silently diverging.
-- Sprint scope is fixed once a sprint starts (see "Sprint history" in `docs/backlog.md`):
+- Sprint scope is fixed once a sprint starts (see `docs/current-sprint.md`):
   - New bugs, ideas and review findings, including pasted review reports, go into `docs/backlog.md`, not onto a branch, unless I explicitly say to build now.
-  - "What's next" always comes from the current sprint plan.
+  - "What's next" always comes from `docs/current-sprint.md`.
   - Only an urgent bug that affects prod or User data can come in mid-sprint, and you must say it's an exception.
   - Only I can cancel or close a sprint early.
 
