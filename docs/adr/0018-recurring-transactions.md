@@ -4,7 +4,7 @@
 Accepted, not yet built (Recurring sprint, 2026-11-15 → 2026-12-13)
 
 ## Context
-ADR0017 split the old "template" idea in two: a Favourite is a manual shortcut, and Recurring is time-based (a monthly bill, a paycheck). Favourite shipped in #46. Recurring was settled in two grilling passes (2026-10-11 for the shape, 2026-11-11 for the details) and is recorded in `docs/backlog.md`. This ADR is where those rules live before any code is written.
+ADR0017 split the old "template" idea in two: a Favourite is a manual shortcut, and Recurring is time-based (a monthly bill, a paycheck). Favourite shipped in #46. Recurring was settled in two grilling passes (2026-10-11 for the shape, 2026-11-11 for the details) and is recorded in `docs/sprints/sprint-history.md`. This ADR is where those rules live before any code is written.
 
 The point of Recurring is to show how much of the month the User's bills have already spoken for. That only works if each run becomes a real Transaction on time, with the date it belongs to, even when the app was asleep or redeploying when the run was due.
 

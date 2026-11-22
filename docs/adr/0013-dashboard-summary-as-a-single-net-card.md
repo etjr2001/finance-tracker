@@ -68,7 +68,7 @@ horizontal bars, per ADR0010 — gains two things at the same time, reusing what
   internally (`features/categories/utils/categorySwatch.js`), so the Dashboard, Transactions, and Categories
   pages are guaranteed to agree on which colour a given Category gets — no separate
   logic to drift out of sync.
-- Still a stopgap pending Sprint 3's real per-Category colour/icon (`docs/backlog.md`):
+- Still a stopgap pending Sprint 3's real per-Category colour/icon (`docs/sprints/sprint-history.md`):
   once that lands, the Dashboard's bars and tiles pick it up automatically through the
   same shared functions, no separate change needed here.
 
